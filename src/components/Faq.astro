@@ -1,0 +1,161 @@
+---
+import Icon from './Icon.astro';
+
+const faqs = [
+  {
+    q: 'How much does a penetration test cost?',
+    a: 'It depends on the scope: how many applications, user roles, APIs and IP addresses are in play. After a 30-minute scoping call you get a written scope and a fixed quote, so the price does not change halfway through.',
+  },
+  {
+    q: 'How long does an engagement take?',
+    a: 'A single web application usually takes one to two weeks, including the report. Larger scopes take longer. We agree the testing window and the report date in the written scope.',
+  },
+  {
+    q: 'Will testing disrupt our systems?',
+    a: 'We test inside the agreed window, avoid destructive techniques unless you approve them in writing, and stop straight away if a system becomes unstable. If production is sensitive, we can test a staging copy instead.',
+  },
+  {
+    q: 'Do you sign an NDA?',
+    a: 'Yes. We sign your NDA, or provide ours, before you share any details about your systems.',
+  },
+  {
+    q: 'What do we receive at the end?',
+    a: 'A report with an executive summary for management and, for every finding, the evidence, the business impact and the steps to fix it. Once your team has made the fixes, we retest and update the report.',
+  },
+];
+
+const jsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+});
+---
+
+<section id="faq" class="section" aria-labelledby="faq-title">
+  <div class="container layout">
+    <div class="side">
+      <h2 id="faq-title">Questions buyers ask first</h2>
+      <p>Anything else, ask us directly. We answer in plain language.</p>
+    </div>
+    <div class="list">
+      {
+        faqs.map((f) => (
+          <details class="qa" name="faq">
+            <summary>
+              <span>{f.q}</span>
+              <Icon name="caret-down" class="icon caret" />
+            </summary>
+            <div class="answer">
+              <p>{f.a}</p>
+            </div>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+  <script type="application/ld+json" set:html={jsonLd} />
+</section>
+
+<style>
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    gap: clamp(2rem, 1rem + 4vw, 5rem);
+    align-items: start;
+  }
+
+  .side {
+    display: grid;
+    gap: var(--s-3);
+    position: sticky;
+    top: calc(var(--header-h) + var(--s-6));
+  }
+
+  .side p {
+    color: var(--ink-2);
+  }
+
+  .list {
+    border-top: 1px solid var(--line);
+  }
+
+  .qa {
+    border-bottom: 1px solid var(--line);
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    min-height: 3.5rem;
+    padding-block: var(--s-4);
+    font-size: var(--step-1);
+    font-weight: 620;
+    font-stretch: 104%;
+    line-height: 1.3;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary:hover span {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 0.2em;
+  }
+
+  summary :global(.caret) {
+    flex: none;
+    color: var(--ink-3);
+    transition: transform 200ms var(--ease-out);
+  }
+
+  .qa[open] summary :global(.caret) {
+    transform: rotate(180deg);
+    color: var(--accent);
+  }
+
+  .answer {
+    padding-bottom: var(--s-5);
+  }
+
+  .answer p {
+    color: var(--ink-2);
+    max-width: 62ch;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .qa[open] .answer {
+      animation: reveal 260ms var(--ease-out);
+    }
+  }
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (max-width: 54rem) {
+    .layout {
+      grid-template-columns: 1fr;
+    }
+
+    .side {
+      position: static;
+    }
+  }
+</style>

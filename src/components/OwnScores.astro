@@ -1,0 +1,147 @@
+---
+import Icon from './Icon.astro';
+import { site } from '../data/site';
+
+const host = new URL(site.url).hostname;
+
+const scores = [
+  {
+    scanner: 'Mozilla HTTP Observatory',
+    grade: 'A+',
+    what: 'Security headers, including a strict Content Security Policy.',
+    href: `https://developer.mozilla.org/en-US/observatory/analyze?host=${host}`,
+    linkLabel: 'View the report',
+    external: true,
+  },
+  {
+    scanner: 'Qualys SSL Labs',
+    grade: 'A+',
+    what: 'TLS 1.2 and 1.3 only, with HSTS on every response.',
+    href: `https://www.ssllabs.com/ssltest/analyze.html?d=${host}&hideResults=on`,
+    linkLabel: 'View the report',
+    external: true,
+  },
+  {
+    scanner: 'Email spoofing',
+    grade: 'Reject',
+    what: 'DMARC tells receiving servers to refuse email that fakes our domain.',
+    href: `/#check=${host}`,
+    linkLabel: 'Run the check on us',
+    external: false,
+  },
+];
+---
+
+<section class="scores" aria-labelledby="scores-title">
+  <div class="container">
+    <div class="intro">
+      <h2 id="scores-title">We test our own site first</h2>
+      <p>Independent scanners grade this website. We re-run the checks automatically and fix anything that slips.</p>
+    </div>
+    <ul class="grid">
+      {
+        scores.map((s) => (
+          <li class="cell">
+            <p class="scanner">{s.scanner}</p>
+            <p class="grade" translate="no">
+              {s.grade}
+            </p>
+            <p class="what">{s.what}</p>
+            <a href={s.href} class="report" rel={s.external ? 'noopener' : undefined}>
+              {s.linkLabel}
+              {s.external && <Icon name="arrow-up-right" class="icon ext" />}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .scores {
+    padding-block: 0 clamp(3rem, 2rem + 4vw, 5rem);
+  }
+
+  .intro {
+    display: grid;
+    gap: var(--s-3);
+    margin-bottom: var(--s-6);
+  }
+
+  h2 {
+    font-size: var(--step-2);
+  }
+
+  .intro p {
+    color: var(--ink-2);
+    max-width: 60ch;
+  }
+
+  .grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    background: var(--raised);
+    overflow: hidden;
+  }
+
+  .cell {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: var(--s-2);
+    padding: clamp(1.25rem, 1rem + 1.2vw, 1.75rem);
+  }
+
+  .cell + .cell {
+    border-left: 1px solid var(--line);
+  }
+
+  .scanner {
+    color: var(--ink-2);
+    font-weight: 600;
+    font-size: var(--step--1);
+  }
+
+  .grade {
+    font-size: clamp(2.25rem, 1.75rem + 2vw, 3.25rem);
+    font-weight: 750;
+    font-stretch: 118%;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .what {
+    color: var(--ink-2);
+    font-size: var(--step--1);
+  }
+
+  .report {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
+    width: fit-content;
+    margin-top: var(--s-2);
+    font-weight: 600;
+    font-size: var(--step--1);
+  }
+
+  .report :global(.ext) {
+    width: 1em;
+    height: 1em;
+  }
+
+  @media (max-width: 48rem) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+
+    .cell + .cell {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+  }
+</style>

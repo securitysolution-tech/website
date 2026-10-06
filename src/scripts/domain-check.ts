@@ -149,6 +149,16 @@ function init(root: HTMLElement) {
     if (linked) root.scrollIntoView({ block: 'start' });
     run(autorun);
   }
+
+  // In-page links such as "/#check=example.com" only change the hash.
+  window.addEventListener('hashchange', () => {
+    const domain = fromHash();
+    if (!domain) return;
+    input.value = domain;
+    clearError();
+    root.scrollIntoView({ block: 'start', behavior: reduce.matches ? 'auto' : 'smooth' });
+    run(domain);
+  });
 }
 
 document.querySelectorAll<HTMLElement>('[data-domain-check]').forEach(init);

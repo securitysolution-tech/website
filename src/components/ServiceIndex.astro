@@ -1,4 +1,5 @@
 ---
+import Icon from './Icon.astro';
 import { services } from '../data/services';
 ---
 
@@ -13,9 +14,14 @@ import { services } from '../data/services';
       {
         services.map((s) => (
           <li class="svc">
-            <h3>
-              <a href={`/services/${s.slug}/`}>{s.name}</a>
-            </h3>
+            <div class="svc-head">
+              <span class="svc-icon" aria-hidden="true">
+                <Icon name={s.icon} />
+              </span>
+              <h3>
+                <a href={`/services/${s.slug}/`}>{s.name}</a>
+              </h3>
+            </div>
             <div class="svc-body">
               <p class="svc-summary">{s.summary}</p>
               <ul class="svc-items" aria-label={`${s.name} includes`}>
@@ -47,6 +53,39 @@ import { services } from '../data/services';
 
   .svc:last-child {
     border-bottom: 1px solid var(--line);
+  }
+
+  .svc-head {
+    display: grid;
+    gap: var(--s-4);
+    align-content: start;
+    justify-items: start;
+  }
+
+  .svc-icon {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-control);
+    background: var(--accent-tint);
+    color: var(--accent);
+    transition:
+      background-color 200ms ease,
+      color 200ms ease,
+      transform 200ms var(--ease-out);
+  }
+
+  .svc-icon :global(svg) {
+    width: 1.625rem;
+    height: 1.625rem;
+  }
+
+  .svc:hover .svc-icon,
+  .svc:has(a:focus-visible) .svc-icon {
+    background: var(--accent);
+    color: var(--on-accent);
+    transform: translateY(-2px);
   }
 
   h3 {

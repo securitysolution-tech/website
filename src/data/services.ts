@@ -6,6 +6,7 @@ export interface ServiceItem {
 export interface Service {
   slug: string;
   name: string;
+  icon: 'crosshair' | 'shield-check' | 'scales' | 'cloud-check';
   /** One sentence for the home page index. */
   summary: string;
   /** Opening paragraph on the service page. */
@@ -22,6 +23,7 @@ export interface Service {
 export const services: Service[] = [
   {
     slug: 'offensive-testing',
+    icon: 'crosshair',
     name: 'Offensive testing',
     summary:
       'We test your web apps, APIs, networks and cloud the way a real attacker would, then show you how to close every gap we find.',
@@ -69,6 +71,7 @@ export const services: Service[] = [
   },
   {
     slug: 'defensive-operations',
+    icon: 'shield-check',
     name: 'Defensive operations',
     summary:
       'We set up monitoring that spots attacks early, prepare your team for incidents, and harden the systems attackers try first.',
@@ -112,6 +115,7 @@ export const services: Service[] = [
   },
   {
     slug: 'governance-compliance',
+    icon: 'scales',
     name: 'Governance & compliance',
     summary:
       'We get you ready for the security standards your customers and regulators ask about, with policies and training your staff will follow.',
@@ -160,6 +164,7 @@ export const services: Service[] = [
   },
   {
     slug: 'ai-cloud-security',
+    icon: 'cloud-check',
     name: 'AI & cloud security',
     summary:
       'We test the AI features and cloud accounts your business now depends on, before someone else finds the weak point.',

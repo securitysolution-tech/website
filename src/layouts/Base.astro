@@ -24,10 +24,12 @@ const csp = [
   "style-src 'self'",
   "img-src 'self' data:",
   "font-src 'self'",
-  'connect-src https://cloudflare-dns.com https://dns.google',
+  "connect-src 'self' https://cloudflare-dns.com https://dns.google",
   "manifest-src 'self'",
   "base-uri 'none'",
   "form-action 'self'",
+  "require-trusted-types-for 'script'",
+  "trusted-types 'none'",
   'upgrade-insecure-requests',
 ].join('; ');
 

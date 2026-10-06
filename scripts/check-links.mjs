@@ -48,7 +48,8 @@ for (const [pagePath, { html }] of pages) {
         continue;
       }
     }
-    if (url.hash && url.hash !== '#') {
+    // "#check=domain" is state for the domain check, not an element id.
+    if (url.hash && url.hash !== '#' && !url.hash.startsWith('#check=')) {
       targetPage ??= pages.get(target);
       const id = decodeURIComponent(url.hash.slice(1));
       if (!targetPage || !targetPage.ids.has(id)) problems.push(`${pagePath}: missing anchor ${value}`);
