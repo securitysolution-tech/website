@@ -24,10 +24,10 @@ const files = [];
 
 const problems = [];
 for (const file of files) {
-  // Scripts and styles are code, not copy; everything else (text and attributes) is checked.
-  const html = readFileSync(file, 'utf8')
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '');
+  // The whole page is checked: text, attributes and the JSON-LD blocks, whose
+  // descriptions and FAQ answers search engines show. Pages carry no inline
+  // code (styles and scripts are external files), so there is nothing to strip.
+  const html = readFileSync(file, 'utf8');
   for (const { re, why } of rules) {
     const match = html.match(re);
     if (match) {
