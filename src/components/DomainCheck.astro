@@ -125,6 +125,9 @@ const checks = [
     display: grid;
     gap: var(--s-5);
     align-content: start;
+    align-self: start;
+    position: sticky;
+    top: calc(var(--header-h) + var(--s-5));
   }
 
   .panel-results {
@@ -136,6 +139,10 @@ const checks = [
   @media (max-width: 60rem) {
     .instrument {
       grid-template-columns: 1fr;
+    }
+
+    .panel-intro {
+      position: static;
     }
   }
 
