@@ -17,6 +17,7 @@ env:
 
 jobs:
   build:
+    name: Check, build and test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -40,11 +41,12 @@ jobs:
           include-hidden-files: true
 
   deploy:
+    name: Publish to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
     permissions:
-      pages: write
-      id-token: write
+      pages: write # Publish the build to GitHub Pages
+      id-token: write # Prove the deployment comes from this workflow (OIDC)
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

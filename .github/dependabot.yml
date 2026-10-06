@@ -4,13 +4,25 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Wait a week before proposing a new release, so a compromised or broken
+    # version is usually caught upstream first. Security updates still arrive
+    # immediately.
+    cooldown:
+      default-days: 7
     groups:
       astro:
         patterns:
           - astro
           - '@astrojs/*'
+    ignore:
+      # @astrojs/check supports TypeScript 5 and 6 only. Lift this once it
+      # accepts TypeScript 7.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
