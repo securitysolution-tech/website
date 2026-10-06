@@ -11,7 +11,7 @@ const links = [
 ];
 ---
 
-<header class="site-header">
+<header class="site-header ink">
   <div class="container bar">
     <a class="brand" href="/">
       <Mark />
@@ -31,7 +31,7 @@ const links = [
         <Icon name="x" class="icon icon-close" />
         <span>Menu</span>
       </summary>
-      <nav class="menu-panel" aria-label="Main menu">
+      <nav class="menu-panel ink" aria-label="Main menu">
         <ul>
           {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
         </ul>
@@ -55,8 +55,7 @@ const links = [
     position: sticky;
     top: 0;
     z-index: 50;
-    background: var(--paper);
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--ink-line);
   }
 
   .bar {
@@ -72,7 +71,7 @@ const links = [
     align-items: center;
     gap: 0.625rem;
     text-decoration: none;
-    color: var(--ink);
+    color: var(--ink-text);
   }
 
   .wordmark {
@@ -97,15 +96,20 @@ const links = [
 
   .nav-desktop ul a,
   .menu-panel ul a {
-    color: var(--ink-2);
+    color: var(--ink-text-2);
     font-weight: 540;
     text-decoration: none;
+    transition: color 150ms ease;
   }
 
   .nav-desktop ul a:hover,
   .menu-panel ul a:hover {
-    color: var(--ink);
-    text-decoration: underline;
+    color: var(--ink-text);
+  }
+
+  .nav-desktop .btn {
+    min-height: 2.625rem;
+    padding-inline: 1.1rem;
   }
 
   .nav-mobile {
@@ -121,14 +125,29 @@ const links = [
       display: block;
     }
 
+    .bar {
+      gap: var(--s-3);
+    }
+
+    .brand {
+      min-width: 0;
+      gap: var(--s-2);
+    }
+
+    .wordmark {
+      font-size: 0.9375rem;
+      font-stretch: 106%;
+    }
+
     .menu-btn {
       display: inline-flex;
       align-items: center;
       gap: var(--s-2);
       min-height: 2.75rem;
       padding: 0 0.875rem;
-      border: 1px solid var(--line-strong);
+      border: 1px solid var(--ink-control);
       border-radius: var(--radius-control);
+      color: var(--ink-text);
       font-weight: 600;
       cursor: pointer;
       list-style: none;
@@ -149,20 +168,6 @@ const links = [
       display: block;
     }
 
-    .bar {
-      gap: var(--s-3);
-    }
-
-    .brand {
-      min-width: 0;
-      gap: var(--s-2);
-    }
-
-    .wordmark {
-      font-size: 0.9375rem;
-      font-stretch: 106%;
-    }
-
     .menu-panel {
       position: absolute;
       left: 0;
@@ -171,8 +176,7 @@ const links = [
       display: grid;
       gap: var(--s-5);
       padding: var(--s-5) var(--gutter) var(--s-6);
-      background: var(--paper);
-      border-bottom: 1px solid var(--line);
+      border-bottom: 1px solid var(--ink-line);
     }
 
     .menu-panel ul {
@@ -184,7 +188,7 @@ const links = [
       display: block;
       padding: var(--s-2) 0;
       font-size: var(--step-1);
-      color: var(--ink);
+      color: var(--ink-text);
     }
   }
 

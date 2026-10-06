@@ -18,7 +18,7 @@ const others = services.filter((s) => s.slug !== service.slug);
 
 <Base title={service.seoTitle} description={service.seoDescription}>
   <article>
-    <header class="page-head">
+    <header class="page-head ink">
       <div class="container">
         <nav class="crumbs" aria-label="Breadcrumb">
           <a href="/#services">Services</a>
@@ -81,8 +81,12 @@ const others = services.filter((s) => s.slug !== service.slug);
 
 <style>
   .page-head {
-    padding-block: clamp(2.5rem, 1.5rem + 4vw, 5rem) clamp(2.5rem, 1.5rem + 3vw, 4rem);
-    border-bottom: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+    padding-block: clamp(3rem, 2rem + 5vw, 6rem) clamp(3rem, 2rem + 4vw, 5rem);
+    background:
+      radial-gradient(70% 90% at 100% 100%, rgb(98 211 166 / 0.14), transparent 65%),
+      var(--ink-bg);
   }
 
   .page-head .container {
@@ -92,7 +96,7 @@ const others = services.filter((s) => s.slug !== service.slug);
   }
 
   .crumbs a {
-    color: var(--ink-2);
+    color: var(--ink-text-2);
     font-weight: 560;
   }
 

@@ -1,44 +1,133 @@
 ---
 import DomainCheck from './DomainCheck.astro';
 import { contactCta } from '../data/site';
+
+const headline = 'Know where you’re exposed, and what to fix first.';
+const words = headline.split(' ');
+
+// Real records and headers from this site, used as a quiet backdrop.
+const records = [
+  '_dmarc.securitysolution.tech.   TXT   "v=DMARC1; p=reject; sp=reject"',
+  'securitysolution.tech.   DS   2371 13 2 83D179A04A2DDD7173869A47E1A5E861',
+  'content-security-policy: default-src \'none\'; script-src \'self\'; frame-ancestors \'none\'',
+  'securitysolution.tech.   CAA   0 issue "letsencrypt.org"',
+  'strict-transport-security: max-age=15552000; includeSubDomains',
+  'securitysolution.tech.   TXT   "v=spf1 include:_spf.mx.cloudflare.net ~all"',
+];
 ---
 
-<section class="hero" aria-labelledby="hero-title">
-  <div class="container">
-    <div class="intro">
-      <h1 id="hero-title">Know where you’re exposed, and what to fix first.</h1>
-      <p class="lead">
-        Penetration testing, security monitoring and compliance readiness for UAE companies, from the people who do the
-        testing.
-      </p>
-      <div class="actions">
-        <a class="btn btn-primary" href={contactCta.href}>{contactCta.label}</a>
-        <a class="btn btn-secondary" href="/#services">See services</a>
-      </div>
+<section class="hero ink" aria-labelledby="hero-title">
+  <div class="backdrop" aria-hidden="true">
+    {records.map((r) => <p data-r={r} />)}
+  </div>
+  <div class="glow" aria-hidden="true"></div>
+
+  <div class="container intro">
+    <h1 id="hero-title">
+      {
+        words.map((w) => (
+          <>
+            <span class="w">{w}</span>{' '}
+          </>
+        ))
+      }
+    </h1>
+    <p class="lead">
+      Penetration testing, security monitoring and compliance readiness for UAE companies, from the people who do the
+      testing.
+    </p>
+    <div class="actions">
+      <a class="btn btn-primary" href={contactCta.href}>{contactCta.label}</a>
+      <a class="btn btn-secondary" href="/#services">See services</a>
     </div>
-    <DomainCheck />
   </div>
 </section>
 
+<div class="container check-wrap">
+  <DomainCheck />
+</div>
+
 <style>
   .hero {
-    padding-block: clamp(2.5rem, 1.5rem + 4vw, 4.5rem) clamp(4rem, 3rem + 4vw, 6rem);
+    --overlap: clamp(5rem, 2.5rem + 9vw, 10rem);
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    padding-block: clamp(3rem, 2rem + 5vw, 6rem) calc(var(--overlap) + clamp(3rem, 2rem + 3vw, 4.5rem));
+  }
+
+  /* Sits below the headline and right of the copy, so it never competes with the text. */
+  .backdrop {
+    position: absolute;
+    inset: 38% 0 0 0;
+    z-index: -1;
+    display: grid;
+    align-content: start;
+    justify-items: end;
+    padding-right: 3vw;
+    gap: clamp(1.1rem, 0.6rem + 1.6vw, 2rem);
+    font-family: var(--mono);
+    font-size: clamp(0.85rem, 0.65rem + 0.8vw, 1.15rem);
+    white-space: nowrap;
+    color: var(--ink-text);
+    opacity: 0.09;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 54%, #000 72%, #000 94%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, transparent 54%, #000 72%, #000 94%, transparent 100%);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  @media (max-width: 54rem) {
+    .backdrop {
+      display: none;
+    }
+  }
+
+  .backdrop p {
+    max-width: none;
+    margin: 0;
+  }
+
+  /* Rendered as generated content: pure decoration, never read as page text. */
+  .backdrop p::before {
+    content: attr(data-r);
+  }
+
+  .backdrop p:nth-child(odd) {
+    transform: translateX(-4%);
+  }
+
+  .backdrop p:nth-child(even) {
+    transform: translateX(3%);
+  }
+
+  .glow {
+    position: absolute;
+    z-index: -1;
+    right: -10%;
+    bottom: -35%;
+    width: min(70vw, 900px);
+    aspect-ratio: 1;
+    background: radial-gradient(closest-side, rgb(98 211 166 / 0.17), transparent);
+    pointer-events: none;
   }
 
   .intro {
     display: grid;
     gap: var(--s-5);
-    margin-bottom: clamp(2.5rem, 1.5rem + 3vw, 3.75rem);
+    justify-items: start;
   }
 
   h1 {
-    max-width: 24ch;
+    max-width: 22ch;
     font-stretch: 116%;
     font-weight: 700;
+    color: var(--ink-text);
   }
 
   .lead {
     max-width: 54ch;
+    color: var(--ink-text-2);
   }
 
   .actions {
@@ -46,5 +135,73 @@ import { contactCta } from '../data/site';
     flex-wrap: wrap;
     gap: var(--s-3);
     margin-top: var(--s-2);
+  }
+
+  .check-wrap {
+    position: relative;
+    z-index: 2;
+    margin-top: calc(-1 * clamp(5rem, 2.5rem + 9vw, 10rem));
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .w {
+      display: inline-block;
+      animation: rise 760ms var(--ease-out) both;
+    }
+
+    .w:nth-child(1) { animation-delay: 40ms; }
+    .w:nth-child(2) { animation-delay: 90ms; }
+    .w:nth-child(3) { animation-delay: 140ms; }
+    .w:nth-child(4) { animation-delay: 190ms; }
+    .w:nth-child(5) { animation-delay: 260ms; }
+    .w:nth-child(6) { animation-delay: 310ms; }
+    .w:nth-child(7) { animation-delay: 360ms; }
+    .w:nth-child(8) { animation-delay: 410ms; }
+    .w:nth-child(9) { animation-delay: 460ms; }
+
+    .lead {
+      animation: rise 760ms var(--ease-out) 540ms both;
+    }
+
+    .actions {
+      animation: rise 760ms var(--ease-out) 620ms both;
+    }
+
+    .backdrop p:nth-child(odd) {
+      animation: drift-left 90s linear infinite alternate;
+    }
+
+    .backdrop p:nth-child(even) {
+      animation: drift-right 110s linear infinite alternate;
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(0.45em);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes drift-left {
+    from {
+      transform: translateX(-4%);
+    }
+    to {
+      transform: translateX(-14%);
+    }
+  }
+
+  @keyframes drift-right {
+    from {
+      transform: translateX(3%);
+    }
+    to {
+      transform: translateX(-7%);
+    }
   }
 </style>

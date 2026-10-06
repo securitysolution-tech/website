@@ -34,6 +34,16 @@
   --p-fail: #ff8f80;
   --p-info: #9fb8d4;
 
+  /* Ink bands: header, hero, process, contact and footer */
+  --ink-bg: #0c1813;
+  --ink-raised: #12211b;
+  --ink-line: #24372e;
+  --ink-text: #eaf1ed;
+  --ink-text-2: #a9bbb2;
+  --ink-accent: #62d3a6;
+  --ink-accent-hover: #86e0bd;
+  --ink-control: #577266;
+
   --font: 'Archivo Variable', 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace;
 
@@ -83,7 +93,47 @@
     --focus: #5fcda0;
     --panel: #131f1a;
     --panel-2: #0a120f;
+    --ink-bg: #070f0c;
+    --ink-raised: #0f1b16;
+    --ink-line: #1d2d26;
   }
+}
+
+/* A dark band. Everything inside reads its colours from the ink tokens. */
+.ink {
+  background: var(--ink-bg);
+  color: var(--ink-text);
+  --focus: var(--ink-accent);
+  --mark-core: var(--ink-accent);
+}
+
+.ink .btn-primary {
+  background: var(--ink-accent);
+  color: #07130e;
+}
+
+.ink .btn-primary:hover {
+  background: var(--ink-accent-hover);
+}
+
+.ink .btn-secondary {
+  color: var(--ink-text);
+  border-color: var(--ink-control);
+}
+
+.ink .btn-secondary:hover {
+  background: rgb(255 255 255 / 0.06);
+  border-color: var(--ink-text-2);
+}
+
+.ink .section-head p,
+.ink .lead {
+  color: var(--ink-text-2);
+}
+
+.ink ::selection {
+  background: var(--ink-accent);
+  color: #07130e;
 }
 
 *,

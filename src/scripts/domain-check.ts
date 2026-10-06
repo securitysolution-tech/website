@@ -12,6 +12,8 @@ function init(root: HTMLElement) {
   const list = root.querySelector<HTMLOListElement>('[data-results]')!;
   const target = root.querySelector<HTMLElement>('[data-target]')!;
   const targetName = root.querySelector<HTMLElement>('[data-target-name]')!;
+  const targetOwn = root.querySelector<HTMLElement>('[data-target-own]')!;
+  const ownDomain = root.dataset.autorun ?? '';
   const verdict = root.querySelector<HTMLElement>('[data-verdict]')!;
   const announce = root.querySelector<HTMLElement>('[data-announce]')!;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -80,6 +82,7 @@ function init(root: HTMLElement) {
     verdict.hidden = true;
     announce.textContent = '';
     targetName.textContent = domain;
+    targetOwn.hidden = domain !== ownDomain;
     target.hidden = false;
     rows.forEach((li) => setState(li, 'checking', 'Looking this up…'));
 
@@ -143,11 +146,13 @@ function init(root: HTMLElement) {
     }
   };
   const linked = fromHash();
-  const autorun = linked ?? root.dataset.autorun;
-  if (autorun) {
-    input.value = autorun;
-    if (linked) root.scrollIntoView({ block: 'start' });
-    run(autorun);
+  if (linked) {
+    input.value = linked;
+    root.scrollIntoView({ block: 'start' });
+    run(linked);
+  } else if (ownDomain) {
+    // Show our own results on load, and leave the field empty for the visitor's domain.
+    run(ownDomain);
   }
 
   // In-page links such as "/#check=example.com" only change the hash.

@@ -29,6 +29,14 @@ const scores = [
     linkLabel: 'Run the check on us',
     external: false,
   },
+  {
+    scanner: 'DNSSEC',
+    grade: 'Signed',
+    what: 'Our DNS answers are signed, so they cannot be forged on the way to you.',
+    href: `https://dnsviz.net/d/${host}/dnssec/`,
+    linkLabel: 'See the chain of trust',
+    external: true,
+  },
 ];
 ---
 
@@ -60,7 +68,7 @@ const scores = [
 
 <style>
   .scores {
-    padding-block: 0 clamp(3rem, 2rem + 4vw, 5rem);
+    padding-block: clamp(3.5rem, 2.5rem + 4vw, 6rem) clamp(3rem, 2rem + 4vw, 5rem);
   }
 
   .intro {
@@ -78,13 +86,15 @@ const scores = [
     max-width: 60ch;
   }
 
+  /* 1px gaps over a line-coloured background draw the dividers at any column count. */
   .grid {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
     border: 1px solid var(--line);
     border-radius: var(--radius-panel);
-    background: var(--raised);
+    background: var(--line);
     overflow: hidden;
   }
 
@@ -93,10 +103,12 @@ const scores = [
     grid-template-rows: auto auto 1fr auto;
     gap: var(--s-2);
     padding: clamp(1.25rem, 1rem + 1.2vw, 1.75rem);
+    background: var(--raised);
+    transition: background-color 200ms ease;
   }
 
-  .cell + .cell {
-    border-left: 1px solid var(--line);
+  .cell:hover {
+    background: var(--paper);
   }
 
   .scanner {
@@ -134,14 +146,15 @@ const scores = [
     height: 1em;
   }
 
-  @media (max-width: 48rem) {
+  @media (max-width: 64rem) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 36rem) {
     .grid {
       grid-template-columns: 1fr;
-    }
-
-    .cell + .cell {
-      border-left: 0;
-      border-top: 1px solid var(--line);
     }
   }
 </style>

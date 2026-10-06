@@ -1,54 +1,152 @@
 ---
+import Icon from './Icon.astro';
 import { contactCta, mailto, site } from '../data/site';
 ---
 
-<section id="contact" class="section contact" aria-labelledby="contact-title">
-  <div class="container">
-    <h2 id="contact-title">{contactCta.label}</h2>
-    <p class="lead">
-      Email us your company name, what you would like tested or reviewed, and your timeline. We reply within one
-      business day to set up a 30-minute call.
-    </p>
-    <a class="address" href={mailto('Scoping call request')}>{site.email}</a>
-    <p class="small">
-      Found a security issue in one of our own systems? Please follow our <a href="/security/">disclosure policy</a>.
-    </p>
+<section id="contact" class="contact ink" aria-labelledby="contact-title">
+  <div class="glow" aria-hidden="true"></div>
+  <div class="container grid">
+    <div class="main">
+      <h2 id="contact-title">{contactCta.label}</h2>
+      <p class="lead">
+        Email us and we will set up a 30-minute call to agree what to test, when, and what is off-limits. You get a written
+        scope and a fixed quote before any testing starts.
+      </p>
+      <a class="address" href={mailto('Scoping call request')}>
+        <Icon name="envelope-simple" class="icon mail" />
+        <span>{site.email.split('@')[0]}<wbr />@{site.email.split('@')[1]}</span>
+      </a>
+      <p class="small">We reply within one business day.</p>
+    </div>
+
+    <div class="include">
+      <h3>Helpful to include</h3>
+      <ul>
+        <li>Your company name and website</li>
+        <li>What you want tested or reviewed</li>
+        <li>Your timeline, and any deadline such as an audit or a launch</li>
+      </ul>
+      <p class="small">
+        Found a security issue in one of our own systems? Please follow our <a href="/security/">disclosure policy</a>.
+      </p>
+    </div>
   </div>
 </section>
 
 <style>
-  .contact .container {
+  .contact {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    padding-block: clamp(4rem, 3rem + 5vw, 7rem);
+  }
+
+  .glow {
+    position: absolute;
+    z-index: -1;
+    left: -15%;
+    top: -40%;
+    width: min(80vw, 1000px);
+    aspect-ratio: 1;
+    background: radial-gradient(closest-side, rgb(98 211 166 / 0.14), transparent);
+    pointer-events: none;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: clamp(2.5rem, 1.5rem + 4vw, 5rem);
+    align-items: start;
+  }
+
+  .main {
     display: grid;
     gap: var(--s-5);
     justify-items: start;
   }
 
   h2 {
-    font-size: var(--step-3);
+    font-size: var(--step-4);
+    font-stretch: 116%;
   }
 
   .lead {
-    max-width: 56ch;
+    max-width: 52ch;
   }
 
   .address {
-    font-size: clamp(1.6rem, 0.9rem + 3.6vw, 3.5rem);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-3);
+    font-size: clamp(1.2rem, 0.85rem + 1.8vw, 2.125rem);
     font-weight: 680;
-    font-stretch: 112%;
+    font-stretch: 108%;
     letter-spacing: -0.02em;
-    line-height: 1.1;
-    color: var(--accent);
+    line-height: 1.15;
+    color: var(--ink-accent);
     text-decoration-thickness: 2px;
-    text-underline-offset: 0.15em;
-    word-break: break-word;
+    text-underline-offset: 0.18em;
+  }
+
+  .address :global(.mail) {
+    flex: none;
+    width: 1em;
+    height: 1em;
   }
 
   .address:hover {
-    text-decoration-thickness: 4px;
+    color: var(--ink-accent-hover);
+    text-decoration-thickness: 3px;
   }
 
   .small {
-    color: var(--ink-3);
+    color: var(--ink-text-2);
     font-size: var(--step--1);
+  }
+
+  .small a {
+    color: var(--ink-text);
+  }
+
+  .include {
+    display: grid;
+    gap: var(--s-4);
+    padding: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
+    border: 1px solid var(--ink-line);
+    border-radius: var(--radius-panel);
+    background: rgb(255 255 255 / 0.03);
+  }
+
+  h3 {
+    font-size: var(--step-1);
+  }
+
+  .include ul {
+    list-style: none;
+    display: grid;
+    gap: var(--s-3);
+  }
+
+  .include li {
+    position: relative;
+    padding-left: 1.6rem;
+    color: var(--ink-text);
+  }
+
+  .include li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.5em;
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 2px;
+    background: var(--ink-accent);
+  }
+
+  @media (max-width: 54rem) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

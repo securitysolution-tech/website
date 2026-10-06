@@ -10,26 +10,25 @@ import { services } from '../data/services';
       <p>Start with the service you need now, and let the report tell you what to look at next.</p>
     </div>
 
-    <ul class="index">
+    <ul class="bento">
       {
-        services.map((s) => (
-          <li class="svc">
-            <div class="svc-head">
-              <span class="svc-icon" aria-hidden="true">
-                <Icon name={s.icon} />
-              </span>
-              <h3>
-                <a href={`/services/${s.slug}/`}>{s.name}</a>
-              </h3>
-            </div>
-            <div class="svc-body">
-              <p class="svc-summary">{s.summary}</p>
-              <ul class="svc-items" aria-label={`${s.name} includes`}>
-                {s.items.map((i) => (
-                  <li>{i.name}</li>
-                ))}
-              </ul>
-            </div>
+        services.map((s, i) => (
+          <li class:list={['card', `card-${i + 1}`, { ink: i === 0 }]}>
+            <span class="chip" aria-hidden="true">
+              <Icon name={s.icon} />
+            </span>
+            <h3>
+              <a href={`/services/${s.slug}/`}>{s.name}</a>
+            </h3>
+            <p class="summary">{s.summary}</p>
+            <ul class="items" aria-label={`${s.name} includes`}>
+              {(i === 0 ? s.items : s.items.slice(0, 4)).map((item) => (
+                <li>{item.name}</li>
+              ))}
+            </ul>
+            <span class="more" aria-hidden="true">
+              See how we do it
+            </span>
           </li>
         ))
       }
@@ -38,131 +37,198 @@ import { services } from '../data/services';
 </section>
 
 <style>
-  .index {
+  .bento {
     list-style: none;
-  }
-
-  .svc {
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
-    gap: var(--s-6);
-    padding-block: clamp(1.75rem, 1.25rem + 1.5vw, 2.5rem);
-    border-top: 1px solid var(--line);
-  }
-
-  .svc:last-child {
-    border-bottom: 1px solid var(--line);
-  }
-
-  .svc-head {
     display: grid;
     gap: var(--s-4);
-    align-content: start;
-    justify-items: start;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'a b c'
+      'a d d';
   }
 
-  .svc-icon {
+  .card-1 {
+    grid-area: a;
+  }
+  .card-2 {
+    grid-area: b;
+  }
+  .card-3 {
+    grid-area: c;
+  }
+  .card-4 {
+    grid-area: d;
+  }
+
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    padding: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    background: var(--raised);
+    transition:
+      transform 240ms var(--ease-out),
+      border-color 240ms ease,
+      box-shadow 240ms ease;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+    box-shadow: 0 28px 50px -30px rgb(19 33 27 / 0.4);
+  }
+
+  .card.ink {
+    border-color: var(--ink-line);
+    background:
+      radial-gradient(120% 70% at 100% 100%, rgb(98 211 166 / 0.14), transparent 60%),
+      var(--ink-raised);
+  }
+
+  .card.ink:hover {
+    border-color: rgb(98 211 166 / 0.45);
+    box-shadow: 0 30px 60px -30px rgb(6 16 12 / 0.8);
+  }
+
+  .chip {
     display: grid;
     place-items: center;
     width: 3rem;
     height: 3rem;
+    margin-bottom: var(--s-2);
     border-radius: var(--radius-control);
     background: var(--accent-tint);
     color: var(--accent);
-    transition:
-      background-color 200ms ease,
-      color 200ms ease,
-      transform 200ms var(--ease-out);
+    transition: transform 240ms var(--ease-out);
   }
 
-  .svc-icon :global(svg) {
+  .ink .chip {
+    background: rgb(98 211 166 / 0.13);
+    color: var(--ink-accent);
+  }
+
+  .chip :global(svg) {
     width: 1.625rem;
     height: 1.625rem;
   }
 
-  .svc:hover .svc-icon,
-  .svc:has(a:focus-visible) .svc-icon {
-    background: var(--accent);
-    color: var(--on-accent);
-    transform: translateY(-2px);
+  .card:hover .chip {
+    transform: translateY(-2px) rotate(-4deg);
   }
 
   h3 {
     font-size: var(--step-2);
-    font-stretch: 116%;
+    font-stretch: 114%;
   }
 
   h3 a {
     text-decoration: none;
   }
 
-  /* The whole row is the link target; the heading carries the accessible name. */
+  /* The heading link covers the whole card. */
   h3 a::after {
     content: '';
     position: absolute;
     inset: 0;
-  }
-
-  .svc:hover h3 a,
-  h3 a:focus-visible {
-    text-decoration: underline;
-    text-decoration-thickness: 2px;
-    text-decoration-color: var(--accent);
+    border-radius: inherit;
   }
 
   h3 a:focus-visible {
     outline: none;
   }
 
-  .svc:has(a:focus-visible) {
+  .card:has(a:focus-visible) {
     outline: 3px solid var(--focus);
-    outline-offset: 4px;
-    border-radius: 4px;
+    outline-offset: 3px;
   }
 
-  .svc-body {
-    display: grid;
-    gap: var(--s-4);
+  .summary {
+    color: var(--ink-2);
+    line-height: 1.5;
   }
 
-  .svc-summary {
-    font-size: var(--step-1);
-    line-height: 1.45;
-    max-width: 48ch;
+  .ink .summary {
+    color: var(--ink-text-2);
   }
 
-  .svc-items {
+  .items {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--s-2) var(--s-6);
-    color: var(--ink-2);
+    gap: var(--s-2);
+    margin-top: var(--s-2);
     font-size: var(--step--1);
+    color: var(--ink-2);
   }
 
-  .svc-items li {
-    padding-left: 1rem;
+  .ink .items {
+    color: var(--ink-text-2);
+  }
+
+  .card-4 .items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--s-6);
+  }
+
+  .items li {
     position: relative;
+    padding-left: 1.1rem;
   }
 
-  .svc-items li::before {
+  .items li::before {
     content: '';
     position: absolute;
     left: 0;
-    top: 0.62em;
-    width: 0.375rem;
-    height: 1px;
-    background: var(--ink-3);
+    top: 0.55em;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0.8;
   }
 
-  @media (max-width: 48rem) {
-    .svc {
+  .ink .items li::before {
+    background: var(--ink-accent);
+  }
+
+  .more {
+    margin-top: auto;
+    padding-top: var(--s-4);
+    font-weight: 620;
+    font-size: var(--step--1);
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+  }
+
+  .ink .more {
+    color: var(--ink-accent);
+  }
+
+  .card:hover .more {
+    text-decoration-thickness: 2px;
+  }
+
+  @media (max-width: 60rem) {
+    .bento {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas:
+        'a a'
+        'b c'
+        'd d';
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .bento {
       grid-template-columns: 1fr;
-      gap: var(--s-4);
+      grid-template-areas: 'a' 'b' 'c' 'd';
     }
 
-    .svc-items {
+    .card-4 .items {
       grid-template-columns: 1fr;
     }
   }

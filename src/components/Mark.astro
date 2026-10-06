@@ -30,6 +30,6 @@ const { size = 28, class: className = '' } = Astro.props;
     flex: none;
   }
   .mark-core {
-    fill: var(--accent);
+    fill: var(--mark-core, var(--accent));
   }
 </style>

@@ -23,7 +23,7 @@ const steps = [
 ];
 ---
 
-<section id="approach" class="section approach" aria-labelledby="approach-title">
+<section id="approach" class="section approach ink" aria-labelledby="approach-title">
   <div class="container">
     <div class="section-head">
       <h2 id="approach-title">How an engagement works</h2>
@@ -48,8 +48,11 @@ const steps = [
 
 <style>
   .approach {
-    background: var(--raised);
-    border-block: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(60% 80% at 0% 0%, rgb(98 211 166 / 0.1), transparent 70%),
+      var(--ink-bg);
   }
 
   .steps {
@@ -69,12 +72,12 @@ const steps = [
     left: 1.125rem;
     right: 1.125rem;
     height: 2px;
-    background: var(--line);
+    background: var(--ink-line);
     z-index: 0;
   }
 
   .steps::after {
-    background: var(--accent);
+    background: var(--ink-accent);
     transform-origin: left center;
   }
 
@@ -92,9 +95,9 @@ const steps = [
     width: 2.25rem;
     height: 2.25rem;
     border-radius: 50%;
-    background: var(--paper);
-    border: 2px solid var(--accent);
-    color: var(--accent);
+    background: var(--ink-bg);
+    border: 2px solid var(--ink-accent);
+    color: var(--ink-accent);
     font-weight: 700;
     font-stretch: 112%;
     font-size: var(--step--1);
@@ -107,7 +110,7 @@ const steps = [
   }
 
   .step p {
-    color: var(--ink-2);
+    color: var(--ink-text-2);
     font-size: var(--step--1);
   }
 

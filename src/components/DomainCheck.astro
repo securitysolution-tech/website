@@ -57,7 +57,9 @@ const checks = [
   </div>
 
   <div class="panel-results">
-  <p class="target" data-target hidden>Results for <strong data-target-name translate="no"></strong></p>
+  <p class="target" data-target hidden>
+    Results for <strong data-target-name translate="no"></strong><span data-target-own hidden>, our own domain. Try yours.</span>
+  </p>
 
   <ol class="results" data-results aria-busy="false" aria-label="Check results">
     {
@@ -114,11 +116,12 @@ const checks = [
     padding: clamp(1.25rem, 0.9rem + 1.8vw, 2.25rem);
     background: var(--panel);
     color: var(--panel-ink);
-    border: 1px solid var(--panel-line);
+    border: 1px solid rgb(98 211 166 / 0.24);
     border-radius: var(--radius-panel);
     box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.05),
-      0 30px 60px -30px rgb(19 33 27 / 0.55);
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      0 50px 90px -40px rgb(6 16 12 / 0.75),
+      0 0 0 6px rgb(98 211 166 / 0.04);
   }
 
   .panel-intro {
