@@ -1,0 +1,51 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+---
+
+<Base
+  title="Report a vulnerability"
+  description="How to report a security issue in SecuritySolution.tech websites and systems, and what you can expect from us."
+>
+  <article class="section">
+    <div class="container prose">
+      <h1>Report a vulnerability</h1>
+      <p class="lead">If you find a security issue in one of our websites or systems, we want to hear about it.</p>
+
+      <h2>How to report</h2>
+      <p>
+        Email <a href={`mailto:${site.securityEmail}`}>{site.securityEmail}</a> with a description of the issue, the steps
+        to reproduce it, and the impact you expect. Screenshots or a short proof of concept help us move faster.
+      </p>
+
+      <h2>What you can expect</h2>
+      <ul>
+        <li>We acknowledge your report within 3 business days.</li>
+        <li>We keep you updated while we investigate and fix the issue.</li>
+        <li>Once it is resolved, we credit you publicly if you would like that.</li>
+      </ul>
+
+      <h2>Scope</h2>
+      <p>{site.name} and its subdomains.</p>
+
+      <h2>Please do not</h2>
+      <ul>
+        <li>Access, change or delete data that is not yours.</li>
+        <li>Run denial-of-service tests or high-volume automated scans.</li>
+        <li>Use social engineering, phishing or physical attacks.</li>
+        <li>Share the issue publicly before we have fixed it.</li>
+      </ul>
+
+      <h2>Safe harbour</h2>
+      <p>
+        We will not take legal action against security research that follows this policy in good faith. We do not run a
+        paid bug bounty at the moment.
+      </p>
+
+      <p>
+        Machine-readable contact details are published in our
+        <a href="/.well-known/security.txt">security.txt</a> file.
+      </p>
+    </div>
+  </article>
+</Base>

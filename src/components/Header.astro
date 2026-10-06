@@ -1,0 +1,204 @@
+---
+import Mark from './Mark.astro';
+import Icon from './Icon.astro';
+import { contactCta, site } from '../data/site';
+
+const links = [
+  { label: 'Services', href: '/#services' },
+  { label: 'Approach', href: '/#approach' },
+  { label: 'Team', href: '/#team' },
+];
+---
+
+<header class="site-header">
+  <div class="container bar">
+    <a class="brand" href="/">
+      <Mark />
+      <span class="wordmark" translate="no">{site.name}</span>
+    </a>
+
+    <nav class="nav-desktop" aria-label="Primary">
+      <ul>
+        {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+      </ul>
+      <a class="btn btn-primary" href={contactCta.href}>{contactCta.label}</a>
+    </nav>
+
+    <details class="nav-mobile">
+      <summary class="menu-btn">
+        <Icon name="list" class="icon icon-open" />
+        <Icon name="x" class="icon icon-close" />
+        <span>Menu</span>
+      </summary>
+      <nav class="menu-panel" aria-label="Main menu">
+        <ul>
+          {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+        </ul>
+        <a class="btn btn-primary" href={contactCta.href}>{contactCta.label}</a>
+      </nav>
+    </details>
+  </div>
+</header>
+
+<script>
+  // Close the mobile menu after a link is chosen.
+  document.querySelectorAll<HTMLAnchorElement>('.nav-mobile a').forEach((link) => {
+    link.addEventListener('click', () => {
+      link.closest('details')?.removeAttribute('open');
+    });
+  });
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-5);
+    min-height: var(--header-h);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    text-decoration: none;
+    color: var(--ink);
+  }
+
+  .wordmark {
+    font-weight: 700;
+    font-stretch: 112%;
+    font-size: 1.0625rem;
+    letter-spacing: -0.01em;
+  }
+
+  .nav-desktop {
+    display: flex;
+    align-items: center;
+    gap: var(--s-6);
+  }
+
+  .nav-desktop ul,
+  .menu-panel ul {
+    list-style: none;
+    display: flex;
+    gap: var(--s-5);
+  }
+
+  .nav-desktop ul a,
+  .menu-panel ul a {
+    color: var(--ink-2);
+    font-weight: 540;
+    text-decoration: none;
+  }
+
+  .nav-desktop ul a:hover,
+  .menu-panel ul a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+
+  .nav-mobile {
+    display: none;
+  }
+
+  @media (max-width: 54rem) {
+    .nav-desktop {
+      display: none;
+    }
+
+    .nav-mobile {
+      display: block;
+    }
+
+    .menu-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--s-2);
+      min-height: 2.75rem;
+      padding: 0 0.875rem;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-control);
+      font-weight: 600;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+    }
+
+    .menu-btn::-webkit-details-marker {
+      display: none;
+    }
+
+    /* Icons are injected as raw SVG, so they need :global to be matched. */
+    .menu-btn :global(.icon-close),
+    .nav-mobile[open] .menu-btn :global(.icon-open) {
+      display: none;
+    }
+
+    .nav-mobile[open] .menu-btn :global(.icon-close) {
+      display: block;
+    }
+
+    .bar {
+      gap: var(--s-3);
+    }
+
+    .brand {
+      min-width: 0;
+      gap: var(--s-2);
+    }
+
+    .wordmark {
+      font-size: 0.9375rem;
+      font-stretch: 106%;
+    }
+
+    .menu-panel {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%;
+      display: grid;
+      gap: var(--s-5);
+      padding: var(--s-5) var(--gutter) var(--s-6);
+      background: var(--paper);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .menu-panel ul {
+      flex-direction: column;
+      gap: var(--s-2);
+    }
+
+    .menu-panel ul a {
+      display: block;
+      padding: var(--s-2) 0;
+      font-size: var(--step-1);
+      color: var(--ink);
+    }
+  }
+
+  @media (max-width: 23rem) {
+    .menu-btn {
+      padding: 0 0.75rem;
+    }
+
+    .menu-btn span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+  }
+</style>

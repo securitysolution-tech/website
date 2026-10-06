@@ -1,0 +1,47 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+---
+
+<Base title="Privacy" description="What this website does and does not collect, including how the domain check handles your lookups.">
+  <article class="section">
+    <div class="container prose">
+      <h1>Privacy</h1>
+      <p class="lead">This website does not use cookies, analytics or advertising trackers, and it loads no third-party scripts.</p>
+
+      <h2>The domain check</h2>
+      <p>
+        The check runs in your browser. It sends DNS lookups for the domain you enter straight to Cloudflare’s public DNS
+        resolver and, if that does not answer, to Google Public DNS. We never receive the domain or the results. Cloudflare
+        and Google handle those lookups under their own privacy policies.
+      </p>
+
+      <h2>Hosting</h2>
+      <p>
+        The site is served by GitHub Pages through Cloudflare. Like any web server, they process your IP address and request
+        details to deliver pages and protect the site from abuse.
+      </p>
+
+      <h2>When you email us</h2>
+      <p>
+        We use your message and contact details only to reply and to provide the services you ask about. We do not sell them
+        or share them for marketing, and we keep correspondence only as long as that purpose requires.
+      </p>
+
+      <h2>Your rights</h2>
+      <p>
+        You can ask what personal data we hold about you, and ask us to correct or delete it. Email
+        <a href={`mailto:${site.email}`}>{site.email}</a> and we will respond within 30 days.
+      </p>
+
+      <p class="updated">Last updated 6 October 2026.</p>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .updated {
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+</style>

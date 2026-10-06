@@ -1,0 +1,89 @@
+---
+import Icon from './Icon.astro';
+import { founders } from '../data/site';
+---
+
+<section id="team" class="section" aria-labelledby="team-title">
+  <div class="container">
+    <div class="section-head">
+      <h2 id="team-title">Who you’ll work with</h2>
+      <p>You deal directly with the founders, from the first call to the retest.</p>
+    </div>
+
+    <ul class="people">
+      {
+        founders.map((f) => (
+          <li class="person">
+            <h3>{f.name}</h3>
+            <p class="role">{f.role}</p>
+            <p class="bio">{f.bio}</p>
+            <ul class="links">
+              {f.links.map((l) => (
+                <li>
+                  <a href={l.href} rel="noopener">
+                    <Icon name={l.icon} />
+                    <span>{l.label}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .people {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(2rem, 1rem + 4vw, 5rem);
+  }
+
+  .person {
+    display: grid;
+    gap: var(--s-3);
+    align-content: start;
+    padding-top: var(--s-5);
+    border-top: 3px solid var(--ink);
+  }
+
+  h3 {
+    font-size: var(--step-2);
+    font-stretch: 112%;
+  }
+
+  .role {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .bio {
+    color: var(--ink-2);
+    max-width: 52ch;
+  }
+
+  .links {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+    margin-top: var(--s-2);
+  }
+
+  .links a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 2.75rem;
+    font-weight: 560;
+  }
+
+  @media (max-width: 48rem) {
+    .people {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

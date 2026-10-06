@@ -1,0 +1,41 @@
+---
+// Phosphor icons (MIT), inlined at build time.
+import arrowUpRight from '@phosphor-icons/core/regular/arrow-up-right.svg?raw';
+import checkCircle from '@phosphor-icons/core/regular/check-circle.svg?raw';
+import envelope from '@phosphor-icons/core/regular/envelope-simple.svg?raw';
+import github from '@phosphor-icons/core/regular/github-logo.svg?raw';
+import info from '@phosphor-icons/core/regular/info.svg?raw';
+import linkedin from '@phosphor-icons/core/regular/linkedin-logo.svg?raw';
+import list from '@phosphor-icons/core/regular/list.svg?raw';
+import warning from '@phosphor-icons/core/regular/warning.svg?raw';
+import xCircle from '@phosphor-icons/core/regular/x-circle.svg?raw';
+import x from '@phosphor-icons/core/regular/x.svg?raw';
+
+const icons = {
+  'arrow-up-right': arrowUpRight,
+  'check-circle': checkCircle,
+  'envelope-simple': envelope,
+  'github-logo': github,
+  info,
+  'linkedin-logo': linkedin,
+  list,
+  warning,
+  'x-circle': xCircle,
+  x,
+} as const;
+
+export type IconName = keyof typeof icons;
+
+interface Props {
+  name: IconName;
+  class?: string;
+}
+
+const { name, class: className = 'icon' } = Astro.props;
+const svg = icons[name].replace(
+  '<svg ',
+  `<svg class="${className}" aria-hidden="true" focusable="false" `,
+);
+---
+
+<Fragment set:html={svg} />

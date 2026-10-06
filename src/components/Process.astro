@@ -1,0 +1,179 @@
+---
+const steps = [
+  {
+    title: 'Scope',
+    text: 'A 30-minute call to agree what we test, when, and what is off-limits. You get a written scope and a fixed quote.',
+  },
+  {
+    title: 'Test',
+    text: 'We work inside the agreed window and contact you straight away if we find something critical.',
+  },
+  {
+    title: 'Report',
+    text: 'Findings ranked by business risk, each with evidence, impact and step-by-step fixes.',
+  },
+  {
+    title: 'Fix',
+    text: 'Your team makes the changes. We answer questions along the way.',
+  },
+  {
+    title: 'Retest',
+    text: 'We verify every fix and update the report, so you can share it with customers and auditors.',
+  },
+];
+---
+
+<section id="approach" class="section approach" aria-labelledby="approach-title">
+  <div class="container">
+    <div class="section-head">
+      <h2 id="approach-title">How an engagement works</h2>
+      <p>The same 5 steps whether we are testing one web app or your whole network.</p>
+    </div>
+
+    <ol class="steps">
+      {
+        steps.map((s, i) => (
+          <li class="step">
+            <span class="num" aria-hidden="true">
+              {i + 1}
+            </span>
+            <h3>{s.title}</h3>
+            <p>{s.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .approach {
+    background: var(--raised);
+    border-block: 1px solid var(--line);
+  }
+
+  .steps {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--s-5);
+    position: relative;
+  }
+
+  /* The line that connects the steps: a grey track with an accent fill on top. */
+  .steps::before,
+  .steps::after {
+    content: '';
+    position: absolute;
+    top: 1.125rem;
+    left: 1.125rem;
+    right: 1.125rem;
+    height: 2px;
+    background: var(--line);
+    z-index: 0;
+  }
+
+  .steps::after {
+    background: var(--accent);
+    transform-origin: left center;
+  }
+
+  .step {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: var(--s-3);
+    align-content: start;
+  }
+
+  .num {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    font-weight: 700;
+    font-stretch: 112%;
+    font-size: var(--step--1);
+    position: relative;
+    margin-bottom: var(--s-2);
+  }
+
+  h3 {
+    font-size: var(--step-1);
+  }
+
+  .step p {
+    color: var(--ink-2);
+    font-size: var(--step--1);
+  }
+
+  /* Where supported, the line fills as the section scrolls into view. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .steps::after {
+        animation: fill-x linear both;
+        animation-timeline: view();
+        animation-range: entry 40% cover 55%;
+      }
+    }
+
+    @media (prefers-reduced-motion: no-preference) and (max-width: 60rem) {
+      .steps::after {
+        animation-name: fill-y;
+      }
+    }
+  }
+
+  @keyframes fill-x {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  @keyframes fill-y {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+
+  @media (max-width: 60rem) {
+    .steps {
+      grid-template-columns: 1fr;
+      gap: var(--s-6);
+    }
+
+    .steps::before,
+    .steps::after {
+      top: 1.125rem;
+      bottom: 1.125rem;
+      left: calc(1.125rem - 1px);
+      right: auto;
+      width: 2px;
+      height: auto;
+    }
+
+    .steps::after {
+      transform-origin: center top;
+    }
+
+    .step {
+      grid-template-columns: 2.25rem 1fr;
+      column-gap: var(--s-4);
+    }
+
+    .num {
+      grid-row: span 2;
+      margin-bottom: 0;
+    }
+  }
+</style>

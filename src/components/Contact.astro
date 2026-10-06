@@ -1,0 +1,54 @@
+---
+import { contactCta, mailto, site } from '../data/site';
+---
+
+<section id="contact" class="section contact" aria-labelledby="contact-title">
+  <div class="container">
+    <h2 id="contact-title">{contactCta.label}</h2>
+    <p class="lead">
+      Email us your company name, what you would like tested or reviewed, and your timeline. We reply within one
+      business day to set up a 30-minute call.
+    </p>
+    <a class="address" href={mailto('Scoping call request')}>{site.email}</a>
+    <p class="small">
+      Found a security issue in one of our own systems? Please follow our <a href="/security/">disclosure policy</a>.
+    </p>
+  </div>
+</section>
+
+<style>
+  .contact .container {
+    display: grid;
+    gap: var(--s-5);
+    justify-items: start;
+  }
+
+  h2 {
+    font-size: var(--step-3);
+  }
+
+  .lead {
+    max-width: 56ch;
+  }
+
+  .address {
+    font-size: clamp(1.6rem, 0.9rem + 3.6vw, 3.5rem);
+    font-weight: 680;
+    font-stretch: 112%;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.15em;
+    word-break: break-word;
+  }
+
+  .address:hover {
+    text-decoration-thickness: 4px;
+  }
+
+  .small {
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+</style>

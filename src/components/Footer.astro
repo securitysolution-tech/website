@@ -1,0 +1,137 @@
+---
+import Mark from './Mark.astro';
+import { services } from '../data/services';
+import { contactCta, site } from '../data/site';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container grid">
+    <div class="about">
+      <a class="brand" href="/">
+        <Mark size={24} />
+        <span translate="no">{site.name}</span>
+      </a>
+      <p>
+        Security testing, monitoring and compliance readiness for companies in the {site.location}.
+      </p>
+      <p><a href={`mailto:${site.email}`}>{site.email}</a></p>
+    </div>
+
+    <nav aria-label="Services">
+      <h2>Services</h2>
+      <ul>
+        {services.map((s) => <li><a href={`/services/${s.slug}/`}>{s.name}</a></li>)}
+      </ul>
+    </nav>
+
+    <nav aria-label="Company">
+      <h2>Company</h2>
+      <ul>
+        <li><a href="/#approach">Approach</a></li>
+        <li><a href="/#team">Team</a></li>
+        <li><a href={contactCta.href}>{contactCta.label}</a></li>
+      </ul>
+    </nav>
+
+    <nav aria-label="Trust">
+      <h2>Trust</h2>
+      <ul>
+        <li><a href="/security/">Report a vulnerability</a></li>
+        <li><a href="/privacy/">Privacy</a></li>
+        <li><a href="/.well-known/security.txt">security.txt</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <div class="container legal">
+    <p>© {year} {site.name}</p>
+    <p>This site sets no cookies and loads no third-party scripts.</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--line);
+    padding-block: var(--s-8) var(--s-6);
+    color: var(--ink-2);
+    font-size: var(--step--1);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 2fr repeat(3, 1fr);
+    gap: var(--s-6);
+  }
+
+  .about {
+    display: grid;
+    gap: var(--s-3);
+    align-content: start;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    color: var(--ink);
+    font-weight: 700;
+    font-stretch: 112%;
+    font-size: var(--step-0);
+    text-decoration: none;
+  }
+
+  .about p {
+    max-width: 34ch;
+  }
+
+  h2 {
+    font-size: var(--step--1);
+    font-stretch: 100%;
+    font-weight: 650;
+    letter-spacing: 0;
+    color: var(--ink);
+    margin-bottom: var(--s-3);
+  }
+
+  ul {
+    list-style: none;
+    display: grid;
+    gap: var(--s-2);
+  }
+
+  a {
+    color: var(--ink-2);
+  }
+
+  a:hover {
+    color: var(--ink);
+  }
+
+  .legal {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--s-3);
+    margin-top: var(--s-7);
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--line);
+  }
+
+  @media (max-width: 54rem) {
+    .grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .about {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 30rem) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

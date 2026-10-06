@@ -1,0 +1,50 @@
+---
+import DomainCheck from './DomainCheck.astro';
+import { contactCta } from '../data/site';
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container">
+    <div class="intro">
+      <h1 id="hero-title">Know where you’re exposed, and what to fix first.</h1>
+      <p class="lead">
+        Penetration testing, security monitoring and compliance readiness for UAE companies, from the people who do the
+        testing.
+      </p>
+      <div class="actions">
+        <a class="btn btn-primary" href={contactCta.href}>{contactCta.label}</a>
+        <a class="btn btn-secondary" href="/#services">See services</a>
+      </div>
+    </div>
+    <DomainCheck />
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding-block: clamp(2.5rem, 1.5rem + 4vw, 4.5rem) clamp(4rem, 3rem + 4vw, 6rem);
+  }
+
+  .intro {
+    display: grid;
+    gap: var(--s-5);
+    margin-bottom: clamp(2.5rem, 1.5rem + 3vw, 3.75rem);
+  }
+
+  h1 {
+    max-width: 24ch;
+    font-stretch: 116%;
+    font-weight: 700;
+  }
+
+  .lead {
+    max-width: 54ch;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    margin-top: var(--s-2);
+  }
+</style>

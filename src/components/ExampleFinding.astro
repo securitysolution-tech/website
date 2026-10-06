@@ -1,0 +1,209 @@
+---
+import Icon from './Icon.astro';
+---
+
+<section id="reports" class="section" aria-labelledby="reports-title">
+  <div class="container">
+    <div class="section-head">
+      <h2 id="reports-title">Reports your team can act on</h2>
+      <p>
+        Every finding says what we found, why it matters to the business, and exactly how to fix it. This is what one
+        looks like.
+      </p>
+    </div>
+
+    <figure class="finding">
+      <div class="finding-head">
+        <span class="severity">High</span>
+        <h3>Anyone can send email that appears to come from your company</h3>
+        <dl class="meta">
+          <div>
+            <dt>Affected</dt>
+            <dd>example.com mail domain</dd>
+          </div>
+          <div>
+            <dt>Category</dt>
+            <dd>Email security</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="finding-body">
+        <div class="col">
+          <h4>Evidence</h4>
+          <pre translate="no"><code>_dmarc.example.com  TXT  "v=DMARC1; p=none"</code></pre>
+          <h4>Business impact</h4>
+          <p>
+            Attackers can send invoices or payment requests that look like they come from your finance team. Because the
+            policy is <code translate="no">p=none</code>, receiving mail servers are told to deliver them anyway.
+          </p>
+        </div>
+        <div class="col">
+          <h4>How to fix</h4>
+          <ol class="fix">
+            <li>Confirm SPF and DKIM pass for every service that sends your email.</li>
+            <li>Change the policy to <code translate="no">p=quarantine</code> and review the DMARC reports for two weeks.</li>
+            <li>Move to <code translate="no">p=reject</code> once legitimate mail passes.</li>
+          </ol>
+          <h4>Retest</h4>
+          <p class="retest">
+            <Icon name="check-circle" />
+            <span>Fixed and verified. The policy is now <code translate="no">p=reject</code>.</span>
+          </p>
+        </div>
+      </div>
+      <figcaption>Example finding. The company and domain are illustrative.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .finding {
+    margin: 0;
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    overflow: hidden;
+  }
+
+  .finding-head {
+    display: grid;
+    gap: var(--s-3);
+    padding: clamp(1.25rem, 1rem + 1.5vw, 2rem);
+    border-bottom: 1px solid var(--line);
+    border-left: 4px solid var(--crit);
+  }
+
+  .severity {
+    width: fit-content;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--radius-badge);
+    background: color-mix(in srgb, var(--crit) 12%, transparent);
+    color: var(--crit);
+    font-weight: 650;
+    font-size: var(--step--1);
+  }
+
+  h3 {
+    font-size: var(--step-2);
+    font-stretch: 112%;
+    max-width: 30ch;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-6);
+    margin: 0;
+    font-size: var(--step--1);
+  }
+
+  .meta div {
+    display: flex;
+    gap: var(--s-2);
+  }
+
+  dt {
+    color: var(--ink-3);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 560;
+  }
+
+  .finding-body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .col {
+    display: grid;
+    gap: var(--s-3);
+    align-content: start;
+    padding: clamp(1.25rem, 1rem + 1.5vw, 2rem);
+  }
+
+  .col + .col {
+    border-left: 1px solid var(--line);
+  }
+
+  h4 {
+    font-size: var(--step-0);
+    font-stretch: 104%;
+    font-weight: 650;
+    letter-spacing: 0;
+  }
+
+  .col h4:not(:first-child) {
+    margin-top: var(--s-3);
+  }
+
+  pre {
+    margin: 0;
+    padding: var(--s-3) var(--s-4);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-badge);
+    font-size: 0.875rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  p {
+    color: var(--ink-2);
+  }
+
+  :not(pre) > code {
+    padding: 0.05rem 0.3rem;
+    border-radius: 4px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 0.85em;
+  }
+
+  .fix {
+    display: grid;
+    gap: var(--s-2);
+    padding-left: 1.25rem;
+    color: var(--ink-2);
+  }
+
+  .fix li::marker {
+    color: var(--ink);
+    font-weight: 650;
+  }
+
+  .retest {
+    display: flex;
+    gap: var(--s-2);
+    align-items: flex-start;
+    color: var(--ink);
+  }
+
+  .retest :global(svg) {
+    width: 1.375rem;
+    height: 1.375rem;
+    color: var(--accent);
+    margin-top: 0.1rem;
+  }
+
+  figcaption {
+    padding: var(--s-3) clamp(1.25rem, 1rem + 1.5vw, 2rem);
+    border-top: 1px solid var(--line);
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+
+  @media (max-width: 48rem) {
+    .finding-body {
+      grid-template-columns: 1fr;
+    }
+
+    .col + .col {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+  }
+</style>
