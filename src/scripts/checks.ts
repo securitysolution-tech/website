@@ -275,14 +275,14 @@ function evaluateMtaSts(res: DnsResponse | null, receivesMail: boolean): Result 
     return {
       id: 'mtasts',
       status: 'pass',
-      summary: 'Published. Servers sending to you must use an encrypted, verified connection.',
+      summary: 'Published. Senders that support MTA-STS read your policy; in enforce mode they deliver only over an encrypted, verified connection.',
       evidence: records.map((r) => clip(r)),
     };
   }
   return {
     id: 'mtasts',
     status: 'info',
-    summary: 'Not set. Optional hardening that makes sending servers encrypt mail on its way to you.',
+    summary: 'Not set. Optional hardening that lets you require encrypted delivery from sending servers that support it.',
     evidence: [],
   };
 }
