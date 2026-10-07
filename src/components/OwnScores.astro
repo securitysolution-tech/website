@@ -44,7 +44,12 @@ const scores = [
   <div class="container">
     <div class="intro">
       <h2 id="scores-title">We test our own site first</h2>
-      <p>Independent scanners grade this website. We re-run the checks automatically and fix anything that slips.</p>
+      <p>
+        Independent scanners grade this website. We re-check it every day (<a
+          href="https://github.com/securitysolution-tech/website/actions/workflows/posture.yml"
+          rel="noopener">see&nbsp;the&nbsp;runs</a
+        >) and fix anything that slips.
+      </p>
     </div>
     <ul class="grid">
       {
@@ -68,7 +73,7 @@ const scores = [
 
 <style>
   .scores {
-    padding-block: clamp(3.5rem, 2.5rem + 4vw, 6rem) clamp(3rem, 2rem + 4vw, 5rem);
+    padding-block: clamp(3rem, 2rem + 3.5vw, 5rem) clamp(2.5rem, 1.5rem + 3vw, 4rem);
   }
 
   .intro {
@@ -104,11 +109,6 @@ const scores = [
     gap: var(--s-2);
     padding: clamp(1.25rem, 1rem + 1.2vw, 1.75rem);
     background: var(--raised);
-    transition: background-color 200ms ease;
-  }
-
-  .cell:hover {
-    background: var(--paper);
   }
 
   .scanner {
@@ -137,9 +137,16 @@ const scores = [
     align-items: center;
     gap: var(--s-1);
     width: fit-content;
-    margin-top: var(--s-2);
+    min-height: 2rem;
+    margin-top: var(--s-1);
     font-weight: 600;
     font-size: var(--step--1);
+  }
+
+  @media (pointer: coarse) {
+    .report {
+      min-height: 2.75rem;
+    }
   }
 
   .report :global(.ext) {

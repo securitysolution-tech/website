@@ -6,8 +6,8 @@ import { contactCta, mailto, site } from '../data/site';
 <section id="contact" class="contact ink" aria-labelledby="contact-title">
   <div class="glow" aria-hidden="true"></div>
   <div class="container grid">
+    <h2 id="contact-title">{contactCta.label}</h2>
     <div class="main">
-      <h2 id="contact-title">{contactCta.label}</h2>
       <p class="lead">
         Email us and we will set up a 30-minute call to agree what to test, when, and what is off-limits. You get a written
         scope and a fixed quote before any testing starts.
@@ -16,7 +16,7 @@ import { contactCta, mailto, site } from '../data/site';
         <Icon name="envelope-simple" class="icon mail" />
         <span>{site.email.split('@')[0]}<wbr />@{site.email.split('@')[1]}</span>
       </a>
-      <p class="small">We reply within one business day.</p>
+      <p class="small">We reply within 1 business day.</p>
     </div>
 
     <div class="include">
@@ -38,7 +38,7 @@ import { contactCta, mailto, site } from '../data/site';
     position: relative;
     overflow: hidden;
     isolation: isolate;
-    padding-block: clamp(4rem, 3rem + 5vw, 7rem);
+    padding-block: clamp(3.5rem, 2.5rem + 4.5vw, 6rem);
   }
 
   .glow {
@@ -55,7 +55,7 @@ import { contactCta, mailto, site } from '../data/site';
   .grid {
     display: grid;
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: clamp(2.5rem, 1.5rem + 4vw, 5rem);
+    gap: var(--s-6) clamp(2.5rem, 1.5rem + 4vw, 5rem);
     align-items: start;
   }
 
@@ -66,6 +66,7 @@ import { contactCta, mailto, site } from '../data/site';
   }
 
   h2 {
+    grid-column: 1 / -1;
     font-size: var(--step-4);
     font-family: var(--font-display);
     font-stretch: 116%;

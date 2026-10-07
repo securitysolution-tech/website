@@ -308,7 +308,7 @@ kbd {
 }
 
 .section {
-  padding-block: clamp(4rem, 3rem + 5vw, 7rem);
+  padding-block: clamp(3.5rem, 2.25rem + 4vw, 5.5rem);
 }
 
 .section-head {
@@ -424,6 +424,15 @@ kbd {
   display: grid;
   gap: var(--s-2);
   padding-left: 1.25rem;
+}
+
+/* Square bullets are drawn as backgrounds, which forced-colour modes remove. */
+@media (forced-colors: active) {
+  .items li::before,
+  .ticks li::before,
+  .include li::before {
+    background: CanvasText;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

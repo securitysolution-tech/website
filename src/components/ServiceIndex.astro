@@ -37,27 +37,25 @@ import { services } from '../data/services';
 </section>
 
 <style>
+  /* Two rows that alternate wide and narrow, so every card is about as tall as its content. */
   .bento {
     list-style: none;
     display: grid;
     gap: var(--s-4);
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-areas:
-      'a b c'
-      'a d d';
+    grid-template-columns: repeat(12, minmax(0, 1fr));
   }
 
   .card-1 {
-    grid-area: a;
+    grid-column: 1 / span 7;
   }
   .card-2 {
-    grid-area: b;
+    grid-column: 8 / span 5;
   }
   .card-3 {
-    grid-area: c;
+    grid-column: 1 / span 5;
   }
   .card-4 {
-    grid-area: d;
+    grid-column: 6 / span 7;
   }
 
   .card {
@@ -79,6 +77,12 @@ import { services } from '../data/services';
     transform: translateY(-3px);
     border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
     box-shadow: 0 28px 50px -30px rgb(19 33 27 / 0.4);
+  }
+
+  /* The last card gets a soft accent tint, so the grid has a diagonal rhythm of dark, light, light, tinted. */
+  .card-4 {
+    border-color: color-mix(in srgb, var(--accent) 22%, var(--line));
+    background: color-mix(in srgb, var(--accent-tint) 55%, var(--raised));
   }
 
   .card.ink {
@@ -116,7 +120,7 @@ import { services } from '../data/services';
   }
 
   .card:hover .chip {
-    transform: translateY(-2px) rotate(-4deg);
+    transform: translateY(-2px);
   }
 
   h3 {
@@ -167,6 +171,7 @@ import { services } from '../data/services';
     color: var(--ink-text-2);
   }
 
+  .card-1 .items,
   .card-4 .items {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: var(--s-6);
@@ -215,21 +220,38 @@ import { services } from '../data/services';
   @media (max-width: 60rem) {
     .bento {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      grid-template-areas:
-        'a a'
-        'b c'
-        'd d';
+    }
+
+    .card-1,
+    .card-4 {
+      grid-column: 1 / -1;
+    }
+
+    .card-2,
+    .card-3 {
+      grid-column: auto;
     }
   }
 
   @media (max-width: 40rem) {
     .bento {
       grid-template-columns: 1fr;
-      grid-template-areas: 'a' 'b' 'c' 'd';
     }
 
+    .card-1 .items,
     .card-4 .items {
       grid-template-columns: 1fr;
+    }
+  }
+
+  /* In dark mode the featured card needs its own light, or it looks like the others. */
+  @media (prefers-color-scheme: dark) {
+    .card.ink {
+      border-color: rgb(98 211 166 / 0.32);
+      background:
+        radial-gradient(120% 80% at 100% 100%, rgb(98 211 166 / 0.2), transparent 62%),
+        linear-gradient(165deg, rgb(98 211 166 / 0.09), transparent 45%),
+        var(--ink-raised);
     }
   }
 </style>

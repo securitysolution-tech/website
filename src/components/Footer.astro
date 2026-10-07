@@ -106,7 +106,20 @@ const year = new Date().getFullYear();
   }
 
   a {
+    display: inline-block;
+    padding-block: 0.15rem;
     color: var(--ink-text-2);
+  }
+
+  /* Fingers need more than the 24px minimum, so on touch screens the links fill 44px rows. */
+  @media (pointer: coarse) {
+    ul {
+      gap: 0;
+    }
+
+    a {
+      padding-block: 0.7rem;
+    }
   }
 
   a:hover {

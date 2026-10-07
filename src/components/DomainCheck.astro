@@ -376,6 +376,7 @@ const checks = [
 
   .evidence summary {
     width: fit-content;
+    padding-block: 0.25rem;
     color: var(--panel-ink-2);
     cursor: pointer;
     text-decoration: underline;
@@ -385,6 +386,12 @@ const checks = [
   .evidence summary:hover {
     color: var(--panel-ink);
     text-decoration-thickness: 2px;
+  }
+
+  @media (pointer: coarse) {
+    .evidence summary {
+      padding-block: 0.65rem;
+    }
   }
 
   .evidence pre {

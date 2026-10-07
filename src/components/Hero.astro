@@ -139,6 +139,14 @@ const records = [
     margin-top: var(--s-2);
   }
 
+  /* On phones the buttons stack at full width. Side by side, whether they fit depends on the font by a pixel. */
+  @media (max-width: 30rem) {
+    .actions {
+      flex-direction: column;
+      justify-self: stretch;
+    }
+  }
+
   .check-wrap {
     position: relative;
     z-index: 2;
@@ -168,14 +176,6 @@ const records = [
     .actions {
       animation: rise 760ms var(--ease-out) 620ms both;
     }
-
-    .backdrop p:nth-child(odd) {
-      animation: drift-left 90s linear infinite alternate;
-    }
-
-    .backdrop p:nth-child(even) {
-      animation: drift-right 110s linear infinite alternate;
-    }
   }
 
   @keyframes rise {
@@ -186,24 +186,6 @@ const records = [
     to {
       opacity: 1;
       transform: none;
-    }
-  }
-
-  @keyframes drift-left {
-    from {
-      transform: translateX(-4%);
-    }
-    to {
-      transform: translateX(-14%);
-    }
-  }
-
-  @keyframes drift-right {
-    from {
-      transform: translateX(3%);
-    }
-    to {
-      transform: translateX(-7%);
     }
   }
 </style>
