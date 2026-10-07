@@ -44,7 +44,9 @@
   --ink-accent-hover: #86e0bd;
   --ink-control: #577266;
 
-  --font: 'Archivo Variable', 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font: 'Archivo Variable', 'Archivo Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-wide: 'Archivo Variable', 'Archivo Fallback Wide', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Archivo Variable', 'Archivo Fallback Display', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace;
 
   --step--1: 0.875rem;
@@ -70,7 +72,8 @@
 
   --container: 74rem;
   --gutter: clamp(1rem, 4vw, 2.5rem);
-  --measure: 65ch;
+  /* Line lengths are in em, not ch: ch is the width of a "0" in the active font, so it shifts when Archivo replaces the fallback. */
+  --measure: 37.245em;
   --header-h: 4.25rem;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -97,6 +100,53 @@
     --ink-raised: #0f1b16;
     --ink-line: #1d2d26;
   }
+}
+
+/*
+  Fallback faces. Until Archivo arrives, text is set in Arial scaled to Archivo's widths and
+  vertical metrics, so the page lays out the same before and after the font loads.
+  size-adjust is Archivo's width over Arial's, measured on this site's own text: body 0.985,
+  semibold 0.98, headings at 112-114% 1.115, at 116-118% 1.157. The ascent and descent
+  overrides are Archivo's 0.88 and 0.21 em divided by size-adjust.
+*/
+@font-face {
+  font-family: 'Archivo Fallback';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('Arimo');
+  font-weight: 100 599;
+  size-adjust: 98.5%;
+  ascent-override: 89.3%;
+  descent-override: 21.3%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Archivo Fallback';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('Arimo Bold');
+  font-weight: 600 900;
+  size-adjust: 98%;
+  ascent-override: 89.8%;
+  descent-override: 21.4%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Archivo Fallback Wide';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('Arimo Bold');
+  font-weight: 600 900;
+  size-adjust: 111.5%;
+  ascent-override: 78.9%;
+  descent-override: 18.8%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Archivo Fallback Display';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('Arimo Bold');
+  font-weight: 600 900;
+  size-adjust: 115.7%;
+  ascent-override: 76.1%;
+  descent-override: 18.2%;
+  line-gap-override: 0%;
 }
 
 /* A dark band. Everything inside reads its colours from the ink tokens. */
@@ -177,6 +227,7 @@ h2,
 h3,
 h4 {
   margin: 0;
+  font-family: var(--font-wide);
   font-stretch: 112%;
   font-weight: 680;
   line-height: 1.08;
@@ -270,7 +321,7 @@ kbd {
   color: var(--ink-2);
   font-size: var(--step-1);
   line-height: 1.5;
-  max-width: 52ch;
+  max-width: 29.796em;
 }
 
 .lead {

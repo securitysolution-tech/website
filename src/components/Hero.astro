@@ -118,15 +118,17 @@ const records = [
     justify-items: start;
   }
 
+  /* The first line is 15.53em wide, so the box has slack: with none, a fraction of a pixel decides whether it wraps. */
   h1 {
-    max-width: 22ch;
+    max-width: 16.5em;
+    font-family: var(--font-display);
     font-stretch: 116%;
     font-weight: 700;
     color: var(--ink-text);
   }
 
   .lead {
-    max-width: 54ch;
+    max-width: 30.942em;
     color: var(--ink-text-2);
   }
 
