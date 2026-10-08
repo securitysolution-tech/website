@@ -73,9 +73,17 @@ void main() {
 
 const STILL_FRAME_TIME = 7.1; // the scan band resting on the right
 
+// Once a context is refused (no GPU, or software rendering only), the other canvases on the
+// page do not ask again: each attempt costs the main thread about a tenth of a second.
+let unavailable = false;
+
 export function mountExposureMap(canvas: HTMLCanvasElement) {
   const host = canvas.parentElement;
   if (!host) return;
+  if (unavailable) {
+    host.classList.add('no-map');
+    return;
+  }
 
   const coarse = matchMedia('(pointer: coarse)').matches;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
@@ -242,6 +250,7 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
   };
 
   if (!setup()) {
+    if (!gl) unavailable = true;
     giveUp('WebGL2 unavailable or software-rendered');
     return;
   }

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Outside-in check of the live site's security posture: response headers,
-# redirects, TLS, DNSSEC, email authentication, the contact endpoint and the
-# published policies.
+# redirects, TLS, DNSSEC, email authentication, the contact endpoint, the
+# records printed on the home page, the outbound links and the published
+# policies.
 # Runs daily from .github/workflows/posture.yml, which opens an issue when
 # anything regresses. Needs bash, curl, jq, openssl and GNU date.
 #
@@ -220,6 +221,50 @@ else
     -H "origin: $SITE" --data '{}' "$SITE/api/contact")
   verdict "contact endpoint: empty request rejected" "status $got" [ "$got" = 400 ]
 fi
+
+# --- The home page against live DNS ----------------------------------------
+# The hero prints six real records. When one is changed in DNS and not in the
+# page, the page quietly lies; this catches it. Values are compared as
+# prefixes, since the page shortens long ones.
+
+home=$("${CURL[@]}" "$SITE/")
+printed=$(grep -o 'data-r="[^"]*"' <<<"$home" | sed -e 's/^data-r="//' -e 's/"$//' -e 's/&quot;/"/g')
+drift=""
+count=0
+while IFS= read -r line; do
+  [ -n "$line" ] || continue
+  count=$((count + 1))
+  name=$(awk '{ print $1 }' <<<"$line")
+  type=$(awk '{ print $2 }' <<<"$line")
+  value=$(sed -E 's/^[^ ]+ +[^ ]+ +//' <<<"$line")
+  case $type in
+    TXT) live=$(txt "${name%.}") ; value=$(sed -e 's/^"//' -e 's/"$//' <<<"$value") ;;
+    MX) live=$(records "${name%.}" MX 15) ;;
+    DS) live=$(records "${name%.}" DS 43) ;;
+    CAA) live=$(records "${name%.}" CAA 257) ;;
+    *) live="" ;;
+  esac
+  # Resolvers print DS digests in lower case; the page prints them as published.
+  if [ -z "$(grep -iF "$value" <<<"$live")" ]; then drift="$drift [$type $name]"; fi
+done <<<"$printed"
+verdict "home page: the printed records match live DNS ($count checked)" "drifted:$drift" [ "$count" -ge 4 -a -z "$drift" ]
+
+# --- External links ---------------------------------------------------------
+# Every outbound link on the public pages must still answer. LinkedIn answers
+# 999 to anything that is not a browser, which counts as reachable.
+
+broken=""
+for path in / /services/offensive-testing/ /services/defensive-operations/ /services/governance-compliance/ /services/ai-cloud-security/ /privacy/ /security/; do
+  page=$("${CURL[@]}" "$SITE$path")
+  for url in $(grep -o 'href="https\?://[^"]*"' <<<"$page" | sed -e 's/^href="//' -e 's/"$//' -e 's/&amp;/\&/g' | grep -v "^$SITE" | sort -u); do
+    code=$(curl -sS -o /dev/null --max-time 20 -L -A 'Mozilla/5.0 (X11; Linux x86_64) Chrome/130' -w '%{http_code}' "$url" || echo 000)
+    case $code in
+      2* | 3* | 999) ;;
+      *) broken="$broken $url($code)" ;;
+    esac
+  done
+done
+verdict "external links answer" "broken:$broken" [ -z "$broken" ]
 
 # --- Published policies -----------------------------------------------------
 

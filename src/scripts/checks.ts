@@ -1,10 +1,11 @@
-import { caaValue, orgDomain, query, RR, txtValue, type DnsResponse } from './dns';
-import { fmt, type CheckStrings } from '../i18n/client';
+// Imports carry their .ts extension: tests/checks.test.mjs runs this file on Node directly.
+import { caaValue, orgDomain, query, RR, txtValue, type DnsResponse } from './dns.ts';
+import { fmt, type CheckStrings } from '../i18n/client.ts';
 
 export type Status = 'pass' | 'warn' | 'fail' | 'info';
 export type CheckId = 'dmarc' | 'spf' | 'mx' | 'dnssec' | 'caa' | 'mtasts';
 export type Level = 'strong' | 'partial' | 'weak';
-type Summaries = CheckStrings['summaries'];
+export type Summaries = CheckStrings['summaries'];
 
 export interface Result {
   id: CheckId;
@@ -45,7 +46,7 @@ interface DmarcInfo {
   enforced: boolean;
 }
 
-function evaluateDmarc(own: DnsResponse | null, inherited: DnsResponse | null, org: string, s: Summaries): DmarcInfo {
+export function evaluateDmarc(own: DnsResponse | null, inherited: DnsResponse | null, org: string, s: Summaries): DmarcInfo {
   let records = txtRecords(own, /^v=dmarc1\b/i);
   let via = '';
   if (records.length === 0 && inherited) {
@@ -77,7 +78,7 @@ function evaluateDmarc(own: DnsResponse | null, inherited: DnsResponse | null, o
   return { enforced: false, result: result('fail', fmt(s.dmarcInvalid, { via }), evidence) };
 }
 
-function evaluateSpf(res: DnsResponse | null, dmarcEnforced: boolean, s: Summaries): Result {
+export function evaluateSpf(res: DnsResponse | null, dmarcEnforced: boolean, s: Summaries): Result {
   const records = txtRecords(res, /^v=spf1(\s|$)/i);
   const result = (status: Status, summary: string, evidence: string[]): Result => ({ id: 'spf', status, summary, evidence });
   if (records.length === 0) return result('fail', s.spfNone, []);
@@ -108,7 +109,7 @@ const mailProviders: [RegExp, string][] = [
   [/mimecast\.com\.?$/, 'Mimecast'],
 ];
 
-function evaluateMx(res: DnsResponse | null, s: Summaries): { result: Result; receivesMail: boolean } {
+export function evaluateMx(res: DnsResponse | null, s: Summaries): { result: Result; receivesMail: boolean } {
   const mx = (res?.answers ?? [])
     .filter((a) => a.type === RR.MX)
     .map((a) => {
@@ -135,12 +136,12 @@ function evaluateMx(res: DnsResponse | null, s: Summaries): { result: Result; re
   };
 }
 
-function evaluateDnssec(res: DnsResponse | null, s: Summaries): Result {
+export function evaluateDnssec(res: DnsResponse | null, s: Summaries): Result {
   if (res?.ad) return { id: 'dnssec', status: 'pass', summary: s.dnssecOk, evidence: [] };
   return { id: 'dnssec', status: 'warn', summary: s.dnssecNo, evidence: [] };
 }
 
-function evaluateCaa(res: DnsResponse | null, s: Summaries): Result {
+export function evaluateCaa(res: DnsResponse | null, s: Summaries): Result {
   const records = (res?.answers ?? []).filter((a) => a.type === RR.CAA).map((a) => caaValue(a.data)).filter(Boolean) as {
     tag: string;
     value: string;
@@ -155,7 +156,7 @@ function evaluateCaa(res: DnsResponse | null, s: Summaries): Result {
   };
 }
 
-function evaluateMtaSts(res: DnsResponse | null, receivesMail: boolean, s: Summaries): Result {
+export function evaluateMtaSts(res: DnsResponse | null, receivesMail: boolean, s: Summaries): Result {
   if (!receivesMail) return { id: 'mtasts', status: 'info', summary: s.mtastsNotNeeded, evidence: [] };
   const records = txtRecords(res, /^v=stsv1\b/i);
   if (records.length) return { id: 'mtasts', status: 'pass', summary: s.mtastsOk, evidence: records.map((r) => clip(r)) };
@@ -211,12 +212,15 @@ export async function runChecks(
   emit(sts && mx ? evaluateMtaSts(sts, mxInfo.receivesMail, s) : unknown('mtasts'));
 
   const list = Object.values(results) as Result[];
+  return { results: list, verdict: verdictOf(list, !dmarc || !txt) };
+}
+
+/** The headline for a set of results: how many passed, and how well spoofing is held off. */
+export function verdictOf(list: Result[], incomplete: boolean): Verdict {
   const scored = list.filter((r) => r.status !== 'info');
   const passed = scored.filter((r) => r.status === 'pass').length;
-  const d = results.dmarc?.status;
-  const sp = results.spf?.status;
+  const d = list.find((r) => r.id === 'dmarc')?.status;
+  const sp = list.find((r) => r.id === 'spf')?.status;
   const spoofing: Level = d === 'pass' && sp === 'pass' ? 'strong' : d === 'fail' || sp === 'fail' ? 'weak' : 'partial';
-  const incomplete = !dmarc || !txt;
-
-  return { results: list, verdict: { passed, scored: scored.length, spoofing, incomplete } };
+  return { passed, scored: scored.length, spoofing, incomplete };
 }
