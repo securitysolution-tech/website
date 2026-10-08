@@ -1,5 +1,6 @@
 ---
 import Mark from './Mark.astro';
+import Wordmark from './Wordmark.astro';
 import { services } from '../data/services';
 import { contactCta, site } from '../data/site';
 
@@ -10,8 +11,8 @@ const year = new Date().getFullYear();
   <div class="container grid">
     <div class="about">
       <a class="brand" href="/">
-        <Mark size={24} />
-        <span translate="no">{site.name}</span>
+        <Mark size={26} />
+        <Wordmark small />
       </a>
       <p>
         Security testing, monitoring and compliance readiness for companies in the {site.location}.
@@ -78,10 +79,6 @@ const year = new Date().getFullYear();
     align-items: center;
     gap: var(--s-2);
     color: var(--ink-text);
-    font-family: var(--font-wide);
-    font-weight: 700;
-    font-stretch: 112%;
-    font-size: var(--step-0);
     text-decoration: none;
   }
 

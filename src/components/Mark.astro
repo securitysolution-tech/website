@@ -1,5 +1,6 @@
 ---
-// Brand mark: four scope brackets around a verified square.
+// Brand mark: three scope brackets, and the verified core where the fourth would be.
+// What the scan found, at the edge of what was in scope.
 interface Props {
   size?: number;
   class?: string;
@@ -16,13 +17,13 @@ const { size = 28, class: className = '' } = Astro.props;
   focusable="false"
 >
   <path
-    d="M4 11V4h7M21 4h7v7M28 21v7h-7M11 28H4v-7"
+    d="M3 11V3h8M21 3h8v8M11 29H3v-8"
     fill="none"
     stroke="currentColor"
     stroke-width="3"
     stroke-linecap="square"
   ></path>
-  <rect class="mark-core" x="11.5" y="11.5" width="9" height="9" rx="1.5"></rect>
+  <rect class="mark-core" x="17" y="17" width="12" height="12" rx="2.5"></rect>
 </svg>
 
 <style>
