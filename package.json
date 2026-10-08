@@ -16,7 +16,8 @@
     "astro": "astro",
     "audit": "node scripts/audit.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "verify:browser": "node scripts/verify/behaviour.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.4",
