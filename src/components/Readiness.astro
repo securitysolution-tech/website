@@ -16,29 +16,31 @@ const strings = { result: r.result, of: r.of, progress: r.progress, bands: r.ban
 
 <section id="readiness" class="readiness" aria-labelledby="readiness-title" data-readiness>
   <div class="container grid">
-    <form class="quiz" data-quiz aria-describedby="readiness-legend">
+    <div class="quizwrap">
       <p id="readiness-legend" class="legend">
         {r.legend}
       </p>
-      {questions.map((q, i) => (
-        <fieldset class="q" data-q={q.id} data-weight={q.weight} data-href={href(`/services/${q.service}/`)}>
-          <legend>
-            <span class="n" aria-hidden="true">
-              {i + 1}
-            </span>
-            {r.questions[q.id as keyof typeof r.questions]}
-          </legend>
-          <div class="opts">
-            {answers.map((a) => (
-              <label class="opt">
-                <input type="radio" name={`q-${q.id}`} value={a} />
-                <span>{r.answers[a]}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-      ))}
-    </form>
+      <div class="quiz" data-quiz role="group" aria-describedby="readiness-legend">
+        {questions.map((q, i) => (
+          <fieldset class="q" data-q={q.id} data-weight={q.weight} data-href={href(`/services/${q.service}/`)}>
+            <legend>
+              <span class="n" aria-hidden="true">
+                {i + 1}
+              </span>
+              {r.questions[q.id as keyof typeof r.questions]}
+            </legend>
+            <div class="opts">
+              {answers.map((a) => (
+                <label class="opt">
+                  <input type="radio" name={`q-${q.id}`} value={a} />
+                  <span>{r.answers[a]}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ))}
+      </div>
+    </div>
 
     <aside class="panel" aria-live="polite">
       <div class="result" data-result hidden>

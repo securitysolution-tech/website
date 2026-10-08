@@ -14,7 +14,7 @@ interface Strings {
 
 function init(root: HTMLElement) {
   const t = readStrings<Strings>('readiness');
-  const form = root.querySelector<HTMLFormElement>('[data-quiz]');
+  const form = root.querySelector<HTMLElement>('[data-quiz]');
   const result = root.querySelector<HTMLElement>('[data-result]');
   if (!form || !result) return;
 
