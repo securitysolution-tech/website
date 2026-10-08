@@ -1,5 +1,6 @@
 ---
 import Icon from './Icon.astro';
+import Ornament from './Ornament.astro';
 import { services } from '../data/services';
 ---
 
@@ -33,6 +34,7 @@ import { services } from '../data/services';
             <span class="more" aria-hidden="true">
               See how we do it
             </span>
+            <Ornament kind={s.icon} />
           </li>
         ))
       }
@@ -67,6 +69,7 @@ import { services } from '../data/services';
     --spot: rgb(98 211 166 / 0.14);
     position: relative;
     isolation: isolate;
+    overflow: clip;
     display: flex;
     flex-direction: column;
     gap: var(--s-3);

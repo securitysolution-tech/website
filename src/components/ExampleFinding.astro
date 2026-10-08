@@ -64,14 +64,62 @@ import Icon from './Icon.astro';
     border: 1px solid var(--line);
     border-radius: var(--radius-panel);
     overflow: hidden;
+    /* clip, not a scroll container: the view() timelines inside must reach the viewport */
+    overflow: clip;
   }
 
   .finding-head {
+    position: relative;
     display: grid;
     gap: var(--s-3);
     padding: clamp(1.25rem, 1rem + 1.5vw, 2rem);
     border-bottom: 1px solid var(--line);
-    border-left: 4px solid var(--crit);
+  }
+
+  /* The severity bar draws down as the finding arrives, then the retest line lands last:
+     finding, fix, verified. */
+  .finding-head::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--crit);
+    transform-origin: top;
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .finding-head::before {
+        animation: draw-y linear both;
+        animation-timeline: view();
+        animation-range: entry 10% entry 70%;
+      }
+
+      .retest {
+        animation: rise-in linear both;
+        animation-timeline: view();
+        animation-range: entry 20% entry 95%;
+      }
+    }
+  }
+
+  @supports not (animation-timeline: view()) {
+    :global(html.io) .finding-head::before {
+      transform: scaleY(0);
+      transition: transform 700ms var(--ease-out) 200ms;
+    }
+
+    :global(html.io) .finding.in .finding-head::before {
+      transform: none;
+    }
+  }
+
+  @keyframes draw-y {
+    from {
+      transform: scaleY(0);
+    }
   }
 
   .severity {
