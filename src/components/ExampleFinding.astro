@@ -25,6 +25,10 @@ import Icon from './Icon.astro';
             <dt>Category</dt>
             <dd>Email security</dd>
           </div>
+          <div>
+            <dt>Status</dt>
+            <dd>Fixed, verified on retest</dd>
+          </div>
         </dl>
       </div>
 
@@ -52,7 +56,11 @@ import Icon from './Icon.astro';
           </p>
         </div>
       </div>
-      <figcaption>Example finding. The company and domain are illustrative.</figcaption>
+      <figcaption>
+        Example finding. The company and domain are illustrative. The domain check above rates the same record as a
+        warning; a report also weighs the business impact, which is why this one is High.
+        <a href="/#check">Run the check on your domain</a>
+      </figcaption>
     </figure>
   </div>
 </section>
@@ -243,6 +251,12 @@ import Icon from './Icon.astro';
     border-top: 1px solid var(--line);
     color: var(--ink-3);
     font-size: var(--step--1);
+    max-width: none;
+  }
+
+  figcaption a {
+    color: var(--ink);
+    font-weight: 600;
   }
 
   @media (max-width: 48rem) {

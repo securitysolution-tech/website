@@ -27,7 +27,7 @@ const steps = [
   <div class="container">
     <div class="section-head">
       <h2 id="approach-title">How an engagement works</h2>
-      <p>The same 5&nbsp;steps whether we are testing one web app or your whole network.</p>
+      <p>The same five steps for every test, whether it covers one web app or your whole network.</p>
     </div>
 
     <ol class="steps">
@@ -43,6 +43,8 @@ const steps = [
         ))
       }
     </ol>
+
+    <p class="start"><a href="#contact">Start with step 1: book the scoping call</a></p>
   </div>
 </section>
 
@@ -118,6 +120,22 @@ const steps = [
   .step p {
     color: var(--ink-text-2);
     font-size: var(--step--1);
+  }
+
+  .start {
+    margin-top: var(--s-7);
+    font-weight: 620;
+  }
+
+  .start a {
+    color: var(--ink-accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+    transition: color 150ms ease;
+  }
+
+  .start a:hover {
+    color: var(--ink-accent-hover);
   }
 
   /* Where supported, the line fills as the section scrolls into view. */

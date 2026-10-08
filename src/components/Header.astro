@@ -32,29 +32,43 @@ const links = [
       <a class="btn btn-primary" href={contactHref}>{contactCta.label}</a>
     </nav>
 
-    <details class="nav-mobile">
-      <summary class="menu-btn">
-        <Icon name="list" class="icon icon-open" />
-        <Icon name="x" class="icon icon-close" />
-        <span>Menu</span>
-      </summary>
-      <nav class="menu-panel ink" aria-label="Main menu">
-        <ul>
-          {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
-        </ul>
-        <a class="btn btn-primary" href={contactHref}>{contactCta.label}</a>
-      </nav>
-    </details>
+    <nav class="nav-mobile-wrap" aria-label="Menu">
+      <details class="nav-mobile">
+        <summary class="menu-btn">
+          <Icon name="list" class="icon icon-open" />
+          <Icon name="x" class="icon icon-close" />
+          <span>Menu</span>
+        </summary>
+        <div class="menu-panel ink">
+          <ul>
+            {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+          </ul>
+          <a class="btn btn-primary" href={contactHref}>{contactCta.label}</a>
+        </div>
+      </details>
+    </nav>
   </div>
 </header>
 
 <script>
-  // Close the mobile menu after a link is chosen.
-  document.querySelectorAll<HTMLAnchorElement>('.nav-mobile a').forEach((link) => {
-    link.addEventListener('click', () => {
-      link.closest('details')?.removeAttribute('open');
+  // The mobile menu closes after a link is chosen, on Escape (focus returns to the button),
+  // and on a tap or click anywhere outside it.
+  const menu = document.querySelector<HTMLDetailsElement>('.nav-mobile');
+  if (menu) {
+    const button = menu.querySelector<HTMLElement>('summary');
+    menu.querySelectorAll<HTMLAnchorElement>('a').forEach((link) => {
+      link.addEventListener('click', () => menu.removeAttribute('open'));
     });
-  });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && menu.open) {
+        menu.removeAttribute('open');
+        button?.focus();
+      }
+    });
+    document.addEventListener('pointerdown', (event) => {
+      if (menu.open && !menu.contains(event.target as Node)) menu.removeAttribute('open');
+    });
+  }
 </script>
 
 <style>
@@ -189,7 +203,7 @@ const links = [
     padding-inline: 1.1rem;
   }
 
-  .nav-mobile {
+  .nav-mobile-wrap {
     display: none;
   }
 
@@ -198,7 +212,7 @@ const links = [
       display: none;
     }
 
-    .nav-mobile {
+    .nav-mobile-wrap {
       display: block;
     }
 
@@ -224,6 +238,15 @@ const links = [
       cursor: pointer;
       list-style: none;
       user-select: none;
+      transition: border-color 160ms ease;
+    }
+
+    .menu-btn:hover {
+      border-color: var(--ink-text-2);
+    }
+
+    .nav-mobile[open] .menu-btn {
+      border-color: var(--ink-accent);
     }
 
     .menu-btn::-webkit-details-marker {
@@ -247,8 +270,14 @@ const links = [
       top: 100%;
       display: grid;
       gap: var(--s-5);
+      max-height: calc(100dvh - var(--header-h));
+      overflow-y: auto;
       padding: var(--s-5) var(--gutter) var(--s-6);
       border-bottom: 1px solid var(--ink-line);
+      /* Frosted like the scrolled bar, so the menu and the bar read as one surface. */
+      background: color-mix(in srgb, var(--ink-bg) 96%, transparent);
+      -webkit-backdrop-filter: blur(14px) saturate(1.3);
+      backdrop-filter: blur(14px) saturate(1.3);
     }
 
     /* The panel unfolds on open; @starting-style gives the first frame something to transition from. */

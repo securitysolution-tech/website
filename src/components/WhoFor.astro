@@ -1,20 +1,14 @@
 ---
 // The situations that bring companies to us, each pointing at the service that answers it.
-// Drawn from the "good fit" lists on the service pages.
+// Service names and links come from the services data, so they never drift.
+import { services } from '../data/services';
+
 const reasons = [
-  { text: 'You are launching or changing a customer-facing app.', service: 'Offensive testing', slug: 'offensive-testing' },
-  {
-    text: 'A customer, regulator or auditor is asking about your security.',
-    service: 'Governance & compliance',
-    slug: 'governance-compliance',
-  },
-  { text: 'Nobody watches your logs today.', service: 'Defensive operations', slug: 'defensive-operations' },
-  {
-    text: 'Your AI features and cloud accounts have never been tested.',
-    service: 'AI & cloud security',
-    slug: 'ai-cloud-security',
-  },
-];
+  { slug: 'offensive-testing', text: 'You are launching or changing a customer-facing app.' },
+  { slug: 'governance-compliance', text: 'A customer, regulator or auditor is asking about your security.' },
+  { slug: 'defensive-operations', text: 'Nobody watches your logs today.' },
+  { slug: 'ai-cloud-security', text: 'Your AI features and cloud accounts have never been tested.' },
+].map((r) => ({ ...r, service: services.find((s) => s.slug === r.slug)?.name ?? r.slug }));
 ---
 
 <section class="section who" aria-labelledby="who-title">
@@ -62,7 +56,6 @@ const reasons = [
     height: 100%;
     padding: var(--s-5) var(--s-5) var(--s-5) 0;
     text-decoration: none;
-    transition: background-color 200ms ease;
   }
 
   .reasons li + li a {
@@ -78,6 +71,7 @@ const reasons = [
     letter-spacing: -0.01em;
     color: var(--ink);
     text-wrap: balance;
+    transition: color 180ms ease;
   }
 
   .reasons span {

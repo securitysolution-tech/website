@@ -1,6 +1,7 @@
 ---
 import Mark from './Mark.astro';
 import Wordmark from './Wordmark.astro';
+import Icon from './Icon.astro';
 import { services } from '../data/services';
 import { contactCta, site } from '../data/site';
 
@@ -9,6 +10,8 @@ interface Props {
 }
 const { contactHref = contactCta.href } = Astro.props;
 const year = new Date().getFullYear();
+const path = Astro.url.pathname;
+const current = (href: string) => (path === href ? 'page' : undefined);
 ---
 
 <footer class="site-footer ink grain">
@@ -18,16 +21,22 @@ const year = new Date().getFullYear();
         <Mark size={26} />
         <Wordmark small />
       </a>
-      <p>
-        Security testing, monitoring and compliance readiness for companies in the {site.location}.
-      </p>
+      <p>{site.tagline.replace('UAE companies', `companies in the ${site.location}`)}.</p>
       <p><a href={`mailto:${site.email}`}>{site.email}</a></p>
     </div>
 
     <nav aria-label="Services">
       <h2>Services</h2>
       <ul>
-        {services.map((s) => <li><a href={`/services/${s.slug}/`}>{s.name}</a></li>)}
+        {
+          services.map((s) => (
+            <li>
+              <a href={`/services/${s.slug}/`} aria-current={current(`/services/${s.slug}/`)}>
+                {s.name}
+              </a>
+            </li>
+          ))
+        }
       </ul>
     </nav>
 
@@ -44,17 +53,22 @@ const year = new Date().getFullYear();
     <nav aria-label="Trust">
       <h2>Trust</h2>
       <ul>
-        <li><a href="/security/">Report a vulnerability</a></li>
-        <li><a href="/privacy/">Privacy</a></li>
+        <li><a href="/security/" aria-current={current('/security/')}>Report a vulnerability</a></li>
+        <li><a href="/privacy/" aria-current={current('/privacy/')}>Privacy</a></li>
         <li><a href="/.well-known/security.txt">security.txt</a></li>
-        <li><a href="https://github.com/securitysolution-tech/website" rel="noopener">Source code</a></li>
+        <li>
+          <a class="ext" href="https://github.com/securitysolution-tech/website" rel="noopener">
+            Source code
+            <Icon name="arrow-up-right" class="icon ext-icon" />
+          </a>
+        </li>
       </ul>
     </nav>
   </div>
 
   <div class="container legal">
     <p>© {year} {site.name}</p>
-    <p>This site sets no cookies and loads no third-party scripts.</p>
+    <p>This site sets no cookies and loads no third-party scripts. <a href="/privacy/">Privacy</a></p>
   </div>
 </footer>
 
@@ -88,6 +102,17 @@ const year = new Date().getFullYear();
     text-decoration: none;
   }
 
+  .brand :global(.mark-core) {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 240ms var(--ease-out);
+  }
+
+  .brand:hover :global(.mark-core),
+  .brand:focus-visible :global(.mark-core) {
+    transform: scale(1.15);
+  }
+
   .about p {
     max-width: 19.482em;
   }
@@ -112,6 +137,7 @@ const year = new Date().getFullYear();
     display: inline-block;
     padding-block: 0.15rem;
     color: var(--ink-text-2);
+    transition: color 150ms ease;
   }
 
   /* Fingers need more than the 24px minimum, so on touch screens the links fill 44px rows. */
@@ -125,8 +151,29 @@ const year = new Date().getFullYear();
     }
   }
 
-  a:hover {
+  a:hover,
+  a[aria-current] {
     color: var(--ink-text);
+  }
+
+  a[aria-current] {
+    text-decoration-color: var(--ink-accent);
+  }
+
+  .ext {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
+  }
+
+  .ext :global(.ext-icon) {
+    width: 1em;
+    height: 1em;
+    transition: transform 180ms var(--ease-out);
+  }
+
+  .ext:hover :global(.ext-icon) {
+    transform: translate(2px, -2px);
   }
 
   .legal {

@@ -23,8 +23,8 @@ const scores = [
   },
   {
     scanner: 'Email spoofing',
-    grade: 'Reject',
-    what: 'DMARC tells receiving servers to refuse email that fakes our domain.',
+    grade: 'Enforced',
+    what: 'Our DMARC policy is p=reject: receiving servers refuse email that fakes our domain.',
     href: `/#check=${host}`,
     linkLabel: 'Run the check on us',
     external: false,
@@ -46,8 +46,9 @@ const scores = [
       <h2 id="scores-title">We test our own site first</h2>
       <p>
         Independent scanners grade this website. We re-check it every day (<a
+          class="runs"
           href="https://github.com/securitysolution-tech/website/actions/workflows/posture.yml"
-          rel="noopener">see&nbsp;the&nbsp;runs</a
+          rel="noopener">see&nbsp;the&nbsp;runs<Icon name="arrow-up-right" class="icon ext" /></a
         >) and fix anything that slips.
       </p>
     </div>
@@ -56,12 +57,13 @@ const scores = [
         scores.map((s) => (
           <li class="cell">
             <p class="scanner">{s.scanner}</p>
-            <p class="grade" translate="no">
+            <p class:list={['grade', { long: s.grade.length > 6 }]} translate="no">
               {s.grade}
             </p>
             <p class="what">{s.what}</p>
             <a href={s.href} class="report" rel={s.external ? 'noopener' : undefined}>
               {s.linkLabel}
+              {s.external && <span class="visually-hidden"> from {s.scanner}</span>}
               {s.external && <Icon name="arrow-up-right" class="icon ext" />}
             </a>
           </li>
@@ -129,6 +131,12 @@ const scores = [
     color: var(--accent);
   }
 
+  /* Longer words keep the same presence at a size that fits the cell. */
+  .grade.long {
+    font-size: clamp(1.9rem, 1.4rem + 1.7vw, 2.75rem);
+    letter-spacing: -0.03em;
+  }
+
   .what {
     color: var(--ink-2);
     font-size: var(--step--1);
@@ -151,13 +159,16 @@ const scores = [
     }
   }
 
-  .report :global(.ext) {
+  .report :global(.ext),
+  .runs :global(.ext) {
     width: 1em;
     height: 1em;
+    vertical-align: -0.1em;
     transition: transform 180ms var(--ease-out);
   }
 
-  .report:hover :global(.ext) {
+  .report:hover :global(.ext),
+  .runs:hover :global(.ext) {
     transform: translate(2px, -2px);
   }
 

@@ -16,7 +16,7 @@ interface Props {
 
 const { title, description = site.description, noindex = false, hasContact = false } = Astro.props;
 const contactHref = hasContact ? '#contact' : contactCta.href;
-const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | Cybersecurity for UAE companies`;
+const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | ${site.titleTagline}`;
 const canonical = new URL(Astro.url.pathname, site.url).href;
 const ogImage = new URL('/og.png', site.url).href;
 

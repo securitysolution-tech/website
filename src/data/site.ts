@@ -3,6 +3,10 @@ export const site = {
   url: 'https://securitysolution.tech',
   email: 'hello@securitysolution.tech',
   securityEmail: 'security@securitysolution.tech',
+  /** The one-line description of the business, used wherever the site introduces itself. */
+  tagline: 'Penetration testing, security monitoring and compliance readiness for UAE companies',
+  /** A shorter line for the browser tab, kept under 70 characters with the name. */
+  titleTagline: 'Penetration testing for UAE companies',
   description:
     'Penetration testing, security monitoring and compliance readiness for companies in the United Arab Emirates. You work directly with the people who test.',
   location: 'United Arab Emirates',
@@ -31,7 +35,7 @@ export const founders: Founder[] = [
     name: 'Mohammad Thabet Hassan',
     role: 'Co-founder',
     highlights: ['B.Sc. Cyber Security, Canadian University Dubai', '3 IEEE-published papers', 'Coordinated vulnerability disclosure'],
-    bio: 'Holds a B.Sc. in Cyber Security from Canadian University Dubai and is first author of 3 IEEE-published papers, on SQL-injection detection, voice-deepfake detection and over-the-air update security. Reports vulnerabilities to open-source maintainers through coordinated disclosure.',
+    bio: 'First author of the three papers, on SQL-injection detection, voice-deepfake detection and over-the-air update security. Reports the vulnerabilities he finds in open-source software to its maintainers before anything is published.',
     links: [
       { label: 'LinkedIn', href: 'https://www.linkedin.com/in/mohammadthabet', icon: 'linkedin-logo' },
       { label: 'GitHub', href: 'https://github.com/MohammadThabetHassan', icon: 'github-logo' },

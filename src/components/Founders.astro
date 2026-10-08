@@ -41,6 +41,7 @@ const initials = (name: string) => {
                   <a href={l.href} rel="noopener">
                     <Icon name={l.icon} />
                     <span>{l.label}</span>
+                    <span class="visually-hidden">, {f.name}</span>
                   </a>
                 </li>
               ))}
@@ -102,7 +103,7 @@ const initials = (name: string) => {
   }
 
   h3 {
-    font-size: var(--step-3);
+    font-size: var(--step-2);
     font-stretch: 114%;
     letter-spacing: -0.02em;
   }

@@ -50,7 +50,7 @@ export const services: Service[] = [
       { label: 'Retest', value: 'Included, with an updated report' },
     ],
     intro:
-      'A penetration test answers one question: what could someone do to your business with the access the internet already gives them? We find out under a written scope, stop at the agreed limits, and give you evidence your team can act on.',
+      'A penetration test answers one question: what could an attacker do to your business, from the internet or from inside your network? We find out under a written scope, stop at the agreed limits, and give you evidence your team can act on.',
     seoTitle: 'Penetration testing in the UAE',
     seoDescription:
       'Web, API, mobile and network penetration testing for UAE companies, with plain-language reports and a retest of every fix.',
