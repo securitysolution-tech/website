@@ -44,17 +44,22 @@ export const en = {
   },
 
   hero: {
-    headline: 'Know where you’re exposed, and what to fix first.',
-    lead: 'Penetration testing, security monitoring and compliance readiness for UAE companies, from the people who do the testing.',
-    seeServices: 'See services',
+    headline: 'Can anyone send email as your company?',
+    lead: 'Type your domain. In five seconds you see what an attacker sees: spoofing, signed DNS, certificates. Nothing you type leaves your browser.',
+    example: 'See a passing domain: ours',
+    /** The headline once a check has run, by how well spoofing is held off. */
+    result: {
+      weak: '{domain}: anyone can send email as you.',
+      partial: '{domain}: spoofing is only partly blocked.',
+      strong: '{domain}: spoofing is blocked.',
+    },
   },
 
   check: {
     title: 'Check your domain',
-    lead: 'See how well your company’s email and DNS are protected against spoofing and tampering. It takes about 5 seconds.',
     label: 'Company domain',
     placeholder: 'yourcompany.ae',
-    run: 'Run check',
+    run: 'Check now',
     retry: 'Try again',
     privacy:
       'Runs in your browser through Cloudflare’s public DNS resolver, with Google Public DNS as a fallback. We never receive the domain you type.',
@@ -70,6 +75,27 @@ export const en = {
     looking: 'Looking this up…',
     verdict: 'Spoofing protection:',
     fixFirst: 'Fix first',
+    /** What an attacker could send, previewed with the results. Nothing is sent. */
+    spoof: {
+      title: 'What an attacker could send',
+      from: 'From',
+      to: 'To',
+      subject: 'Subject',
+      fromName: 'Finance',
+      toLine: 'your team',
+      subjectLine: 'Invoice due today',
+      body: 'Please settle the attached invoice by the end of the day.',
+      delivered: 'Would be delivered',
+      blocked: 'Blocked',
+      deliveredNote:
+        'Anyone can send a message like this with your name on it. Your domain does not tell receiving servers to refuse it.',
+      blockedNote: 'Your domain tells receiving servers to refuse mail like this.',
+      note: 'A preview, in your browser. Nothing is sent.',
+    },
+    /** The record lines behind the headline, when a domain has none. */
+    noRecord: 'no {tech} record',
+    signed: 'signed and validated',
+    unsigned: 'not signed',
     checks: {
       dmarc: {
         title: 'Spoofing protection',

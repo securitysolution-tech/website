@@ -130,7 +130,7 @@ for (const url of ['/', '/services/offensive-testing/', '/privacy/']) {
   if (cls > 0.05) problems.push(`${url}: layout shift ${cls.toFixed(3)} (limit 0.05)`);
   for (const o of over) problems.push(`${url}: over budget, ${o}`);
 }
-await chrome.kill();
+chrome.kill();
 server.close();
 
 const report = summary.map((l) => `- ${l}`).join('\n');

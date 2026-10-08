@@ -21,10 +21,14 @@ export type CheckStrings = Pick<
   | 'checking'
   | 'looking'
   | 'run'
->;
+  | 'spoof'
+  | 'noRecord'
+  | 'signed'
+  | 'unsigned'
+> & { hero: Dictionary['hero']['result'] };
 
 /** The strings domain-check.ts and checks.ts read from the page. */
-export const checkStrings = (c: Dictionary['check']): CheckStrings => ({
+export const checkStrings = (c: Dictionary['check'], hero: Dictionary['hero']['result']): CheckStrings => ({
   labels: c.labels,
   levels: c.levels,
   score: c.score,
@@ -41,7 +45,13 @@ export const checkStrings = (c: Dictionary['check']): CheckStrings => ({
   checking: c.checking,
   looking: c.looking,
   run: c.run,
+  spoof: c.spoof,
+  noRecord: c.noRecord,
+  signed: c.signed,
+  unsigned: c.unsigned,
+  hero,
 });
+
 export type ContactStrings = Dictionary['contact']['script'];
 
 /** Fills {name} placeholders. */

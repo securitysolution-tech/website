@@ -15,6 +15,7 @@ uniform vec2 u_res;
 uniform float u_time;
 uniform vec2 u_pointer;
 uniform float u_gain;
+uniform float u_reveal;
 out vec4 o;
 
 float hash(vec2 p) {
@@ -67,6 +68,15 @@ void main() {
   float relief = smoothstep(0.35, 0.85, h) * 0.045;
   float a = (line * 0.16 + major * 0.10) * (1.0 + sweep * 2.2 + wake * 0.35) + relief + sweep * 0.025;
   a *= left * edge * vig * u_gain;
+
+  // The first scan develops the map: the terrain shows only where its bright front has passed,
+  // and the whole field is a little brighter until it has. u_reveal runs 0 to 1 once at start,
+  // and again when the visitor runs a check.
+  float rx = u_reveal * 1.4 - 0.2;
+  float shown = 1.0 - smoothstep(rx - 0.08, rx, uv.x);
+  float fd = (uv.x - rx) / 0.045;
+  float front = exp(-fd * fd) * step(u_reveal, 0.999) * edge * u_gain;
+  a = a * shown * (1.0 + 0.5 * (1.0 - u_reveal)) + front * 0.22;
   vec3 mint = vec3(0.384, 0.827, 0.651);
   o = vec4(mint * a, a);
 }`;
@@ -101,6 +111,8 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
   let uRes: WebGLUniformLocation | null = null;
   let uTime: WebGLUniformLocation | null = null;
   let uPointer: WebGLUniformLocation | null = null;
+  let uReveal: WebGLUniformLocation | null = null;
+  let revealStart = 0; // when the current scan began, in active seconds; -1 once it is done
   let lost = false;
   let visible = false;
   let raf = 0;
@@ -181,6 +193,7 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
     uRes = ctx.getUniformLocation(p, 'u_res');
     uTime = ctx.getUniformLocation(p, 'u_time');
     uPointer = ctx.getUniformLocation(p, 'u_pointer');
+    uReveal = ctx.getUniformLocation(p, 'u_reveal');
     ctx.uniform1f(ctx.getUniformLocation(p, 'u_gain'), gain);
   }
 
@@ -219,6 +232,10 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
     if (!gl || lost) return;
     gl.uniform1f(uTime, time);
     gl.uniform2f(uPointer, px, py);
+    // The scan takes 2.4 seconds of running time.
+    const reveal = revealStart < 0 ? 1 : Math.min(1, (time - revealStart) / 2.4);
+    if (reveal >= 1) revealStart = -1;
+    gl.uniform1f(uReveal, reveal);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     if (parallax) {
       const sx = px.toFixed(3),
@@ -257,8 +274,16 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
 
   const still = () => {
     resize();
+    revealStart = -1;
     draw(STILL_FRAME_TIME);
   };
+
+  // A new check scans the map again (domain-check.ts), unless motion is reduced.
+  canvas.addEventListener('exposurescan', () => {
+    if (reduce.matches || lost) return;
+    revealStart = active;
+    schedule();
+  });
 
   if (!setup()) {
     if (!gl) unavailable = true;

@@ -1,13 +1,16 @@
 ---
-import DomainCheck from './DomainCheck.astro';
+import CheckForm from './CheckForm.astro';
+import CheckResults from './DomainCheck.astro';
 import ExposureMap from './ExposureMap.astro';
+import { site } from '../data/site';
 import { useI18n } from '../i18n';
 
-const { t, href, cta } = useI18n(Astro);
+const { t, cta } = useI18n(Astro);
 const words = t.hero.headline.split(' ');
 
-// The six live records the domain check below verifies, in the order its rows run.
-// All real: the backdrop is the same material the instrument reads.
+// The six live records the check below verifies, in the order its rows run. All real: the
+// backdrop is the same material the instrument reads. After a visitor's check, the lines
+// print that domain's records instead (domain-check.ts).
 const records = [
   '_dmarc.securitysolution.tech.   TXT   "v=DMARC1; p=reject; sp=reject"',
   'securitysolution.tech.   TXT   "v=spf1 include:_spf.mx.cloudflare.net ~all"',
@@ -16,41 +19,60 @@ const records = [
   'securitysolution.tech.   CAA   0 issue "letsencrypt.org"',
   '_mta-sts.securitysolution.tech.   TXT   "v=STSv1; id=20261006T1200Z"',
 ];
+// Five marks the scan sets down as it develops the map: found at the edge, like the brand mark.
+const marks = [1, 2, 3, 4, 5];
 ---
 
-<section class="hero ink grain" aria-labelledby="hero-title">
-  <ExposureMap />
-  <div class="backdrop" aria-hidden="true" data-parallax>
-    {records.map((r) => (
-      <p data-r={r} />
-    ))}
-  </div>
-  <div class="glow" aria-hidden="true"></div>
-
-  <div class="container intro">
-    <h1 id="hero-title">
-      {words.map((w) => (
-        <>
-          <span class="w">{w}</span>{' '}
-        </>
+<div data-domain-check data-autorun={site.autorunDomain ?? undefined}>
+  <section class="hero ink grain" aria-labelledby="hero-title">
+    <ExposureMap />
+    <div class="backdrop" aria-hidden="true" data-parallax>
+      {records.map((r) => (
+        <p data-r={r} />
       ))}
-    </h1>
-    <p class="lead">{t.hero.lead}</p>
-    <div class="actions">
-      <a class="btn btn-primary" href={cta.href}>
-        {cta.label}
-      </a>
-      <a class="btn btn-secondary" href={href('/#services')}>
-        {t.hero.seeServices}
-      </a>
     </div>
-  </div>
-</section>
+    <div class="marks" aria-hidden="true">
+      {marks.map(() => (
+        <svg
+          class="mark"
+          viewBox="0 0 32 32"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.25"
+          stroke-linecap="square"
+        >
+          <path d="M3 11V3h8M21 3h8v8M29 21v8h-8M11 29H3v-8" />
+        </svg>
+      ))}
+    </div>
+    <div class="glow" aria-hidden="true"></div>
 
-<div class="container check-wrap">
-  <!-- The instrument sits in a recessed tray, like a plate in machined housing. -->
-  <div class="tray">
-    <DomainCheck />
+    <div class="container intro">
+      <h1 id="hero-title" data-hero-title>
+        {words.map((w) => (
+          <>
+            <span class="w">{w}</span>{' '}
+          </>
+        ))}
+      </h1>
+      <p class="lead">{t.hero.lead}</p>
+      <CheckForm />
+      <div class="actions">
+        <a class="btn btn-secondary" href={cta.href}>
+          {cta.label}
+        </a>
+        <a class="example" href={`#check=${site.autorunDomain ?? ''}`}>
+          {t.hero.example}
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="container check-wrap">
+    <!-- The instrument sits in a recessed tray, like a plate in machined housing. -->
+    <div class="tray">
+      <CheckResults />
+    </div>
   </div>
 </div>
 
@@ -88,12 +110,6 @@ const records = [
     transform: translate(calc(var(--px, 0) * -10px), calc(var(--py, 0) * 8px));
   }
 
-  @media (max-width: 54rem) {
-    .backdrop {
-      display: none;
-    }
-  }
-
   .backdrop p {
     max-width: none;
     margin: 0;
@@ -102,6 +118,50 @@ const records = [
   /* Rendered as generated content: pure decoration, never read as page text. */
   .backdrop p::before {
     content: attr(data-r);
+  }
+
+  /* The marks the scan sets down, on the map's side of the band. */
+  .marks {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    color: var(--ink-accent);
+  }
+
+  .mark {
+    position: absolute;
+    width: 1.1rem;
+    height: 1.1rem;
+    opacity: 0.55;
+  }
+
+  .mark:nth-child(1) {
+    inset-inline-start: 72%;
+    top: 12%;
+  }
+  .mark:nth-child(2) {
+    inset-inline-start: 86%;
+    top: 24%;
+  }
+  .mark:nth-child(3) {
+    inset-inline-start: 76%;
+    top: 47%;
+  }
+  .mark:nth-child(4) {
+    inset-inline-start: 94%;
+    top: 66%;
+  }
+  .mark:nth-child(5) {
+    inset-inline-start: 65%;
+    top: 84%;
+  }
+
+  @media (max-width: 54rem) {
+    .backdrop,
+    .marks {
+      display: none;
+    }
   }
 
   .glow {
@@ -136,9 +196,10 @@ const records = [
     justify-items: start;
   }
 
-  /* The first line is 15.53em wide, so the box has slack: with none, a fraction of a pixel decides whether it wraps. */
+  /* The question is 13.5em wide at its longest line, so the box has slack: with none, a
+     fraction of a pixel decides whether it wraps. */
   h1 {
-    max-width: 16.5em;
+    max-width: 15em;
     font-family: var(--font-display);
     font-stretch: 116%;
     font-weight: 700;
@@ -154,15 +215,31 @@ const records = [
   .actions {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--s-3);
-    margin-top: var(--s-2);
+    align-items: center;
+    gap: var(--s-3) var(--s-5);
   }
 
-  /* On phones the buttons stack at full width. Side by side, whether they fit depends on the font by a pixel. */
+  .example {
+    color: var(--ink-text-2);
+    font-weight: 540;
+    text-underline-offset: 0.25em;
+    transition: color var(--dur-quick) ease;
+  }
+
+  .example:hover {
+    color: var(--ink-text);
+  }
+
+  /* On phones the actions stack at full width. */
   @media (max-width: 30rem) {
     .actions {
       flex-direction: column;
+      align-items: stretch;
       justify-self: stretch;
+    }
+
+    .example {
+      text-align: center;
     }
   }
 
@@ -173,9 +250,10 @@ const records = [
   }
 
   /* The load sequence, about 1.2 s end to end: headline words, then the lead at once (it is the
-     largest text on screen), the actions, the instrument, and finally the records printing.
-     The headline and the lead start faint rather than invisible: the eye has an anchor from the
-     first frame, and the page counts as painted the moment it is (invisible text does not). */
+     largest text on screen), the field, the actions, the instrument, the records printing, and
+     the marks as the map's first scan passes. The headline and the lead start faint rather than
+     invisible: the eye has an anchor from the first frame, and the page counts as painted the
+     moment it is (invisible text does not). */
   @media (prefers-reduced-motion: no-preference) {
     /* Each word rises and unsqueezes into its full width, without touching layout. */
     .w {
@@ -227,13 +305,18 @@ const records = [
       animation: enter var(--dur-enter) var(--ease-out) both;
     }
 
+    .intro :global(.check-form) {
+      --enter-y: 0.3em;
+      animation: enter var(--dur-enter) var(--ease-out) 220ms both;
+    }
+
     .actions {
       --enter-y: 0.3em;
-      animation: enter var(--dur-enter) var(--ease-out) 240ms both;
+      animation: enter var(--dur-enter) var(--ease-out) 330ms both;
     }
 
     .check-wrap {
-      animation: enter var(--dur-enter) var(--ease-out) 360ms both;
+      animation: enter var(--dur-enter) var(--ease-out) 420ms both;
     }
 
     /* The records print one by one once the instrument is in place, like a zone being read. */
@@ -260,6 +343,26 @@ const records = [
       animation-delay: 1050ms;
     }
 
+    .mark {
+      animation: mark-in 700ms var(--ease-out) both;
+    }
+
+    .mark:nth-child(1) {
+      animation-delay: 1100ms;
+    }
+    .mark:nth-child(2) {
+      animation-delay: 1500ms;
+    }
+    .mark:nth-child(3) {
+      animation-delay: 1850ms;
+    }
+    .mark:nth-child(4) {
+      animation-delay: 2050ms;
+    }
+    .mark:nth-child(5) {
+      animation-delay: 1700ms;
+    }
+
     .glow {
       animation: breathe 9s var(--ease-loop) 1.4s infinite alternate;
     }
@@ -277,6 +380,13 @@ const records = [
       opacity: 0.14;
       translate: 0 0.45em;
       scale: 0.88 1;
+    }
+  }
+
+  @keyframes mark-in {
+    from {
+      opacity: 0;
+      scale: 1.8;
     }
   }
 

@@ -6,6 +6,8 @@ import { fmt, readStrings, type CheckStrings } from '../i18n/client';
 // The page renders the strings in its own language (DomainCheck.astro).
 const t = readStrings<CheckStrings>('check');
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+// A Latin domain inside a sentence in either direction keeps its own order.
+const isolate = (text: string) => `⁦${text}⁩`;
 
 function init(root: HTMLElement) {
   const form = root.querySelector('form')!;
@@ -13,6 +15,7 @@ function init(root: HTMLElement) {
   const button = root.querySelector<HTMLButtonElement>('button[type="submit"]')!;
   const error = root.querySelector<HTMLElement>('[data-error]')!;
   const retry = root.querySelector<HTMLButtonElement>('[data-retry]');
+  const panel = root.querySelector<HTMLElement>('[data-results-panel]') ?? root;
   const list = root.querySelector<HTMLOListElement>('[data-results]')!;
   const target = root.querySelector<HTMLElement>('[data-target]')!;
   const targetName = root.querySelector<HTMLElement>('[data-target-name]')!;
@@ -20,6 +23,14 @@ function init(root: HTMLElement) {
   const ownDomain = root.dataset.autorun ?? '';
   const verdict = root.querySelector<HTMLElement>('[data-verdict]')!;
   const announce = root.querySelector<HTMLElement>('[data-announce]')!;
+  // The hook: the headline, the record lines behind it, the preview email and the map's scan.
+  const title = root.querySelector<HTMLElement>('[data-hero-title]');
+  const lines = [...root.querySelectorAll<HTMLElement>('[data-r]')];
+  const spoof = root.querySelector<HTMLElement>('[data-spoof]');
+  const spoofDomain = root.querySelector<HTMLElement>('[data-spoof-domain]');
+  const spoofStamp = root.querySelector<HTMLElement>('[data-spoof-stamp]');
+  const spoofNote = root.querySelector<HTMLElement>('[data-spoof-note]');
+  const canvas = root.querySelector<HTMLCanvasElement>('[data-exposure-map]');
 
   const rows = new Map<string, HTMLLIElement>();
   list.querySelectorAll<HTMLLIElement>('[data-check]').forEach((li) => rows.set(li.dataset.check!, li));
@@ -91,7 +102,65 @@ function init(root: HTMLElement) {
     return items.length;
   }
 
-  function showVerdict(domain: string, v: Verdict, results: Result[]) {
+  // The email a spoofer would send, stamped with what this domain does to it. While the
+  // check runs the card already carries the domain, and the stamp says so.
+  function showSpoof(domain: string, results: Result[] | null) {
+    if (!spoof || !spoofStamp || !spoofNote) return;
+    if (spoofDomain) spoofDomain.textContent = domain;
+    if (!results) {
+      spoof.dataset.level = 'checking';
+      spoofStamp.textContent = t.checking;
+      spoofNote.textContent = '';
+    } else {
+      const blocked = results.find((r) => r.id === 'dmarc')?.status === 'pass';
+      spoof.dataset.level = blocked ? 'blocked' : 'delivered';
+      spoofStamp.textContent = blocked ? t.spoof.blocked : t.spoof.delivered;
+      spoofNote.textContent = blocked ? t.spoof.blockedNote : t.spoof.deliveredNote;
+    }
+    spoof.hidden = false;
+    spoof.classList.remove('in');
+    void spoof.offsetWidth;
+    spoof.classList.add('in');
+  }
+
+  // The record lines behind the headline print the checked domain's own records.
+  function printRecords(domain: string, results: Result[]) {
+    if (!lines.length) return;
+    const clip = (v: string) => (v.length > 72 ? `${v.slice(0, 72)}…` : v);
+    const evidence = (id: string, tech: string, quoted: boolean) => {
+      const first = results.find((r) => r.id === id)?.evidence[0];
+      if (!first) return fmt(t.noRecord, { tech });
+      return quoted ? `"${clip(first)}"` : clip(first);
+    };
+    const dnssec = results.find((r) => r.id === 'dnssec')?.status === 'pass' ? t.signed : t.unsigned;
+    const texts = [
+      `_dmarc.${domain}.   TXT   ${evidence('dmarc', 'DMARC', true)}`,
+      `${domain}.   TXT   ${evidence('spf', 'SPF', true)}`,
+      `${domain}.   MX   ${evidence('mx', 'MX', false)}`,
+      `${domain}.   DNSSEC   ${dnssec}`,
+      `${domain}.   CAA   ${evidence('caa', 'CAA', false)}`,
+      `_mta-sts.${domain}.   TXT   ${evidence('mtasts', 'MTA-STS', true)}`,
+    ];
+    lines.forEach((p, i) => {
+      p.dataset.r = texts[i] ?? '';
+      if (!reduceMotion.matches) {
+        p.animate(
+          [
+            { opacity: 0, translate: '1.5rem 0' },
+            { opacity: 1, translate: '0 0' },
+          ],
+          {
+            duration: 820,
+            delay: 200 + i * 90,
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            fill: 'backwards',
+          },
+        );
+      }
+    });
+  }
+
+  function showVerdict(domain: string, v: Verdict, results: Result[], autorun: boolean) {
     const level = v.incomplete ? 'incomplete' : v.spoofing;
     verdict.querySelector('[data-spoofing]')!.textContent = t.levels[level];
     verdict.dataset.level = level;
@@ -100,7 +169,16 @@ function init(root: HTMLElement) {
       : fmt(t.score, { passed: v.passed, scored: v.scored });
     verdict.hidden = false;
     const count = v.incomplete ? 0 : showFixFirst(results);
-    if (v.incomplete && fix) fix.hidden = true;
+    if (v.incomplete) {
+      if (fix) fix.hidden = true;
+      if (spoof) spoof.hidden = true;
+    } else {
+      showSpoof(domain, results);
+      if (!autorun) {
+        if (title) title.textContent = fmt(t.hero[v.spoofing], { domain: isolate(domain) });
+        printRecords(domain, results);
+      }
+    }
     announce.textContent = v.incomplete
       ? fmt(t.announceIncomplete, { domain })
       : fmt(t.announceDone, { domain, level: t.levels[v.spoofing].toLowerCase(), passed: v.passed, scored: v.scored }) +
@@ -138,10 +216,13 @@ function init(root: HTMLElement) {
     if (!autorun) {
       lastRequested = domain;
       button.textContent = t.checking;
+      // The map scans again: the visitor can see the instrument working.
+      canvas?.dispatchEvent(new Event('exposurescan'));
     }
     list.setAttribute('aria-busy', 'true');
     verdict.hidden = true;
     if (fix) fix.hidden = true;
+    showSpoof(domain, null);
     announce.textContent = '';
     targetName.textContent = domain;
     targetOwn.hidden = domain !== ownDomain;
@@ -167,7 +248,7 @@ function init(root: HTMLElement) {
       await queue;
       if (id !== runId) return;
       shown = domain;
-      showVerdict(domain, v, results);
+      showVerdict(domain, v, results, autorun);
     } catch (err) {
       if (id !== runId) return;
       rows.forEach((li) => setState(li, 'idle', li.dataset.about ?? ''));
@@ -199,6 +280,8 @@ function init(root: HTMLElement) {
     // Keep the result linkable. The fragment never leaves the browser, so the domain stays private.
     history.replaceState(null, '', `#check=${encodeURIComponent(domain)}`);
     run(domain);
+    // The headline answers in place; the page moves only when the results sit out of view.
+    if (panel.getBoundingClientRect().top > innerHeight * 0.85) scrollToElement(panel, { focus: false });
   });
 
   retry?.addEventListener('click', () => {
@@ -222,7 +305,7 @@ function init(root: HTMLElement) {
   const linked = fromHash();
   if (linked) {
     input.value = linked;
-    requestAnimationFrame(() => scrollToElement(root, { immediate: true, focus: false }));
+    requestAnimationFrame(() => scrollToElement(panel, { immediate: true, focus: false }));
     run(linked);
   } else if (ownDomain) {
     // Show our own results on load, and leave the field empty for the visitor's domain.
@@ -235,7 +318,7 @@ function init(root: HTMLElement) {
     if (!domain) return;
     input.value = domain;
     clearError();
-    scrollToElement(root, { focus: false });
+    scrollToElement(panel, { focus: false });
     // Back and forward restore a fragment whose results may already be on screen.
     if (domain !== shown) run(domain);
   });

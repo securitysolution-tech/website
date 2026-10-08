@@ -1,74 +1,81 @@
 ---
+// The results panel of the domain check. The field lives in the hero (CheckForm.astro); the
+// two share one root, which domain-check.ts drives.
 import Icon from './Icon.astro';
 import { site } from '../data/site';
 import { useI18n } from '../i18n';
 import { checkStrings, toJsonBlock } from '../i18n/client';
 
-const { t, href, cta } = useI18n(Astro);
+const { t, cta } = useI18n(Astro);
 // The rows, in the order the checks run.
 const ids = ['dmarc', 'spf', 'mx', 'dnssec', 'caa', 'mtasts'] as const;
 const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
+const own = site.autorunDomain ?? '';
 ---
 
-<section
-  id="check"
-  class="instrument"
-  aria-labelledby="check-title"
-  data-domain-check
-  data-autorun={site.autorunDomain ?? undefined}
->
-  <div class="panel-intro">
-    <div class="head">
-      <h2 id="check-title">{t.check.title}</h2>
-      <p>{t.check.lead}</p>
-    </div>
+<section id="check" class="instrument" aria-labelledby="check-title" data-results-panel>
+  <h2 id="check-title" class="visually-hidden">
+    {t.check.title}
+  </h2>
 
-    <form class="check-form" novalidate>
-      <label for="domain-input">{t.check.label}</label>
-      <div class="field">
-        <input
-          id="domain-input"
-          name="domain"
-          type="text"
-          inputmode="url"
-          autocomplete="off"
-          autocapitalize="none"
-          spellcheck="false"
-          maxlength="253"
-          placeholder={t.check.placeholder}
-          aria-describedby="check-privacy"
-          aria-errormessage="domain-error"
-        />
-        <button type="submit" class="run">
-          {t.check.run}
-        </button>
-      </div>
-      <p id="domain-error" class="error" data-error role="alert" hidden></p>
-      <button type="button" class="retry" data-retry hidden>
-        {t.check.retry}
-      </button>
-    </form>
-
-    <p class="privacy" id="check-privacy">
-      {t.check.privacy} <a href={href('/privacy/')}>{t.check.privacyLink}</a>
-    </p>
-    <noscript>
-      <p class="privacy">{t.check.noscript}</p>
-    </noscript>
-  </div>
-
-  <div class="panel-results">
+  <div class="panel-side">
     {/* Rendered for our own domain at build time, so the autorun shifts nothing when it starts. */}
-    <p class="target" data-target hidden={!site.autorunDomain}>
+    <p class="target" data-target hidden={!own}>
       {t.check.resultsFor}{' '}
       <strong data-target-name translate="no">
-        {site.autorunDomain ?? ''}
+        {own}
       </strong>
-      <span data-target-own hidden={!site.autorunDomain}>
+      <span data-target-own hidden={!own}>
         {t.check.ownDomain}
       </span>
     </p>
 
+    <!-- What an attacker could send: a preview built in the browser, never sent. -->
+    <figure class="spoof" data-spoof hidden>
+      <figcaption class="spoof-title">{t.check.spoof.title}</figcaption>
+      <div class="mail" translate="no">
+        <p class="mail-line">
+          <span class="k">{t.check.spoof.from}</span>
+          <span class="v">
+            {t.check.spoof.fromName}{' '}
+            <span class="addr" dir="ltr">
+              &lt;finance@<span data-spoof-domain>{own}</span>&gt;
+            </span>
+          </span>
+        </p>
+        <p class="mail-line">
+          <span class="k">{t.check.spoof.to}</span> <span class="v">{t.check.spoof.toLine}</span>
+        </p>
+        <p class="mail-line">
+          <span class="k">{t.check.spoof.subject}</span> <span class="v">{t.check.spoof.subjectLine}</span>
+        </p>
+        <p class="mail-body">{t.check.spoof.body}</p>
+        <p class="stamp" data-spoof-stamp></p>
+      </div>
+      <p class="spoof-note" data-spoof-note></p>
+      <p class="spoof-small">{t.check.spoof.note}</p>
+    </figure>
+
+    <div class="verdict" data-verdict hidden>
+      <div>
+        <p class="verdict-main">
+          {t.check.verdict} <strong data-spoofing></strong>
+        </p>
+        <p class="verdict-score" data-score></p>
+      </div>
+      <a class="btn verdict-cta" href={cta.href}>
+        {cta.label}
+      </a>
+    </div>
+
+    <!-- The headline, made literal: what to fix first, failures before warnings. -->
+    <div class="fix" data-fix hidden>
+      <p class="fix-title">{t.check.fixFirst}</p>
+      <ol class="fix-list" data-fix-list></ol>
+    </div>
+  </div>
+
+  <div class="panel-results">
     <ol class="results" data-results aria-busy="false" aria-label={t.check.resultsLabel}>
       {checks.map((c) => (
         <li
@@ -98,24 +105,6 @@ const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
         </li>
       ))}
     </ol>
-
-    <div class="verdict" data-verdict hidden>
-      <div>
-        <p class="verdict-main">
-          {t.check.verdict} <strong data-spoofing></strong>
-        </p>
-        <p class="verdict-score" data-score></p>
-      </div>
-      <a class="btn verdict-cta" href={cta.href}>
-        {cta.label}
-      </a>
-    </div>
-
-    <!-- The headline, made literal: what to fix first, failures before warnings. -->
-    <div class="fix" data-fix hidden>
-      <p class="fix-title">{t.check.fixFirst}</p>
-      <ol class="fix-list" data-fix-list></ol>
-    </div>
   </div>
 
   <p class="visually-hidden" aria-live="polite" data-announce></p>
@@ -132,7 +121,7 @@ const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
   <template data-icon="info">
     <Icon name="info" />
   </template>
-  <script type="application/json" data-i18n="check" set:html={toJsonBlock(checkStrings(t.check))} />
+  <script type="application/json" data-i18n="check" set:html={toJsonBlock(checkStrings(t.check, t.hero.result))} />
 </section>
 
 <script>
@@ -156,9 +145,9 @@ const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
       0 0 0 6px rgb(var(--ink-accent-rgb) / 0.04);
   }
 
-  .panel-intro {
+  .panel-side {
     display: grid;
-    gap: var(--s-5);
+    gap: var(--s-4);
     align-content: start;
     align-self: start;
     position: sticky;
@@ -176,138 +165,18 @@ const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
       grid-template-columns: 1fr;
     }
 
-    .panel-intro {
+    .panel-side {
       position: static;
     }
   }
 
-  .head {
-    display: grid;
-    gap: var(--s-2);
-  }
-
-  .head h2 {
-    font-size: var(--step-2);
-  }
-
-  .head p,
-  .privacy,
-  .target {
-    color: var(--panel-ink-2);
-  }
-
-  .head p {
-    font-size: var(--step-0);
-  }
-
-  .check-form {
-    display: grid;
-    gap: var(--s-2);
-  }
-
-  label {
-    font-weight: 600;
-    font-size: var(--step--1);
-  }
-
-  .field {
-    display: flex;
-    gap: var(--s-2);
-  }
-
-  input {
-    flex: 1;
-    min-width: 0;
-    min-height: 3rem;
-    padding: 0 0.875rem;
-    border: 1px solid var(--panel-control);
-    border-radius: var(--radius-control);
-    background: var(--panel-2);
-    color: var(--panel-ink);
-    font: inherit;
-    font-size: 1rem;
-    transition: border-color var(--dur-quick) ease;
-  }
-
-  input:hover {
-    border-color: var(--panel-ink-2);
-  }
-
-  input::placeholder {
-    color: var(--panel-ink-2);
-    opacity: 1;
-  }
-
-  input:focus-visible,
-  .run:focus-visible,
   .verdict-cta:focus-visible,
   .evidence summary:focus-visible {
     outline-color: var(--pass);
   }
 
-  input[aria-invalid='true'] {
-    border-color: var(--p-fail);
-  }
-
-  .run {
-    min-height: 3rem;
-    min-width: 7.25rem; /* "Run check" and "Checking…" take the same room */
-    padding: 0 1.25rem;
-    border: 0;
-    border-radius: var(--radius-control);
-    background: var(--pass);
-    color: var(--on-ink-accent);
-    font: inherit;
-    font-weight: 650;
-    cursor: pointer;
-    white-space: nowrap;
-    transition:
-      background-color 160ms ease,
-      transform 120ms ease;
-  }
-
-  .run:hover {
-    background: #7fdcb6;
-  }
-
-  .run:active {
-    transform: translateY(1px);
-  }
-
-  .run:disabled {
-    cursor: progress;
-    opacity: 0.75;
-  }
-
-  .error {
-    color: var(--p-fail);
-    font-size: var(--step--1);
-  }
-
-  .retry {
-    justify-self: start;
-    min-height: 2.5rem;
-    padding: 0 0.875rem;
-    border: 1px solid var(--panel-control);
-    border-radius: var(--radius-control);
-    background: transparent;
-    color: var(--panel-ink);
-    font: inherit;
-    font-size: var(--step--1);
-    font-weight: 600;
-    cursor: pointer;
-    transition: border-color 160ms ease;
-  }
-
-  .retry:hover {
-    border-color: var(--panel-ink-2);
-  }
-
-  .privacy a {
-    color: var(--panel-ink);
-  }
-
   .target {
+    color: var(--panel-ink-2);
     font-size: var(--step--1);
   }
 
@@ -315,6 +184,112 @@ const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
     color: var(--panel-ink);
     font-weight: 600;
     word-break: break-all;
+  }
+
+  /* The email a spoofer would send, as a sheet of paper on the instrument. */
+  .spoof {
+    display: grid;
+    gap: var(--s-3);
+    margin: 0;
+  }
+
+  .spoof-title {
+    font-weight: 650;
+  }
+
+  .mail {
+    position: relative;
+    display: grid;
+    gap: 0.35rem;
+    padding: var(--s-4);
+    padding-inline-end: 7.5rem;
+    border-radius: var(--radius-control);
+    background: #f6f8f7;
+    color: #13211b;
+    font-size: var(--step--1);
+    line-height: 1.5;
+    box-shadow: 0 18px 40px -24px rgb(0 0 0 / 0.7);
+  }
+
+  .mail-line {
+    display: flex;
+    gap: var(--s-2);
+    min-width: 0;
+  }
+
+  .k {
+    flex: none;
+    width: 3.6em;
+    color: #5e6b65;
+  }
+
+  .v {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .addr {
+    color: #45534c;
+    unicode-bidi: isolate;
+  }
+
+  .mail-body {
+    margin-top: var(--s-2);
+    padding-top: var(--s-2);
+    border-top: 1px solid #d6ddd8;
+  }
+
+  .stamp {
+    position: absolute;
+    top: var(--s-3);
+    inset-inline-end: var(--s-3);
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--radius-badge);
+    border: 1.5px solid currentColor;
+    font-weight: 700;
+    font-size: var(--step--2);
+    line-height: 1.3;
+    text-align: center;
+    max-width: 6.5rem;
+  }
+
+  .spoof[data-level='checking'] .stamp {
+    color: #5e6b65;
+    border-style: dashed;
+  }
+
+  .spoof[data-level='delivered'] .stamp {
+    color: #b42318;
+    background: rgb(180 35 24 / 0.08);
+  }
+
+  .spoof[data-level='blocked'] .stamp {
+    color: #0a6b4c;
+    background: rgb(10 107 76 / 0.1);
+  }
+
+  .spoof-note {
+    font-size: var(--step--1);
+    line-height: 1.5;
+  }
+
+  .spoof[data-level='delivered'] .spoof-note {
+    color: var(--p-fail);
+  }
+
+  .spoof[data-level='blocked'] .spoof-note {
+    color: var(--pass);
+  }
+
+  .spoof-small {
+    color: var(--panel-ink-2);
+    font-size: var(--step--2);
+  }
+
+  @media (forced-colors: active) {
+    .mail {
+      border: 1px solid CanvasText;
+    }
   }
 
   .results {
@@ -566,17 +541,11 @@ const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .fix:not([hidden]) {
+    .fix:not([hidden]),
+    .spoof.in {
       animation: settle 400ms var(--ease-out);
     }
-  }
 
-  .privacy {
-    font-size: var(--step--2);
-    line-height: 1.5;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
     .row[data-status='checking'] .status::before {
       animation: pulse 1.1s ease-in-out infinite;
     }
@@ -649,16 +618,17 @@ const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
   }
 
   @media (max-width: 26rem) {
-    .field {
-      flex-direction: column;
-    }
-
     .row {
       gap: var(--s-2);
     }
 
     .badge {
       padding-inline: 0.375rem;
+    }
+
+    .mail {
+      padding-inline-end: var(--s-4);
+      padding-top: 3rem;
     }
   }
 </style>
