@@ -52,12 +52,41 @@ function init(root: HTMLElement) {
     li.classList.add('revealed');
   }
 
-  function showVerdict(domain: string, v: Verdict) {
+  // What to fix first: failures before warnings, in the order that matters most for email and DNS.
+  const priority: Record<string, number> = { dmarc: 0, spf: 1, mtasts: 2, dnssec: 3, caa: 4 };
+  const fix = root.querySelector<HTMLElement>('[data-fix]');
+  const fixList = root.querySelector<HTMLOListElement>('[data-fix-list]');
+
+  function showFixFirst(results: Result[]): number {
+    if (!fix || !fixList) return 0;
+    const items = results
+      .filter((r) => (r.status === 'fail' || r.status === 'warn') && r.id in priority)
+      .sort((a, b) => (a.status === b.status ? priority[a.id] - priority[b.id] : a.status === 'fail' ? -1 : 1));
+    fixList.replaceChildren(
+      ...items.map((r) => {
+        const row = rows.get(r.id);
+        const li = document.createElement('li');
+        li.dataset.status = r.status;
+        const strong = document.createElement('strong');
+        strong.textContent = `${row?.dataset.title ?? r.id} (${row?.dataset.tech ?? r.id})`;
+        li.append(strong, document.createTextNode(` ${r.summary}`));
+        return li;
+      }),
+    );
+    fix.hidden = items.length === 0;
+    return items.length;
+  }
+
+  function showVerdict(domain: string, v: Verdict, results: Result[]) {
     verdict.querySelector('[data-spoofing]')!.textContent = v.spoofing;
     verdict.dataset.level = v.spoofing.toLowerCase();
     verdict.querySelector('[data-score]')!.textContent = `${v.passed} of ${v.scored} checks passed`;
     verdict.hidden = false;
-    announce.textContent = `Check complete for ${domain}. Spoofing protection is ${v.spoofing.toLowerCase()}. ${v.passed} of ${v.scored} checks passed.`;
+    const count = showFixFirst(results);
+    announce.textContent =
+      `Check complete for ${domain}. Spoofing protection is ${v.spoofing.toLowerCase()}. ${v.passed} of ${v.scored} checks passed.` +
+      (count ? ` ${count} ${count === 1 ? 'item' : 'items'} to fix first.` : '');
+    if (domain !== ownDomain) document.dispatchEvent(new CustomEvent('domaincheck', { detail: { domain } }));
   }
 
   function showError(message: string) {
@@ -80,6 +109,7 @@ function init(root: HTMLElement) {
     button.textContent = 'Checking…';
     list.setAttribute('aria-busy', 'true');
     verdict.hidden = true;
+    if (fix) fix.hidden = true;
     announce.textContent = '';
     targetName.textContent = domain;
     targetOwn.hidden = domain !== ownDomain;
@@ -97,9 +127,9 @@ function init(root: HTMLElement) {
     };
 
     try {
-      const { verdict: v } = await runChecks(domain, reveal);
+      const { results, verdict: v } = await runChecks(domain, reveal);
       await queue;
-      if (id === runId) showVerdict(domain, v);
+      if (id === runId) showVerdict(domain, v, results);
     } catch (err) {
       if (id !== runId) return;
       rows.forEach((li) => setState(li, 'idle', li.dataset.about ?? ''));

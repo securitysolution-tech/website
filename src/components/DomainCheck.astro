@@ -64,7 +64,7 @@ const checks = [
   <ol class="results" data-results aria-busy="false" aria-label="Check results">
     {
       checks.map((c) => (
-        <li class="row" data-check={c.id} data-status="idle" data-about={c.about}>
+        <li class="row" data-check={c.id} data-status="idle" data-about={c.about} data-title={c.title} data-tech={c.tech}>
           <span class="status" data-icon-slot aria-hidden="true" />
           <div class="row-body">
             <p class="row-title">
@@ -92,6 +92,12 @@ const checks = [
       <p class="verdict-score" data-score></p>
     </div>
     <a class="btn verdict-cta" href={contactCta.href}>{contactCta.label}</a>
+  </div>
+
+  <!-- The headline, made literal: what to fix first, failures before warnings. -->
+  <div class="fix" data-fix hidden>
+    <p class="fix-title">Fix first</p>
+    <ol class="fix-list" data-fix-list></ol>
   </div>
   </div>
 
@@ -445,6 +451,57 @@ const checks = [
 
   .verdict-cta:hover {
     background: #ffffff;
+  }
+
+  .fix {
+    display: grid;
+    gap: var(--s-3);
+    padding: var(--s-4);
+    border: 1px solid var(--panel-line);
+    border-left: 3px solid var(--p-warn);
+    border-radius: var(--radius-control);
+    background: rgb(255 255 255 / 0.03);
+  }
+
+  .fix:has(li[data-status='fail']) {
+    border-left-color: var(--p-fail);
+  }
+
+  .fix-title {
+    font-weight: 650;
+  }
+
+  .fix-list {
+    display: grid;
+    gap: var(--s-2);
+    padding-left: 1.25rem;
+    color: var(--panel-ink-2);
+    font-size: var(--step--1);
+    line-height: 1.5;
+  }
+
+  .fix-list li::marker {
+    color: var(--panel-ink);
+    font-weight: 650;
+  }
+
+  .fix-list strong {
+    color: var(--panel-ink);
+    font-weight: 600;
+  }
+
+  .fix-list li[data-status='fail'] strong {
+    color: var(--p-fail);
+  }
+
+  .fix-list li[data-status='warn'] strong {
+    color: var(--p-warn);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .fix:not([hidden]) {
+      animation: settle 400ms var(--ease-out);
+    }
   }
 
   .privacy {
