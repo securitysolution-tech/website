@@ -1,6 +1,8 @@
 ---
 import ServiceCard from './ServiceCard.astro';
-import { services } from '../data/services';
+import { useI18n } from '../i18n';
+
+const { t, services } = useI18n(Astro);
 ---
 
 <script>
@@ -10,8 +12,8 @@ import { services } from '../data/services';
 <section id="services" class="section" aria-labelledby="services-title">
   <div class="container">
     <div class="section-head">
-      <h2 id="services-title">What we do</h2>
-      <p>Start with the service you need now, and let the report tell you what to look at next.</p>
+      <h2 id="services-title">{t.services.title}</h2>
+      <p>{t.services.lead}</p>
     </div>
 
     <ul class="bento" data-spotlight-root>

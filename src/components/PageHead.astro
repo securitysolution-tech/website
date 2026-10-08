@@ -2,6 +2,7 @@
 // The ink band that opens every page except the home page: breadcrumbs, a display
 // heading, a lead, an optional call to action, and whatever the page adds in the slot.
 import ExposureMap from './ExposureMap.astro';
+import { useI18n } from '../i18n';
 
 interface Crumb {
   label: string;
@@ -18,6 +19,7 @@ interface Props {
 }
 
 const { title, lead, crumbs = [], cta, gain = 0.6 } = Astro.props;
+const { t } = useI18n(Astro);
 ---
 
 <header class="page-head ink grain">
@@ -25,7 +27,7 @@ const { title, lead, crumbs = [], cta, gain = 0.6 } = Astro.props;
   <div class="container">
     {
       crumbs.length > 0 && (
-        <nav class="crumbs" aria-label="Breadcrumb">
+        <nav class="crumbs" aria-label={t.page.breadcrumb}>
           <ol>
             {crumbs.map((c) => (
               <li>{c.href ? <a href={c.href}>{c.label}</a> : <span aria-current="page">{c.label}</span>}</li>

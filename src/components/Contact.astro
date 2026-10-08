@@ -1,66 +1,61 @@
 ---
 import Icon from './Icon.astro';
 import ExposureMap from './ExposureMap.astro';
-import { contactBackend, contactCta, mailto, site } from '../data/site';
-import { services } from '../data/services';
+import { contactBackend, mailto, site } from '../data/site';
+import { services as spine } from '../data/services';
 import { timelines } from '../data/contact';
+import { useI18n } from '../i18n';
+import { toJsonBlock } from '../i18n/client';
 
 interface Props {
   /** A need to tick in advance, on pages about one service. */
   need?: string;
 }
 const { need } = Astro.props;
+const { t, href, cta, services } = useI18n(Astro);
 
-// The needs are the services, in the buyer's words, so the form and the pages agree.
-const needs = services.map((s) => s.plainName);
+// The needs are the services, in the buyer's words, so the form and the pages agree. The
+// value is always the English name, which the inbox and the Worker expect; the label follows the page.
+const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plainName }));
 ---
 
 <section id="contact" class="contact ink grain" aria-labelledby="contact-title">
   <ExposureMap gain={0.5} />
   <div class="glow" aria-hidden="true"></div>
   <div class="container grid">
-    <h2 id="contact-title">{contactCta.label}</h2>
+    <h2 id="contact-title">{cta.label}</h2>
     <div class="main">
-      <p class="lead">
-        Tell us what you want tested and when. We set up a 30-minute call to agree the scope, and you get it in writing
-        with a fixed quote before any testing starts.
-      </p>
+      <p class="lead">{t.contact.lead}</p>
       <a class="address" href={mailto('Scoping call request')}>
         <Icon name="envelope-simple" class="icon mail" />
         <span>{site.email.split('@')[0]}<wbr />@{site.email.split('@')[1]}</span>
       </a>
       {
         contactBackend.live ? (
-          <p class="small">
-            We reply within 1 business day. Your request goes to our inbox over an encrypted connection, and we keep it
-            only to reply.
-          </p>
+          <p class="small">{t.contact.replyLive}</p>
         ) : (
-          <p class="small">
-            We reply within 1 business day. This site has no server: your request leaves from your own email app, and
-            nothing you type here is stored.
-          </p>
+          <p class="small">{t.contact.replyMailto}</p>
         )
       }
       <p class="small">
-        Found a security issue in one of our own systems? Please follow our <a href="/security/">disclosure policy</a>.
+        {t.contact.security1}<a href={href('/security/')}>{t.contact.securityLink}</a>{t.contact.security2}
       </p>
     </div>
 
     <!-- Live backend: the request is posted to /api/contact. Otherwise, and as the fallback,
          the form composes the request and the visitor's email app sends it. -->
     <form class="request" novalidate data-contact-form data-to={site.email} aria-labelledby="request-title">
-      <h3 id="request-title">Your request</h3>
+      <h3 id="request-title">{t.contact.formTitle}</h3>
 
       <div class="entry" data-entry>
         <div class="field">
-          <label for="cf-name">Your name</label>
+          <label for="cf-name">{t.contact.name}</label>
           <input id="cf-name" name="name" type="text" autocomplete="name" required aria-errormessage="cf-name-error" />
           <p class="hint error" id="cf-name-error" hidden></p>
         </div>
 
         <div class="field">
-          <label for="cf-email">Work email</label>
+          <label for="cf-email">{t.contact.email}</label>
           <input
             id="cf-email"
             name="email"
@@ -75,7 +70,7 @@ const needs = services.map((s) => s.plainName);
         </div>
 
         <div class="field">
-          <label for="cf-company">Company website <span class="opt">(optional)</span></label>
+          <label for="cf-company">{t.contact.company} <span class="opt">{t.contact.optional}</span></label>
           <input
             id="cf-company"
             name="company"
@@ -84,18 +79,18 @@ const needs = services.map((s) => s.plainName);
             autocomplete="url"
             autocapitalize="none"
             spellcheck="false"
-            placeholder="yourcompany.ae"
+            placeholder={t.contact.companyPlaceholder}
           />
         </div>
 
         <fieldset class="field">
-          <legend>What do you need?</legend>
+          <legend>{t.contact.needs}</legend>
           <div class="choices">
             {
               needs.map((n, i) => (
                 <label class="choice">
-                  <input type="checkbox" name={`need-${i}`} value={n} id={`cf-need-${i}`} checked={n === need} />
-                  <span>{n}</span>
+                  <input type="checkbox" name={`need-${i}`} value={n.value} id={`cf-need-${i}`} checked={n.value === need} />
+                  <span>{n.label}</span>
                 </label>
               ))
             }
@@ -103,27 +98,27 @@ const needs = services.map((s) => s.plainName);
         </fieldset>
 
         <div class="field">
-          <label for="cf-when">When</label>
+          <label for="cf-when">{t.contact.when}</label>
           <select id="cf-when" name="when">
-            {timelines.map((t) => <option value={t}>{t}</option>)}
+            {timelines.map((v) => <option value={v}>{t.contact.timelines[v]}</option>)}
           </select>
         </div>
 
         <div class="field">
-          <label for="cf-message">Anything else <span class="opt">(optional)</span></label>
+          <label for="cf-message">{t.contact.message} <span class="opt">{t.contact.optional}</span></label>
           <textarea id="cf-message" name="message" rows="3" maxlength="600" data-lenis-prevent></textarea>
         </div>
 
         {
           contactBackend.live && (
             <div class="trap" inert>
-              <label for="cf-website">Website</label>
+              <label for="cf-website">{t.contact.website}</label>
               <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off" />
             </div>
           )
         }
 
-        <button type="submit" class="btn btn-primary">{contactBackend.live ? 'Send request' : 'Prepare my request'}</button>
+        <button type="submit" class="btn btn-primary">{contactBackend.live ? t.contact.send : t.contact.prepare}</button>
       </div>
       <p class="visually-hidden" aria-live="polite" data-status></p>
 
@@ -131,23 +126,24 @@ const needs = services.map((s) => s.plainName);
         contactBackend.live && (
           <div class="sent" data-sent hidden tabindex="-1">
             <p class="ready">
-              Your request is sent. We reply within 1 business day to <strong data-sent-email />.
+              {t.contact.sent1}<strong data-sent-email />{t.contact.sent2}
             </p>
             <button type="button" class="btn btn-secondary" data-again>
-              Send another request
+              {t.contact.again}
             </button>
           </div>
         )
       }
 
       <div class="composed" data-composed hidden>
-        <p class="ready" data-note>Your request is ready. Send it from your email app, or copy it into any message.</p>
+        <p class="ready" data-note>{t.contact.ready}</p>
         <div class="composed-actions">
-          <a class="btn btn-primary" data-mailto href={mailto('Scoping call request')}>Open in your email app</a>
-          <button type="button" class="btn btn-secondary" data-copy>Copy the message</button>
+          <a class="btn btn-primary" data-mailto href={mailto('Scoping call request')}>{t.contact.open}</a>
+          <button type="button" class="btn btn-secondary" data-copy>{t.contact.copy}</button>
         </div>
         <pre class="preview" data-preview translate="no" data-lenis-prevent></pre>
       </div>
+      <script type="application/json" data-i18n="contact" set:html={toJsonBlock(t.contact.script)} />
     </form>
   </div>
 </section>

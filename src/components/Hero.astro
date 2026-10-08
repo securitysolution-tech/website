@@ -1,10 +1,10 @@
 ---
 import DomainCheck from './DomainCheck.astro';
 import ExposureMap from './ExposureMap.astro';
-import { contactCta } from '../data/site';
+import { useI18n } from '../i18n';
 
-const headline = 'Know where you’re exposed, and what to fix first.';
-const words = headline.split(' ');
+const { t, href, cta } = useI18n(Astro);
+const words = t.hero.headline.split(' ');
 
 // The six live records the domain check below verifies, in the order its rows run.
 // All real: the backdrop is the same material the instrument reads.
@@ -35,13 +35,10 @@ const records = [
         ))
       }
     </h1>
-    <p class="lead">
-      Penetration testing, security monitoring and compliance readiness for UAE companies, from the people who do the
-      testing.
-    </p>
+    <p class="lead">{t.hero.lead}</p>
     <div class="actions">
-      <a class="btn btn-primary" href={contactCta.href}>{contactCta.label}</a>
-      <a class="btn btn-secondary" href="/#services">See services</a>
+      <a class="btn btn-primary" href={cta.href}>{cta.label}</a>
+      <a class="btn btn-secondary" href={href('/#services')}>{t.hero.seeServices}</a>
     </div>
   </div>
 </section>

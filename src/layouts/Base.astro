@@ -4,8 +4,8 @@ import '../styles/global.css';
 import archivoLatin from '@fontsource-variable/archivo/files/archivo-latin-standard-normal.woff2?url';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { contactCta, founders, site } from '../data/site';
-import { services } from '../data/services';
+import { site } from '../data/site';
+import { useI18n } from '../i18n';
 
 interface Props {
   title?: string;
@@ -17,9 +17,12 @@ interface Props {
   jsonLd?: Record<string, unknown>[];
 }
 
-const { title, description = site.description, noindex = false, hasContact = false, jsonLd = [] } = Astro.props;
-const contactHref = hasContact ? '#contact' : contactCta.href;
-const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | ${site.titleTagline}`;
+const { locale, t, cta, isHome, hidden, services, founders } = useI18n(Astro);
+const { title, description = t.site.description, noindex = false, hasContact = false, jsonLd = [] } = Astro.props;
+const contactHref = hasContact ? '#contact' : cta.href;
+const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | ${t.site.titleTagline}`;
+// Pages that must not be indexed, and locales that are built but not yet live, have no canonical address.
+const unlisted = noindex || hidden;
 const canonical = new URL(Astro.url.pathname, site.url).href;
 const ogImage = new URL('/og.jpg', site.url).href;
 
@@ -49,9 +52,9 @@ const graph = JSON.stringify({
       name: site.name,
       url: site.url,
       email: site.email,
-      description: site.description,
+      description: t.site.description,
       logo: new URL('/icon-512.png', site.url).href,
-      areaServed: { '@type': 'Country', name: site.location },
+      areaServed: { '@type': 'Country', name: t.site.location },
       address: { '@type': 'PostalAddress', addressCountry: 'AE' },
       contactPoint: { '@type': 'ContactPoint', email: site.email, contactType: 'sales', areaServed: 'AE', availableLanguage: 'en' },
       knowsAbout: services.map((s) => s.plainName),
@@ -64,7 +67,7 @@ const graph = JSON.stringify({
       url: site.url,
       name: site.name,
       publisher: { '@id': orgId },
-      inLanguage: 'en',
+      inLanguage: locale,
     },
     ...jsonLd,
   ],
@@ -72,7 +75,7 @@ const graph = JSON.stringify({
 ---
 
 <!doctype html>
-<html lang="en" class:list={[{ home: Astro.url.pathname === '/' }]}>
+<html lang={t.lang} dir={t.dir === 'rtl' ? 'rtl' : undefined} class:list={[{ home: isHome }]}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -81,9 +84,8 @@ const graph = JSON.stringify({
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    {/* A page that must not be indexed has no canonical address to point at. */}
-    {!noindex && <link rel="canonical" href={canonical} />}
-    {noindex && <meta name="robots" content="noindex" />}
+    {!unlisted && <link rel="canonical" href={canonical} />}
+    {unlisted && <meta name="robots" content="noindex" />}
 
     <link rel="preload" href={archivoLatin} as="font" type="font/woff2" crossorigin />
     {/* The domain check's first lookups go here as soon as the page loads. */}
@@ -99,19 +101,19 @@ const graph = JSON.stringify({
     <meta property="og:site_name" content={site.name} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    {!noindex && <meta property="og:url" content={canonical} />}
+    {!unlisted && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Know where you’re exposed, and what to fix first. SecuritySolution.tech" />
-    <meta property="og:locale" content="en_AE" />
+    <meta property="og:image:alt" content={`${t.hero.headline} ${site.name}`} />
+    <meta property="og:locale" content={t.ogLocale} />
     <meta name="twitter:card" content="summary_large_image" />
 
     <script type="application/ld+json" set:html={graph} />
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main">{t.site.skip}</a>
     <Header contactHref={contactHref} />
     <main id="main">
       <slot />

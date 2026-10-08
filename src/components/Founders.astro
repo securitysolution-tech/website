@@ -1,6 +1,9 @@
 ---
 import Icon from './Icon.astro';
-import { founders } from '../data/site';
+import { useI18n } from '../i18n';
+import { fmt } from '../i18n/client';
+
+const { t, founders } = useI18n(Astro);
 
 // First and last initials, set inside the scope frame until portraits exist.
 const initials = (name: string) => {
@@ -12,8 +15,8 @@ const initials = (name: string) => {
 <section id="team" class="section" aria-labelledby="team-title">
   <div class="container">
     <div class="section-head">
-      <h2 id="team-title">Who you’ll work with</h2>
-      <p>You deal directly with the founders, from the first call to the retest.</p>
+      <h2 id="team-title">{t.team.title}</h2>
+      <p>{t.team.lead}</p>
     </div>
 
     <!-- One panel, divided like the signature block of a report: the names behind the findings. -->
@@ -30,7 +33,7 @@ const initials = (name: string) => {
             </span>
             <h3>{f.name}</h3>
             <p class="role">{f.role}</p>
-            <ul class="creds bullets" aria-label={`${f.name} at a glance`}>
+            <ul class="creds bullets" aria-label={fmt(t.team.glance, { name: f.name })}>
               {f.highlights.map((h) => (
                 <li>{h}</li>
               ))}

@@ -1,55 +1,28 @@
 ---
 import Icon from './Icon.astro';
 import { site } from '../data/site';
+import { useI18n } from '../i18n';
+import { fmt } from '../i18n/client';
 
+const { t, href } = useI18n(Astro);
 const host = new URL(site.url).hostname;
 
-const scores = [
-  {
-    scanner: 'Mozilla HTTP Observatory',
-    grade: 'A+',
-    what: 'Security headers, including a strict Content Security Policy.',
-    href: `https://developer.mozilla.org/en-US/observatory/analyze?host=${host}`,
-    linkLabel: 'View the report',
-    external: true,
-  },
-  {
-    scanner: 'Qualys SSL Labs',
-    grade: 'A+',
-    what: 'TLS 1.2 and 1.3 only, with HSTS on every response.',
-    href: `https://www.ssllabs.com/ssltest/analyze.html?d=${host}&hideResults=on`,
-    linkLabel: 'View the report',
-    external: true,
-  },
-  {
-    scanner: 'Email spoofing',
-    grade: 'Enforced',
-    what: 'Our DMARC policy is p=reject: receiving servers refuse email that fakes our domain.',
-    href: `/#check=${host}`,
-    linkLabel: 'Run the check on us',
-    external: false,
-  },
-  {
-    scanner: 'DNSSEC',
-    grade: 'Signed',
-    what: 'Our DNS answers are signed, so they cannot be forged on the way to you.',
-    href: `https://dnsviz.net/d/${host}/dnssec/`,
-    linkLabel: 'See the chain of trust',
-    external: true,
-  },
+// Where each grade can be verified, in the order of the dictionary's items.
+const links = [
+  { href: `https://developer.mozilla.org/en-US/observatory/analyze?host=${host}`, external: true },
+  { href: `https://www.ssllabs.com/ssltest/analyze.html?d=${host}&hideResults=on`, external: true },
+  { href: href(`/#check=${host}`), external: false },
+  { href: `https://dnsviz.net/d/${host}/dnssec/`, external: true },
 ];
+const scores = t.scores.items.map((s, i) => ({ ...s, ...links[i] }));
 ---
 
 <section class="scores" aria-labelledby="scores-title">
   <div class="container">
     <div class="intro">
-      <h2 id="scores-title">We test our own site first</h2>
+      <h2 id="scores-title">{t.scores.title}</h2>
       <p>
-        Independent scanners grade this website. We re-check it every day (<a
-          class="runs"
-          href="https://github.com/securitysolution-tech/website/actions/workflows/posture.yml"
-          rel="noopener">see&nbsp;the&nbsp;runs<Icon name="arrow-up-right" class="icon ext" /></a
-        >) and fix anything that slips.
+        {t.scores.lead1}<a class="runs" href="https://github.com/securitysolution-tech/website/actions/workflows/posture.yml" rel="noopener">{t.scores.runs}<Icon name="arrow-up-right" class="icon ext" /></a>{t.scores.lead2}
       </p>
     </div>
     <ul class="grid">
@@ -64,8 +37,8 @@ const scores = [
               </p>
               <p class="what">{s.what}</p>
               <a href={s.href} class="report" rel={s.external ? 'noopener' : undefined}>
-                {s.linkLabel}
-                {s.external && <span class="visually-hidden"> from {s.scanner}</span>}
+                {s.link}
+                {s.external && <span class="visually-hidden">{fmt(t.scores.from, { scanner: s.scanner })}</span>}
                 {s.external && <Icon name="arrow-up-right" class="icon ext" />}
               </a>
             </div>

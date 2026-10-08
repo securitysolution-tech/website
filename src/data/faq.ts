@@ -32,5 +32,3 @@ export const faqs: FaqItem[] = [
     on: ['home', 'offensive-testing', 'ai-cloud-security'],
   },
 ];
-
-export const faqsFor = (page: string) => faqs.filter((f) => f.on.includes(page));

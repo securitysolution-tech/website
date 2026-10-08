@@ -1,22 +1,12 @@
+// Facts about the company that do not change with the language. The words (tagline,
+// description, the call to action) live in src/i18n.
 export const site = {
   name: 'SecuritySolution.tech',
   url: 'https://securitysolution.tech',
   email: 'hello@securitysolution.tech',
   securityEmail: 'security@securitysolution.tech',
-  /** The one-line description of the business, used wherever the site introduces itself. */
-  tagline: 'Penetration testing, security monitoring and compliance readiness for UAE companies',
-  /** A shorter line for the browser tab, kept under 70 characters with the name. */
-  titleTagline: 'Penetration testing for UAE companies',
-  description:
-    'Penetration testing, security monitoring and compliance readiness for companies in the United Arab Emirates. You work directly with the people who test.',
-  location: 'United Arab Emirates',
   // The hero check runs on this domain when the page loads. Keep it passing.
   autorunDomain: 'securitysolution.tech' as string | null,
-};
-
-export const contactCta = {
-  label: 'Book a scoping call',
-  href: '/#contact',
 };
 
 // The contact Worker behind /api/contact (workers/contact). Set to true once the Worker is
@@ -37,6 +27,7 @@ export const mailto = (subject?: string) =>
   `mailto:${site.email}${subject ? `?subject=${encodeURIComponent(subject)}` : ''}`;
 
 export interface Founder {
+  id: string;
   name: string;
   role: string;
   bio: string;
@@ -46,6 +37,7 @@ export interface Founder {
 
 export const founders: Founder[] = [
   {
+    id: 'mohammad',
     name: 'Mohammad Thabet Hassan',
     role: 'Co-founder',
     highlights: ['B.Sc. Cyber Security, Canadian University Dubai', '3 IEEE-published papers', 'Coordinated vulnerability disclosure'],
@@ -56,6 +48,7 @@ export const founders: Founder[] = [
     ],
   },
   {
+    id: 'omar',
     name: 'Omar Alraas',
     role: 'Co-founder',
     highlights: ['IEEE co-author, OTA update security', 'Built the OTA testbed'],

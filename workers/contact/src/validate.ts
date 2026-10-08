@@ -57,7 +57,7 @@ export function validate(data: unknown): Validation {
   }
 
   const when = text(input.when);
-  if (!timelines.includes(when)) fields.when = 'invalid';
+  if (!(timelines as readonly string[]).includes(when)) fields.when = 'invalid';
 
   const message = text(input.message).replace(/\r\n?/g, '\n');
   if (message.length > limits.message) fields.message = 'too_long';

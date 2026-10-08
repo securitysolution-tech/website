@@ -2,48 +2,49 @@
 import Mark from './Mark.astro';
 import Wordmark from './Wordmark.astro';
 import Icon from './Icon.astro';
-import { contactCta } from '../data/site';
+import { useI18n } from '../i18n';
 
 interface Props {
   /** Where the call to action goes: the page's own form when it has one, else the home page's. */
   contactHref?: string;
 }
-const { contactHref = contactCta.href } = Astro.props;
+const { t, href, cta } = useI18n(Astro);
+const { contactHref = cta.href } = Astro.props;
 
 const links = [
-  { label: 'Services', href: '/#services' },
-  { label: 'Approach', href: '/#approach' },
-  { label: 'Team', href: '/#team' },
-  { label: 'FAQ', href: '/#faq' },
+  { label: t.nav.services, href: href('/#services') },
+  { label: t.nav.approach, href: href('/#approach') },
+  { label: t.nav.team, href: href('/#team') },
+  { label: t.nav.faq, href: href('/#faq') },
 ];
 ---
 
 <header class="site-header ink">
   <div class="container bar">
-    <a class="brand" href="/">
+    <a class="brand" href={href('/')}>
       <Mark size={30} />
       <Wordmark />
     </a>
 
-    <nav class="nav-desktop" aria-label="Primary">
+    <nav class="nav-desktop" aria-label={t.nav.primary}>
       <ul>
         {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
       </ul>
-      <a class="btn btn-primary" href={contactHref}>{contactCta.label}</a>
+      <a class="btn btn-primary" href={contactHref}>{cta.label}</a>
     </nav>
 
-    <nav class="nav-mobile-wrap" aria-label="Menu">
+    <nav class="nav-mobile-wrap" aria-label={t.nav.menu}>
       <details class="nav-mobile">
         <summary class="menu-btn">
           <Icon name="list" class="icon icon-open" />
           <Icon name="x" class="icon icon-close" />
-          <span>Menu</span>
+          <span>{t.nav.menu}</span>
         </summary>
         <div class="menu-panel ink">
           <ul>
             {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
           </ul>
-          <a class="btn btn-primary" href={contactHref}>{contactCta.label}</a>
+          <a class="btn btn-primary" href={contactHref}>{cta.label}</a>
         </div>
       </details>
     </nav>

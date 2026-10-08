@@ -1,6 +1,7 @@
 ---
 import Icon from './Icon.astro';
-import { faqsFor, type FaqItem } from '../data/faq';
+import type { FaqItem } from '../data/faq';
+import { useI18n } from '../i18n';
 
 interface Props {
   faqs?: FaqItem[];
@@ -9,12 +10,8 @@ interface Props {
   id?: string;
 }
 
-const {
-  faqs = faqsFor('home'),
-  title = 'Questions buyers ask first',
-  lead = 'Anything else, ask us directly. We answer in plain language.',
-  id = 'faq',
-} = Astro.props;
+const { t, faqsFor } = useI18n(Astro);
+const { faqs = faqsFor('home'), title = t.faq.title, lead = t.faq.lead, id = 'faq' } = Astro.props;
 
 const jsonLd = JSON.stringify({
   '@context': 'https://schema.org',
@@ -31,7 +28,7 @@ const jsonLd = JSON.stringify({
   <div class="container layout">
     <div class="side">
       <h2 id={`${id}-title`}>{title}</h2>
-      <p>{lead} <a href="#contact">Book a scoping call</a>.</p>
+      <p>{lead} <a href="#contact">{t.faq.cta}</a>.</p>
     </div>
     <div class="list">
       {

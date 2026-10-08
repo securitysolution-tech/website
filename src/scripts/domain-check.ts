@@ -1,8 +1,10 @@
-import { DomainNotFoundError, runChecks, type Result, type Status, type Verdict } from './checks';
+import { DomainNotFoundError, runChecks, type Result, type Verdict } from './checks';
 import { normaliseDomain } from './dns';
 import { reduceMotion, scrollToElement } from './navigate';
+import { fmt, readStrings, type CheckStrings } from '../i18n/client';
 
-const labels: Record<Status, string> = { pass: 'Pass', warn: 'Warning', fail: 'Fail', info: 'Info' };
+// The page renders the strings in its own language (DomainCheck.astro).
+const t = readStrings<CheckStrings>('check');
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function init(root: HTMLElement) {
@@ -28,7 +30,7 @@ function init(root: HTMLElement) {
     const summary = evidence?.querySelector('summary');
     if (evidence && summary) {
       evidence.addEventListener('toggle', () => {
-        summary.textContent = evidence.open ? 'Hide record' : 'Show record';
+        summary.textContent = evidence.open ? t.hide : t.show;
       });
     }
   });
@@ -43,7 +45,7 @@ function init(root: HTMLElement) {
     li.classList.remove('revealed');
     li.querySelector('[data-icon-slot]')!.replaceChildren();
     li.querySelector('[data-summary]')!.textContent = text;
-    li.querySelector('[data-badge]')!.textContent = state === 'checking' ? 'Checking…' : 'Not run';
+    li.querySelector('[data-badge]')!.textContent = state === 'checking' ? t.checking : t.notRun;
     const evidence = li.querySelector<HTMLDetailsElement>('[data-evidence]')!;
     evidence.hidden = true;
     evidence.open = false;
@@ -57,7 +59,7 @@ function init(root: HTMLElement) {
     const svg = icon(r.status);
     slot.replaceChildren(...(svg ? [svg] : []));
     li.querySelector('[data-summary]')!.textContent = r.summary;
-    li.querySelector('[data-badge]')!.textContent = labels[r.status];
+    li.querySelector('[data-badge]')!.textContent = t.labels[r.status];
     const evidence = li.querySelector<HTMLDetailsElement>('[data-evidence]')!;
     evidence.querySelector('pre')!.textContent = r.evidence.join('\n');
     evidence.hidden = r.evidence.length === 0;
@@ -90,19 +92,17 @@ function init(root: HTMLElement) {
   }
 
   function showVerdict(domain: string, v: Verdict, results: Result[]) {
-    const spoofing = v.incomplete ? 'Incomplete' : v.spoofing;
-    verdict.querySelector('[data-spoofing]')!.textContent = spoofing;
-    verdict.dataset.level = spoofing.toLowerCase();
-    verdict.querySelector('[data-score]')!.textContent = v.incomplete
-      ? 'Some lookups did not complete. Run the check again in a moment.'
-      : `${v.passed} of ${v.scored} checks passed`;
+    const level = v.incomplete ? 'incomplete' : v.spoofing;
+    verdict.querySelector('[data-spoofing]')!.textContent = t.levels[level];
+    verdict.dataset.level = level;
+    verdict.querySelector('[data-score]')!.textContent = v.incomplete ? t.incompleteScore : fmt(t.score, { passed: v.passed, scored: v.scored });
     verdict.hidden = false;
     const count = v.incomplete ? 0 : showFixFirst(results);
     if (v.incomplete && fix) fix.hidden = true;
     announce.textContent = v.incomplete
-      ? `Check incomplete for ${domain}. Some lookups did not complete. Run the check again in a moment.`
-      : `Check complete for ${domain}. Spoofing protection is ${v.spoofing.toLowerCase()}. ${v.passed} of ${v.scored} checks passed.` +
-        (count ? ` ${count} ${count === 1 ? 'item' : 'items'} to fix first.` : '');
+      ? fmt(t.announceIncomplete, { domain })
+      : fmt(t.announceDone, { domain, level: t.levels[v.spoofing].toLowerCase(), passed: v.passed, scored: v.scored }) +
+        (count ? ` ${count === 1 ? t.fixOne : fmt(t.fixMany, { count })}` : '');
     if (domain !== ownDomain) document.dispatchEvent(new CustomEvent('domaincheck', { detail: { domain } }));
   }
 
@@ -135,7 +135,7 @@ function init(root: HTMLElement) {
     shown = '';
     if (!autorun) {
       lastRequested = domain;
-      button.textContent = 'Checking…';
+      button.textContent = t.checking;
     }
     list.setAttribute('aria-busy', 'true');
     verdict.hidden = true;
@@ -144,7 +144,7 @@ function init(root: HTMLElement) {
     targetName.textContent = domain;
     targetOwn.hidden = domain !== ownDomain;
     target.hidden = false;
-    rows.forEach((li) => setState(li, 'checking', 'Looking this up…'));
+    rows.forEach((li) => setState(li, 'checking', t.looking));
 
     // Rows fill in one after another so the eye can follow the results. On page load the
     // first row waits for the instrument to finish rising, so the fill is actually seen.
@@ -161,7 +161,7 @@ function init(root: HTMLElement) {
     };
 
     try {
-      const { results, verdict: v } = await runChecks(domain, reveal, signal);
+      const { results, verdict: v } = await runChecks(domain, reveal, signal, t.summaries);
       await queue;
       if (id !== runId) return;
       shown = domain;
@@ -172,16 +172,13 @@ function init(root: HTMLElement) {
       target.hidden = true;
       if (autorun) return;
       if (err instanceof DomainNotFoundError) {
-        showError(`${domain} does not exist in DNS. Check the spelling and try again.`);
+        showError(fmt(t.errors.notFound, { domain }));
       } else {
-        showError(
-          'The DNS lookups could not be completed. Your network may block DNS-over-HTTPS, so try again on another connection.',
-          true,
-        );
+        showError(t.errors.resolver, true);
       }
     } finally {
       if (id === runId) {
-        button.textContent = 'Run check';
+        button.textContent = t.run;
         list.setAttribute('aria-busy', 'false');
       }
     }
@@ -191,7 +188,7 @@ function init(root: HTMLElement) {
     event.preventDefault();
     const domain = normaliseDomain(input.value);
     if (!domain) {
-      showError('Enter a domain name, for example yourcompany.ae.');
+      showError(t.errors.empty);
       input.focus();
       return;
     }

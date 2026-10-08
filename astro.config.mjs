@@ -5,6 +5,12 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://securitysolution.tech',
   trailingSlash: 'always',
+  // English at the root, Arabic under /ar/ (src/i18n). Astro sets Astro.currentLocale from the path.
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'ar'],
+    routing: { prefixDefaultLocale: false },
+  },
   build: {
     format: 'directory',
     // Everything ships as external files so the Content-Security-Policy

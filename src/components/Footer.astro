@@ -2,13 +2,14 @@
 import Mark from './Mark.astro';
 import Wordmark from './Wordmark.astro';
 import Icon from './Icon.astro';
-import { services } from '../data/services';
-import { contactCta, site } from '../data/site';
+import { site } from '../data/site';
+import { useI18n } from '../i18n';
 
 interface Props {
   contactHref?: string;
 }
-const { contactHref = contactCta.href } = Astro.props;
+const { t, href, cta, services } = useI18n(Astro);
+const { contactHref = cta.href } = Astro.props;
 const year = new Date().getFullYear();
 const path = Astro.url.pathname;
 const current = (href: string) => (path === href ? 'page' : undefined);
@@ -17,21 +18,21 @@ const current = (href: string) => (path === href ? 'page' : undefined);
 <footer class="site-footer ink grain">
   <div class="container grid">
     <div class="about">
-      <a class="brand" href="/">
+      <a class="brand" href={href('/')}>
         <Mark size={26} />
         <Wordmark small />
       </a>
-      <p>{site.tagline.replace('UAE companies', `companies in the ${site.location}`)}.</p>
+      <p>{t.footer.blurb}</p>
       <p><a href={`mailto:${site.email}`}>{site.email}</a></p>
     </div>
 
-    <nav aria-label="Services">
-      <h2>Services</h2>
+    <nav aria-label={t.footer.services}>
+      <h2>{t.footer.services}</h2>
       <ul>
         {
           services.map((s) => (
             <li>
-              <a href={`/services/${s.slug}/`} aria-current={current(`/services/${s.slug}/`)}>
+              <a href={href(`/services/${s.slug}/`)} aria-current={current(href(`/services/${s.slug}/`))}>
                 {s.name}
               </a>
             </li>
@@ -40,25 +41,25 @@ const current = (href: string) => (path === href ? 'page' : undefined);
       </ul>
     </nav>
 
-    <nav aria-label="Company">
-      <h2>Company</h2>
+    <nav aria-label={t.footer.company}>
+      <h2>{t.footer.company}</h2>
       <ul>
-        <li><a href="/#approach">Approach</a></li>
-        <li><a href="/#team">Team</a></li>
-        <li><a href="/#faq">FAQ</a></li>
-        <li><a href={contactHref}>{contactCta.label}</a></li>
+        <li><a href={href('/#approach')}>{t.nav.approach}</a></li>
+        <li><a href={href('/#team')}>{t.nav.team}</a></li>
+        <li><a href={href('/#faq')}>{t.nav.faq}</a></li>
+        <li><a href={contactHref}>{cta.label}</a></li>
       </ul>
     </nav>
 
-    <nav aria-label="Trust">
-      <h2>Trust</h2>
+    <nav aria-label={t.footer.trust}>
+      <h2>{t.footer.trust}</h2>
       <ul>
-        <li><a href="/security/" aria-current={current('/security/')}>Report a vulnerability</a></li>
-        <li><a href="/privacy/" aria-current={current('/privacy/')}>Privacy</a></li>
-        <li><a href="/.well-known/security.txt">security.txt</a></li>
+        <li><a href={href('/security/')} aria-current={current(href('/security/'))}>{t.footer.report}</a></li>
+        <li><a href={href('/privacy/')} aria-current={current(href('/privacy/'))}>{t.footer.privacy}</a></li>
+        <li><a href="/.well-known/security.txt">{t.footer.securityTxt}</a></li>
         <li>
           <a class="ext" href="https://github.com/securitysolution-tech/website" rel="noopener">
-            Source code
+            {t.footer.source}
             <Icon name="arrow-up-right" class="icon ext-icon" />
           </a>
         </li>
@@ -68,7 +69,7 @@ const current = (href: string) => (path === href ? 'page' : undefined);
 
   <div class="container legal">
     <p>© {year} {site.name}</p>
-    <p>This site sets no cookies and loads no third-party scripts. <a href="/privacy/">Privacy</a></p>
+    <p>{t.footer.legal} <a href={href('/privacy/')}>{t.footer.privacy}</a></p>
   </div>
 </footer>
 

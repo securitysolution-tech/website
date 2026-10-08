@@ -29,6 +29,7 @@ npm test          # link, copy and HTML checks against dist/
 
 ## Content
 
+- Interface text, in English: `src/i18n/en.ts` (the dictionary every component reads; long-form content stays in `src/data`)
 - Services: `src/data/services.ts`
 - Company details, contact address and founders: `src/data/site.ts`
 - Set `autorunDomain` in `site.ts` to run the homepage check automatically on page load

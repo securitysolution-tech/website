@@ -4,25 +4,17 @@
 // app or the clipboard instead, and nothing is sent to or stored on this site.
 import { formatRequest, subjectFor, type ContactRequest } from '../data/contact';
 import { contactBackend } from '../data/site';
+import { fmt, readStrings, type ContactStrings } from '../i18n/client';
 
 // How long the page has been open when the visitor submits: a hint for the inbox, not a gate.
 const opened = performance.now();
 
+// The page renders the strings in its own language (Contact.astro).
+const t = readStrings<ContactStrings>('contact');
 const messages: Record<'name' | 'email', Record<string, string>> = {
-  name: {
-    required: 'Enter your name, so we know who to reply to.',
-    too_long: 'Use a shorter name.',
-    invalid: 'Use letters, spaces and punctuation only.',
-  },
-  email: {
-    required: 'Enter a work email address, for example you@company.ae.',
-    too_long: 'That address is too long.',
-    invalid: 'Enter a work email address, for example you@company.ae.',
-  },
+  name: { required: t.nameRequired, too_long: t.nameLong, invalid: t.nameInvalid },
+  email: { required: t.emailRequired, too_long: t.emailLong, invalid: t.emailInvalid },
 };
-
-const FAILED = 'This could not be sent from the site just now.';
-const BUSY = 'Too many requests came from your network in the last minute, so this one could not be sent from the site.';
 
 function init(form: HTMLFormElement) {
   const email = form.dataset.to ?? '';
@@ -130,15 +122,10 @@ function init(form: HTMLFormElement) {
     const shortened = linkBody !== body;
     mailLink.href = href;
     preview.textContent = `To: ${email}\r\nSubject: ${subject}\r\n\r\n${body}`;
-    if (note) note.textContent = reason ? `${reason} Send it from your email app instead, or copy it into any message.` : noteDefault;
+    if (note) note.textContent = reason ? `${reason} ${t.fallback}` : noteDefault;
     composed.hidden = false;
     settle(composed);
-    say(
-      (reason ? `${reason} ` : '') +
-        (shortened
-          ? 'Your request is ready. The message is long, so copy it rather than opening your email app.'
-          : 'Your request is ready. Send it from your email app, or copy it.'),
-    );
+    say((reason ? `${reason} ` : '') + (shortened ? t.readyLong : t.readyShort));
     mailLink.focus();
   }
 
@@ -149,15 +136,15 @@ function init(form: HTMLFormElement) {
     composed.hidden = true;
     sent.hidden = false;
     settle(sent);
-    say(`Your request is sent. We reply within 1 business day to ${request.email}.`);
+    say(fmt(t.sentStatus, { email: request.email }));
     sent.focus();
   }
 
   async function send(request: ContactRequest) {
     busy = true;
     submit.setAttribute('aria-disabled', 'true');
-    submit.textContent = 'Sending';
-    say('Sending your request.');
+    submit.textContent = t.sending;
+    say(t.sendingStatus);
     try {
       const response = await fetch(contactBackend.endpoint, {
         method: 'POST',
@@ -184,14 +171,14 @@ function init(form: HTMLFormElement) {
           }
         }
         if (first) {
-          say('Check the highlighted fields.');
+          say(t.checkFields);
           first.focus();
           return;
         }
       }
-      offer(request, response.status === 429 ? BUSY : FAILED);
+      offer(request, response.status === 429 ? t.busy : t.failed);
     } catch {
-      offer(request, FAILED);
+      offer(request, t.failed);
     } finally {
       busy = false;
       submit.removeAttribute('aria-disabled');
@@ -204,7 +191,7 @@ function init(form: HTMLFormElement) {
     if (busy) return;
     const invalid = validate();
     if (invalid) {
-      say('Check the highlighted fields.');
+      say(t.checkFields);
       invalid.focus();
       return;
     }
@@ -234,8 +221,8 @@ function init(form: HTMLFormElement) {
     clearTimeout(copyTimer);
     try {
       await navigator.clipboard.writeText(preview.textContent ?? '');
-      copyButton.textContent = 'Copied';
-      say('Message copied.');
+      copyButton.textContent = t.copied;
+      say(t.copiedStatus);
     } catch {
       // No clipboard access: select the message below so a manual copy is one keystroke away.
       const range = document.createRange();
@@ -243,8 +230,8 @@ function init(form: HTMLFormElement) {
       const selection = getSelection();
       selection?.removeAllRanges();
       selection?.addRange(range);
-      copyButton.textContent = 'Copy the selected text below';
-      say('The message below is selected. Copy it with your keyboard.');
+      copyButton.textContent = t.select;
+      say(t.selectStatus);
     }
     copyTimer = window.setTimeout(() => {
       copyButton.textContent = copyLabel;

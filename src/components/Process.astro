@@ -1,36 +1,17 @@
 ---
 import ExposureMap from './ExposureMap.astro';
+import { useI18n } from '../i18n';
 
-const steps = [
-  {
-    title: 'Scope',
-    text: 'A 30-minute call to agree what we test, when, and what is off-limits. You get a written scope and a fixed quote.',
-  },
-  {
-    title: 'Test',
-    text: 'We work inside the agreed window and contact you straight away if we find something critical.',
-  },
-  {
-    title: 'Report',
-    text: 'Findings ranked by business risk, each with evidence, impact and step-by-step fixes.',
-  },
-  {
-    title: 'Fix',
-    text: 'Your team makes the changes. We answer questions along the way.',
-  },
-  {
-    title: 'Retest',
-    text: 'We verify every fix and update the report, so you can share it with customers and auditors.',
-  },
-];
+const { t } = useI18n(Astro);
+const steps = t.process.steps;
 ---
 
 <section id="approach" class="section approach ink grain" aria-labelledby="approach-title">
   <ExposureMap gain={0.35} />
   <div class="container">
     <div class="section-head">
-      <h2 id="approach-title">How an engagement works</h2>
-      <p>The same five steps for every test, whether it covers one web app or your whole network.</p>
+      <h2 id="approach-title">{t.process.title}</h2>
+      <p>{t.process.lead}</p>
     </div>
 
     <ol class="steps">
@@ -47,7 +28,7 @@ const steps = [
       }
     </ol>
 
-    <p class="start"><a href="#contact">Start with step 1: book the scoping call</a></p>
+    <p class="start"><a href="#contact">{t.process.start}</a></p>
   </div>
 </section>
 

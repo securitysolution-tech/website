@@ -1,10 +1,12 @@
 ---
 import Base from '../layouts/Base.astro';
 import ServiceCard from '../components/ServiceCard.astro';
-import { services } from '../data/services';
+import { useI18n } from '../i18n';
+
+const { t, href, services } = useI18n(Astro);
 ---
 
-<Base title="Page not found" noindex>
+<Base title={t.notFound.title} noindex>
   <section class="section nf">
     <div class="container">
       <!-- The brand mark's scope brackets with nothing inside them: nothing found at this address. -->
@@ -20,18 +22,18 @@ import { services } from '../data/services';
         </svg>
         <span translate="no">404</span>
       </p>
-      <h1>Page not found</h1>
-      <p class="lead">The page you were looking for does not exist or has moved. Start again from one of these.</p>
+      <h1>{t.notFound.title}</h1>
+      <p class="lead">{t.notFound.lead}</p>
       <div class="actions">
-        <a class="btn btn-primary" href="/">Go to the home page</a>
-        <a class="btn btn-secondary" href="/#check">Check your domain</a>
+        <a class="btn btn-primary" href={href('/')}>{t.notFound.home}</a>
+        <a class="btn btn-secondary" href={href('/#check')}>{t.notFound.check}</a>
       </div>
     </div>
   </section>
 
   <section class="section grid-section" aria-labelledby="nf-services">
     <div class="container">
-      <h2 id="nf-services">Our services</h2>
+      <h2 id="nf-services">{t.notFound.services}</h2>
       <ul class="grid" data-spotlight-root>
         {services.map((s, n) => <ServiceCard service={s} items={3} step={n % 2} />)}
       </ul>

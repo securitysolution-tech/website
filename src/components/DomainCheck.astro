@@ -1,36 +1,24 @@
 ---
 import Icon from './Icon.astro';
-import { contactCta, site } from '../data/site';
+import { site } from '../data/site';
+import { useI18n } from '../i18n';
+import { checkStrings, toJsonBlock } from '../i18n/client';
 
-const checks = [
-  {
-    id: 'dmarc',
-    title: 'Spoofing protection',
-    tech: 'DMARC',
-    about: 'Tells receiving mail servers what to do with email that fakes your domain.',
-  },
-  { id: 'spf', title: 'Approved senders', tech: 'SPF', about: 'Lists the servers allowed to send email for your domain.' },
-  { id: 'mx', title: 'Mail servers', tech: 'MX', about: 'Shows who handles the email sent to your domain.' },
-  { id: 'dnssec', title: 'Signed DNS', tech: 'DNSSEC', about: 'Protects the answers your DNS gives out from being forged.' },
-  { id: 'caa', title: 'Certificate lock', tech: 'CAA', about: 'Limits which companies may issue HTTPS certificates for your domain.' },
-  {
-    id: 'mtasts',
-    title: 'Encrypted mail delivery',
-    tech: 'MTA-STS',
-    about: 'Lets you require encryption for email on its way to you.',
-  },
-];
+const { t, href, cta } = useI18n(Astro);
+// The rows, in the order the checks run.
+const ids = ['dmarc', 'spf', 'mx', 'dnssec', 'caa', 'mtasts'] as const;
+const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
 ---
 
 <section id="check" class="instrument" aria-labelledby="check-title" data-domain-check data-autorun={site.autorunDomain ?? undefined}>
   <div class="panel-intro">
   <div class="head">
-    <h2 id="check-title">Check your domain</h2>
-    <p>See how well your company’s email and DNS are protected against spoofing and tampering. It takes about 5 seconds.</p>
+    <h2 id="check-title">{t.check.title}</h2>
+    <p>{t.check.lead}</p>
   </div>
 
   <form class="check-form" novalidate>
-    <label for="domain-input">Company domain</label>
+    <label for="domain-input">{t.check.label}</label>
     <div class="field">
       <input
         id="domain-input"
@@ -41,30 +29,27 @@ const checks = [
         autocapitalize="none"
         spellcheck="false"
         maxlength="253"
-        placeholder="yourcompany.ae"
+        placeholder={t.check.placeholder}
         aria-describedby="check-privacy"
         aria-errormessage="domain-error"
       />
-      <button type="submit" class="run">Run check</button>
+      <button type="submit" class="run">{t.check.run}</button>
     </div>
     <p id="domain-error" class="error" data-error role="alert" hidden></p>
-    <button type="button" class="retry" data-retry hidden>Try again</button>
+    <button type="button" class="retry" data-retry hidden>{t.check.retry}</button>
   </form>
 
-  <p class="privacy" id="check-privacy">
-    Runs in your browser through Cloudflare’s public DNS resolver, with Google Public DNS as a fallback. We never
-    receive the domain you type. <a href="/privacy/">Privacy</a>
-  </p>
-  <noscript><p class="privacy">The check needs JavaScript, which is turned off in this browser.</p></noscript>
+  <p class="privacy" id="check-privacy">{t.check.privacy} <a href={href('/privacy/')}>{t.check.privacyLink}</a></p>
+  <noscript><p class="privacy">{t.check.noscript}</p></noscript>
   </div>
 
   <div class="panel-results">
   {/* Rendered for our own domain at build time, so the autorun shifts nothing when it starts. */}
   <p class="target" data-target hidden={!site.autorunDomain}>
-    Results for <strong data-target-name translate="no">{site.autorunDomain ?? ''}</strong><span data-target-own hidden={!site.autorunDomain}>, our own domain. Try yours.</span>
+    {t.check.resultsFor} <strong data-target-name translate="no">{site.autorunDomain ?? ''}</strong><span data-target-own hidden={!site.autorunDomain}>{t.check.ownDomain}</span>
   </p>
 
-  <ol class="results" data-results aria-busy="false" aria-label="Check results">
+  <ol class="results" data-results aria-busy="false" aria-label={t.check.resultsLabel}>
     {
       checks.map((c) => (
         <li class="row" data-check={c.id} data-status="idle" data-about={c.about} data-title={c.title} data-tech={c.tech}>
@@ -77,12 +62,12 @@ const checks = [
               {c.about}
             </p>
             <details class="evidence" data-evidence hidden>
-              <summary>Show record</summary>
+              <summary>{t.check.show}</summary>
               <pre translate="no" />
             </details>
           </div>
           <span class="badge" data-badge>
-            Not run
+            {t.check.notRun}
           </span>
         </li>
       ))
@@ -91,15 +76,15 @@ const checks = [
 
   <div class="verdict" data-verdict hidden>
     <div>
-      <p class="verdict-main">Spoofing protection: <strong data-spoofing></strong></p>
+      <p class="verdict-main">{t.check.verdict} <strong data-spoofing></strong></p>
       <p class="verdict-score" data-score></p>
     </div>
-    <a class="btn verdict-cta" href={contactCta.href}>{contactCta.label}</a>
+    <a class="btn verdict-cta" href={cta.href}>{cta.label}</a>
   </div>
 
   <!-- The headline, made literal: what to fix first, failures before warnings. -->
   <div class="fix" data-fix hidden>
-    <p class="fix-title">Fix first</p>
+    <p class="fix-title">{t.check.fixFirst}</p>
     <ol class="fix-list" data-fix-list></ol>
   </div>
   </div>
@@ -110,6 +95,7 @@ const checks = [
   <template data-icon="warn"><Icon name="warning" /></template>
   <template data-icon="fail"><Icon name="x-circle" /></template>
   <template data-icon="info"><Icon name="info" /></template>
+  <script type="application/json" data-i18n="check" set:html={toJsonBlock(checkStrings(t.check))} />
 </section>
 
 <script>

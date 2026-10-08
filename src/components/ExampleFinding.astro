@@ -1,65 +1,64 @@
 ---
 import Icon from './Icon.astro';
+import { useI18n } from '../i18n';
+
+const { t, href } = useI18n(Astro);
+const f = t.finding;
 ---
 
 <section id="reports" class="section" aria-labelledby="reports-title">
   <div class="container">
     <div class="section-head">
-      <h2 id="reports-title">Reports your team can act on</h2>
-      <p>
-        Every finding says what we found, why it matters to the business, and exactly how to fix it. This is what one
-        looks like.
-      </p>
+      <h2 id="reports-title">{f.title}</h2>
+      <p>{f.lead}</p>
     </div>
 
     <figure class="finding" data-reveal>
       <div class="finding-head">
-        <span class="severity">High</span>
-        <h3>Anyone can send email that appears to come from your company</h3>
+        <span class="severity">{f.severity}</span>
+        <h3>{f.heading}</h3>
         <dl class="meta">
           <div>
-            <dt>Affected</dt>
-            <dd>example.com mail domain</dd>
+            <dt>{f.affected}</dt>
+            <dd>{f.affectedValue}</dd>
           </div>
           <div>
-            <dt>Category</dt>
-            <dd>Email security</dd>
+            <dt>{f.category}</dt>
+            <dd>{f.categoryValue}</dd>
           </div>
           <div>
-            <dt>Status</dt>
-            <dd>Fixed, verified on retest</dd>
+            <dt>{f.status}</dt>
+            <dd>{f.statusValue}</dd>
           </div>
         </dl>
       </div>
 
       <div class="finding-body">
         <div class="col">
-          <h4>Evidence</h4>
+          <h4>{f.evidence}</h4>
           <pre translate="no"><code>_dmarc.example.com  TXT  "v=DMARC1; p=none"</code></pre>
-          <h4>Business impact</h4>
+          <h4>{f.impact}</h4>
           <p>
-            Attackers can send invoices or payment requests that look like they come from your finance team. Because the
-            policy is <code translate="no">p=none</code>, receiving mail servers are told to deliver them anyway.
+            {f.impact1}<code translate="no">p=none</code>{f.impact2}
           </p>
         </div>
         <div class="col">
-          <h4>How to fix</h4>
+          <h4>{f.fix}</h4>
           <ol class="fix">
-            <li>Confirm SPF and DKIM pass for every service that sends your email.</li>
-            <li>Change the policy to <code translate="no">p=quarantine</code> and review the DMARC reports for 2 weeks.</li>
-            <li>Move to <code translate="no">p=reject</code> once legitimate mail passes.</li>
+            <li>{f.fix1}</li>
+            <li>{f.fix2a}<code translate="no">p=quarantine</code>{f.fix2b}</li>
+            <li>{f.fix3a}<code translate="no">p=reject</code>{f.fix3b}</li>
           </ol>
-          <h4>Retest</h4>
+          <h4>{f.retest}</h4>
           <p class="retest">
             <Icon name="check-circle" />
-            <span>Fixed and verified. The policy is now <code translate="no">p=reject</code>.</span>
+            <span>{f.retest1}<code translate="no">p=reject</code>{f.retest2}</span>
           </p>
         </div>
       </div>
       <figcaption>
-        Example finding. The company and domain are illustrative. The domain check above rates the same record as a
-        warning; a report also weighs the business impact, which is why this one is High.
-        <a href="/#check">Run the check on your domain</a>
+        {f.caption}
+        <a href={href('/#check')}>{f.captionLink}</a>
       </figcaption>
     </figure>
   </div>

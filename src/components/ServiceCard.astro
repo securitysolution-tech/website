@@ -5,6 +5,8 @@
 import Icon from './Icon.astro';
 import Ornament from './Ornament.astro';
 import type { Service } from '../data/services';
+import { useI18n } from '../i18n';
+import { fmt } from '../i18n/client';
 
 interface Props {
   service: Service;
@@ -22,6 +24,7 @@ interface Props {
 }
 
 const { service: s, featured = false, tinted = false, items = 4, columns = 1, step = 0, class: className = '' } = Astro.props;
+const { t, href } = useI18n(Astro);
 ---
 
 <li class:list={['card', className, { ink: featured, tinted }]} data-spotlight data-reveal data-reveal-step={step}>
@@ -29,13 +32,13 @@ const { service: s, featured = false, tinted = false, items = 4, columns = 1, st
     <Icon name={s.icon} />
   </span>
   <h3>
-    <a href={`/services/${s.slug}/`}>{s.name}</a>
+    <a href={href(`/services/${s.slug}/`)}>{s.name}</a>
   </h3>
   <p class="summary">{s.summary}</p>
-  <ul class:list={['items', 'bullets', { two: columns === 2 }]} aria-label={`${s.name} includes`}>
+  <ul class:list={['items', 'bullets', { two: columns === 2 }]} aria-label={fmt(t.services.includes, { name: s.name })}>
     {s.items.slice(0, items).map((item) => <li>{item.name}</li>)}
   </ul>
-  <span class="more" aria-hidden="true">See how we do it</span>
+  <span class="more" aria-hidden="true">{t.services.more}</span>
   <Ornament kind={s.icon} />
 </li>
 

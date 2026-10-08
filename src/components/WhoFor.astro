@@ -1,27 +1,28 @@
 ---
 // The situations that bring companies to us, each pointing at the service that answers it.
 // Service names and links come from the services data, so they never drift.
-import { services } from '../data/services';
+import { useI18n } from '../i18n';
 
-const reasons = [
-  { slug: 'offensive-testing', text: 'You are launching or changing a customer-facing app.' },
-  { slug: 'governance-compliance', text: 'A customer, regulator or auditor is asking about your security.' },
-  { slug: 'defensive-operations', text: 'Nobody watches your logs today.' },
-  { slug: 'ai-cloud-security', text: 'Your AI features and cloud accounts have never been tested.' },
-].map((r) => ({ ...r, service: services.find((s) => s.slug === r.slug)?.name ?? r.slug }));
+const { t, href, services } = useI18n(Astro);
+const order = ['offensive-testing', 'governance-compliance', 'defensive-operations', 'ai-cloud-security'] as const;
+const reasons = order.map((slug) => ({
+  slug,
+  text: t.who.reasons[slug],
+  service: services.find((s) => s.slug === slug)?.name ?? slug,
+}));
 ---
 
 <section class="section who" aria-labelledby="who-title">
   <div class="container">
     <div class="section-head">
-      <h2 id="who-title">When companies call us</h2>
-      <p>Four situations we see most often. Each one has a clear first step.</p>
+      <h2 id="who-title">{t.who.title}</h2>
+      <p>{t.who.lead}</p>
     </div>
     <ul class="reasons">
       {
         reasons.map((r, i) => (
           <li data-reveal data-reveal-step={i}>
-            <a href={`/services/${r.slug}/`}>
+            <a href={href(`/services/${r.slug}/`)}>
               <strong>{r.text}</strong>
               <span>{r.service}</span>
             </a>

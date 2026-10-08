@@ -3,8 +3,10 @@
 // same message from the inbox side. This file imports nothing: the Worker's tests load it
 // on Node directly, and the browser bundle should carry only what it uses.
 
-/** When the visitor wants to start. The first entry is the form's default. */
-export const timelines = ['As soon as possible', 'Within a month', 'Within three months', 'Just exploring'];
+/** When the visitor wants to start. The first entry is the form's default. These are the
+ * values the form sends in every language; the labels live in the dictionaries. */
+export const timelines = ['As soon as possible', 'Within a month', 'Within three months', 'Just exploring'] as const;
+export type Timeline = (typeof timelines)[number];
 
 /** Field limits, applied by the form and enforced again by the Worker. */
 export const limits = {

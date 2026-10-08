@@ -1,0 +1,51 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHead from '../PageHead.astro';
+import FactGrid from '../FactGrid.astro';
+import { contactBackend, site } from '../../data/site';
+import { useI18n } from '../../i18n';
+
+const { t, href } = useI18n(Astro);
+const p = t.privacy;
+---
+
+<Base title={p.title} description={p.description}>
+  <PageHead title={p.title} lead={p.lead} crumbs={[{ label: t.page.home, href: href('/') }, { label: p.title }]} gain={0.5} />
+
+  <article class="section">
+    <div class="container prose">
+      <FactGrid facts={p.summary} label={p.glance} />
+
+      <h2>{p.checkTitle}</h2>
+      <p>{p.check}</p>
+
+      <h2>{p.formTitle}</h2>
+      {contactBackend.live ? <p>{p.formLive}</p> : <p>{p.formMailto}</p>}
+
+      <h2>{p.hostingTitle}</h2>
+      <p>{p.hosting}</p>
+
+      <h2>{p.contactTitle}</h2>
+      <p>{p.contact}</p>
+
+      <h2>{p.rightsTitle}</h2>
+      <p>
+        {p.rights1}{' '}
+        <a href={`mailto:${site.email}`}>{site.email}</a> {p.rights2}
+      </p>
+
+      <p class="updated">{p.updated}</p>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .prose :global(.facts) {
+    margin-bottom: var(--s-5);
+  }
+
+  .updated {
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+</style>
