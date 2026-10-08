@@ -48,9 +48,13 @@
   --on-ink-accent: #07130e;
   --ink-control: #577266;
 
-  --font: 'Archivo Variable', 'Archivo Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-wide: 'Archivo Variable', 'Archivo Fallback Wide', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Archivo Variable', 'Archivo Fallback Display', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font:
+    'Archivo Variable', 'Archivo Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-wide:
+    'Archivo Variable', 'Archivo Fallback Wide', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display:
+    'Archivo Variable', 'Archivo Fallback Display', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    sans-serif;
   --mono: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace;
 
   --step--2: 0.8125rem;
@@ -595,13 +599,21 @@ html.leaving :is(main, .site-footer) {
     border-color: var(--ink-accent);
     color: var(--ink-accent);
   }
-  html.io .steps.in .step:nth-child(2) .num { transition-delay: 0.3s; }
-  html.io .steps.in .step:nth-child(3) .num { transition-delay: 0.6s; }
-  html.io .steps.in .step:nth-child(4) .num { transition-delay: 0.9s; }
-  html.io .steps.in .step:nth-child(5) .num { transition-delay: 1.2s; }
+  html.io .steps.in .step:nth-child(2) .num {
+    transition-delay: 0.3s;
+  }
+  html.io .steps.in .step:nth-child(3) .num {
+    transition-delay: 0.6s;
+  }
+  html.io .steps.in .step:nth-child(4) .num {
+    transition-delay: 0.9s;
+  }
+  html.io .steps.in .step:nth-child(5) .num {
+    transition-delay: 1.2s;
+  }
   html.io .steps::after {
-      transform: scaleY(0);
-    }
+    transform: scaleY(0);
+  }
 }
 
 /* The scrolled header, driven by a sentinel observer where scroll-driven animations are

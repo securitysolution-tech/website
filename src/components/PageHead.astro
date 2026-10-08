@@ -25,20 +25,22 @@ const { t } = useI18n(Astro);
 <header class="page-head ink grain">
   {gain > 0 && <ExposureMap gain={gain} />}
   <div class="container">
-    {
-      crumbs.length > 0 && (
-        <nav class="crumbs" aria-label={t.page.breadcrumb}>
-          <ol>
-            {crumbs.map((c) => (
-              <li>{c.href ? <a href={c.href}>{c.label}</a> : <span aria-current="page">{c.label}</span>}</li>
-            ))}
-          </ol>
-        </nav>
-      )
-    }
+    {crumbs.length > 0 && (
+      <nav class="crumbs" aria-label={t.page.breadcrumb}>
+        <ol>
+          {crumbs.map((c) => (
+            <li>{c.href ? <a href={c.href}>{c.label}</a> : <span aria-current="page">{c.label}</span>}</li>
+          ))}
+        </ol>
+      </nav>
+    )}
     <h1 class="display">{title}</h1>
     {lead && <p class="lead">{lead}</p>}
-    {cta && <a class="btn btn-primary" href={cta.href}>{cta.label}</a>}
+    {cta && (
+      <a class="btn btn-primary" href={cta.href}>
+        {cta.label}
+      </a>
+    )}
     <slot />
   </div>
 </header>
@@ -51,8 +53,7 @@ const { t } = useI18n(Astro);
     border-bottom: 1px solid var(--ink-line);
     padding-block: clamp(3rem, 2rem + 5vw, 6rem) clamp(3rem, 2rem + 4vw, 5rem);
     background:
-      radial-gradient(70% 90% at 100% 100%, rgb(var(--ink-accent-rgb) / 0.14), transparent 65%),
-      var(--ink-bg);
+      radial-gradient(70% 90% at 100% 100%, rgb(var(--ink-accent-rgb) / 0.14), transparent 65%), var(--ink-bg);
   }
 
   .page-head .container {

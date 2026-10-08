@@ -11,7 +11,12 @@ const steps = p.steps;
 ---
 
 <Base title={p.title} description={p.description}>
-  <PageHead title={p.title} lead={p.lead} crumbs={[{ label: t.page.home, href: href('/') }, { label: p.title }]} gain={0.5} />
+  <PageHead
+    title={p.title}
+    lead={p.lead}
+    crumbs={[{ label: t.page.home, href: href('/') }, { label: p.title }]}
+    gain={0.5}
+  />
 
   <article class="section">
     <div class="container prose">
@@ -19,35 +24,45 @@ const steps = p.steps;
       <p>{p.how}</p>
       <a class="address" href={`mailto:${site.securityEmail}?subject=${encodeURIComponent(p.subject)}`}>
         <Icon name="envelope-simple" class="icon mail" />
-        <span>{site.securityEmail.split('@')[0]}<wbr />@{site.securityEmail.split('@')[1]}</span>
+        <span>
+          {site.securityEmail.split('@')[0]}
+          <wbr />@{site.securityEmail.split('@')[1]}
+        </span>
       </a>
       <p>
-        {p.machine1}<a href="/.well-known/security.txt">{p.machineLink}</a>{p.machine2}
+        {p.machine1}
+        <a href="/.well-known/security.txt">{p.machineLink}</a>
+        {p.machine2}
       </p>
 
       <h2>{p.expectTitle}</h2>
       <ol class="steps">
-        {
-          steps.map((s, i) => (
-            <li>
-              <span class="num" aria-hidden="true">
-                {i + 1}
-              </span>
-              <div>
-                <strong>{s.title}</strong>
-                <p>{s.text}</p>
-              </div>
-            </li>
-          ))
-        }
+        {steps.map((s, i) => (
+          <li>
+            <span class="num" aria-hidden="true">
+              {i + 1}
+            </span>
+            <div>
+              <strong>{s.title}</strong>
+              <p>{s.text}</p>
+            </div>
+          </li>
+        ))}
       </ol>
 
       <h2>{p.scopeTitle}</h2>
-      <p>{site.name}{p.scope}</p>
+      <p>
+        {site.name}
+        {p.scope}
+      </p>
       <p>{p.outOfScope}</p>
 
       <h2>{p.dontTitle}</h2>
-      <ul>{p.dont.map((d) => <li>{d}</li>)}</ul>
+      <ul>
+        {p.dont.map((d) => (
+          <li>{d}</li>
+        ))}
+      </ul>
 
       <h2>{p.harbourTitle}</h2>
       <p>{p.harbour}</p>

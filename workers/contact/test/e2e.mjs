@@ -42,7 +42,11 @@ if (probe.status === 404 && !(probe.headers.get('content-type') ?? '').includes(
 const cases = [
   ['GET is refused', () => fetch(url), 405],
   ['another Origin is refused', () => post(json(good), { origin: 'https://evil.example' }), 403],
-  ['a missing Origin is refused', () => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: json(good) }), 403],
+  [
+    'a missing Origin is refused',
+    () => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: json(good) }),
+    403,
+  ],
   ['text/plain is refused', () => post(json(good), { 'content-type': 'text/plain' }), 415],
   ['an oversized body is refused', () => post(json({ ...good, message: 'x'.repeat(9000) })), 413],
 ];
@@ -50,9 +54,19 @@ const cases = [
 if (send) cases.push(['a real request is accepted (check the inbox)', () => post(json(good)), 202]);
 cases.push(
   ['broken JSON is refused', () => post('{'), 400],
-  ['an empty request names the missing fields', () => post(json({})), 400, (d) => d.fields?.name === 'required' && d.fields?.email === 'required'],
+  [
+    'an empty request names the missing fields',
+    () => post(json({})),
+    400,
+    (d) => d.fields?.name === 'required' && d.fields?.email === 'required',
+  ],
 );
-if (!send) cases.push(['a filled honeypot is accepted and dropped', () => post(json({ ...good, website: 'https://spam.example' })), 202]);
+if (!send)
+  cases.push([
+    'a filled honeypot is accepted and dropped',
+    () => post(json({ ...good, website: 'https://spam.example' })),
+    202,
+  ]);
 cases.push(['the fourth request in a minute is rate-limited', () => post(json({})), 429, undefined, true]);
 
 let failed = 0;
@@ -68,7 +82,12 @@ for (const [name, run, expected, check, advisory] of cases) {
     const noStore = (response.headers.get('cache-control') ?? '').includes('no-store');
     const isJson = (response.headers.get('content-type') ?? '').startsWith('application/json');
     const ok = response.status === expected && noStore && isJson && (!check || check(data ?? {}));
-    const detail = [`got ${response.status}`, noStore ? '' : 'no cache-control: no-store', isJson ? '' : 'not JSON', check && !check(data ?? {}) ? 'body check failed' : '']
+    const detail = [
+      `got ${response.status}`,
+      noStore ? '' : 'no cache-control: no-store',
+      isJson ? '' : 'not JSON',
+      check && !check(data ?? {}) ? 'body check failed' : '',
+    ]
       .filter(Boolean)
       .join(', ');
     line = `${ok ? 'PASS' : advisory ? 'WARN' : 'FAIL'}  ${name} (expected ${expected}, ${detail})`;

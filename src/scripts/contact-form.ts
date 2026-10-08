@@ -49,10 +49,16 @@ function init(form: HTMLFormElement) {
   const settle = (el: HTMLElement) => {
     // Settles in every time it appears, not only the first.
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      el.animate([{ opacity: 0, translate: '0 6px' }, { opacity: 1, translate: '0 0' }], {
-        duration: 320,
-        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-      });
+      el.animate(
+        [
+          { opacity: 0, translate: '0 6px' },
+          { opacity: 1, translate: '0 0' },
+        ],
+        {
+          duration: 320,
+          easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        },
+      );
     }
   };
 
@@ -110,7 +116,8 @@ function init(form: HTMLFormElement) {
   function offer(request: ContactRequest, reason?: string) {
     const subject = subjectFor(request);
     const body = formatRequest(request);
-    const mailto = (text: string) => `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+    const mailto = (text: string) =>
+      `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
     // Long mailto links are cut short by some email apps, so only the link is shortened,
     // on whole characters; the preview and the clipboard always carry the full message.
     let linkBody = body;

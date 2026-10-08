@@ -21,7 +21,14 @@ interface Props {
 }
 
 const { locale, t, cta, isHome, hidden, services, founders, alternates } = useI18n(Astro);
-const { title, description = t.site.description, noindex = false, hasContact = false, jsonLd = [], ogImage: own } = Astro.props;
+const {
+  title,
+  description = t.site.description,
+  noindex = false,
+  hasContact = false,
+  jsonLd = [],
+  ogImage: own,
+} = Astro.props;
 const contactHref = hasContact ? '#contact' : cta.href;
 const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | ${t.site.titleTagline}`;
 // Pages that must not be indexed, and locales that are built but not yet live, have no canonical address.
@@ -69,7 +76,12 @@ const graph = JSON.stringify({
       },
       knowsAbout: services.map((s) => s.plainName),
       sameAs: ['https://github.com/securitysolution-tech', ...founders.flatMap((f) => f.links.map((l) => l.href))],
-      founder: founders.map((f) => ({ '@type': 'Person', name: f.name, jobTitle: f.role, sameAs: f.links.map((l) => l.href) })),
+      founder: founders.map((f) => ({
+        '@type': 'Person',
+        name: f.name,
+        jobTitle: f.role,
+        sameAs: f.links.map((l) => l.href),
+      })),
     },
     {
       '@type': 'WebSite',
@@ -96,15 +108,13 @@ const graph = JSON.stringify({
     <meta name="description" content={description} />
     {!unlisted && <link rel="canonical" href={canonical} />}
     {unlisted && <meta name="robots" content="noindex" />}
-    {
-      arLive && !noindex && (
-        <>
-          <link rel="alternate" hreflang="en" href={new URL(alternates.en, site.url).href} />
-          <link rel="alternate" hreflang="ar" href={new URL(alternates.ar, site.url).href} />
-          <link rel="alternate" hreflang="x-default" href={new URL(alternates.en, site.url).href} />
-        </>
-      )
-    }
+    {arLive && !noindex && (
+      <>
+        <link rel="alternate" hreflang="en" href={new URL(alternates.en, site.url).href} />
+        <link rel="alternate" hreflang="ar" href={new URL(alternates.ar, site.url).href} />
+        <link rel="alternate" hreflang="x-default" href={new URL(alternates.en, site.url).href} />
+      </>
+    )}
 
     <link rel="preload" href={archivoLatin} as="font" type="font/woff2" crossorigin />
     {locale === 'ar' && <link rel="preload" href={notoArabic} as="font" type="font/woff2" crossorigin />}
@@ -133,7 +143,9 @@ const graph = JSON.stringify({
     <script type="application/ld+json" set:html={graph} />
   </head>
   <body>
-    <a class="skip-link" href="#main">{t.site.skip}</a>
+    <a class="skip-link" href="#main">
+      {t.site.skip}
+    </a>
     <Header contactHref={contactHref} />
     <main id="main">
       <slot />

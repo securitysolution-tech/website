@@ -15,7 +15,7 @@
     "CONTACT_ENABLED": "true",
     "ALLOWED_ORIGIN": "https://securitysolution.tech",
     // Must be an address on the routing domain, and listed in allowed_sender_addresses below.
-    "MAIL_FROM": "hello@securitysolution.tech"
+    "MAIL_FROM": "hello@securitysolution.tech",
   },
   // CONTACT_TO: the inbox, a verified destination address in Email Routing. Set with `wrangler secret put CONTACT_TO`.
   "secrets": { "required": ["CONTACT_TO"] },
@@ -24,13 +24,13 @@
       "name": "EMAIL",
       "allowed_sender_addresses": ["hello@securitysolution.tech"],
       // `wrangler dev` sends through the real service, so the delivery test is a real send.
-      "remote": true
-    }
+      "remote": true,
+    },
   ],
   // Soft caps in front of the email quota; the WAF rule on /api/contact is the hard one.
   // namespace_id values are account-wide: two bindings with the same id share one counter.
   "ratelimits": [
     { "name": "PER_IP", "namespace_id": "7301", "simple": { "limit": 3, "period": 60 } },
-    { "name": "GLOBAL", "namespace_id": "7302", "simple": { "limit": 6, "period": 60 } }
-  ]
+    { "name": "GLOBAL", "namespace_id": "7302", "simple": { "limit": 6, "period": 60 } },
+  ],
 }

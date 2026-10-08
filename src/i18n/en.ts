@@ -31,7 +31,8 @@ export const en = {
   },
 
   footer: {
-    blurb: 'Penetration testing, security monitoring and compliance readiness for companies in the United Arab Emirates.',
+    blurb:
+      'Penetration testing, security monitoring and compliance readiness for companies in the United Arab Emirates.',
     services: 'Services',
     company: 'Company',
     trust: 'Trust',
@@ -70,33 +71,58 @@ export const en = {
     verdict: 'Spoofing protection:',
     fixFirst: 'Fix first',
     checks: {
-      dmarc: { title: 'Spoofing protection', tech: 'DMARC', about: 'Tells receiving mail servers what to do with email that fakes your domain.' },
-      spf: { title: 'Approved senders', tech: 'SPF', about: 'Lists the servers allowed to send email for your domain.' },
+      dmarc: {
+        title: 'Spoofing protection',
+        tech: 'DMARC',
+        about: 'Tells receiving mail servers what to do with email that fakes your domain.',
+      },
+      spf: {
+        title: 'Approved senders',
+        tech: 'SPF',
+        about: 'Lists the servers allowed to send email for your domain.',
+      },
       mx: { title: 'Mail servers', tech: 'MX', about: 'Shows who handles the email sent to your domain.' },
-      dnssec: { title: 'Signed DNS', tech: 'DNSSEC', about: 'Protects the answers your DNS gives out from being forged.' },
-      caa: { title: 'Certificate lock', tech: 'CAA', about: 'Limits which companies may issue HTTPS certificates for your domain.' },
-      mtasts: { title: 'Encrypted mail delivery', tech: 'MTA-STS', about: 'Lets you require encryption for email on its way to you.' },
+      dnssec: {
+        title: 'Signed DNS',
+        tech: 'DNSSEC',
+        about: 'Protects the answers your DNS gives out from being forged.',
+      },
+      caa: {
+        title: 'Certificate lock',
+        tech: 'CAA',
+        about: 'Limits which companies may issue HTTPS certificates for your domain.',
+      },
+      mtasts: {
+        title: 'Encrypted mail delivery',
+        tech: 'MTA-STS',
+        about: 'Lets you require encryption for email on its way to you.',
+      },
     },
     labels: { pass: 'Pass', warn: 'Warning', fail: 'Fail', info: 'Info' },
     levels: { strong: 'Strong', partial: 'Partial', weak: 'Weak', incomplete: 'Incomplete' },
     score: '{passed} of {scored} checks passed',
     incompleteScore: 'Some lookups did not complete. Run the check again in a moment.',
     announceDone: 'Check complete for {domain}. Spoofing protection is {level}. {passed} of {scored} checks passed.',
-    announceIncomplete: 'Check incomplete for {domain}. Some lookups did not complete. Run the check again in a moment.',
+    announceIncomplete:
+      'Check incomplete for {domain}. Some lookups did not complete. Run the check again in a moment.',
     fixOne: '1 item to fix first.',
     fixMany: '{count} items to fix first.',
     errors: {
       empty: 'Enter a domain name, for example yourcompany.ae.',
       notFound: '{domain} does not exist in DNS. Check the spelling and try again.',
-      resolver: 'The DNS lookups could not be completed. Your network may block DNS-over-HTTPS, so try again on another connection.',
+      resolver:
+        'The DNS lookups could not be completed. Your network may block DNS-over-HTTPS, so try again on another connection.',
     },
     summaries: {
       inherited: 'Inherited from {org}. ',
-      dmarcNone: 'No DMARC policy. Anyone can send email that claims to come from this domain, and receiving servers are not told to stop it.',
+      dmarcNone:
+        'No DMARC policy. Anyone can send email that claims to come from this domain, and receiving servers are not told to stop it.',
       dmarcMany: '{via}{n} DMARC records found. Receivers ignore DMARC when there is more than one.',
-      dmarcPartial: '{via}Policy is {policy}, but only for {pct}% of messages. The rest of the spoofed mail is still delivered.',
+      dmarcPartial:
+        '{via}Policy is {policy}, but only for {pct}% of messages. The rest of the spoofed mail is still delivered.',
       dmarcReject: '{via}Policy is reject. Receivers that check DMARC block email that fakes this domain.',
-      dmarcQuarantine: '{via}Policy is quarantine. Receivers that check DMARC send email that fakes this domain to spam.',
+      dmarcQuarantine:
+        '{via}Policy is quarantine. Receivers that check DMARC send email that fakes this domain to spam.',
       dmarcNone2: '{via}Policy is none, which only monitors. Email that fakes this domain is still delivered.',
       dmarcInvalid: '{via}The DMARC record has no valid policy (p=), so receivers ignore it.',
       spfNone: 'No SPF record. Receiving servers cannot tell which servers are allowed to send email for this domain.',
@@ -104,7 +130,8 @@ export const en = {
       spfLookups: 'This record needs at least {n} DNS lookups. The limit is 10, so receivers treat SPF as an error.',
       spfStrict: 'Strict policy (-all). Mail from servers not on the list fails SPF.',
       spfSoftOk: 'Soft fail (~all), backed by an enforced DMARC policy. That combination is fine.',
-      spfSoftWeak: 'Soft fail (~all) without an enforced DMARC policy. Mail from unlisted servers is usually still delivered.',
+      spfSoftWeak:
+        'Soft fail (~all) without an enforced DMARC policy. Mail from unlisted servers is usually still delivered.',
       spfPlusAll: 'The record ends in +all, which allows any server on the internet to send as this domain.',
       spfRedirect: 'The policy is delegated to {target}.',
       spfNoAll: 'The record has no enforcing “all” rule, so mail from unlisted servers is not rejected.',
@@ -114,12 +141,15 @@ export const en = {
       mxHost: 'Email is delivered to {host}.',
       dnssecOk: 'Signed and validated. Answers for this domain cannot be forged in transit.',
       dnssecNo: 'Not signed. An attacker on the network path could forge DNS answers for this domain.',
-      caaNone: 'No CAA record, so any certificate authority may issue certificates for this domain. One DNS record fixes it.',
+      caaNone:
+        'No CAA record, so any certificate authority may issue certificates for this domain. One DNS record fixes it.',
       caaIssuers: 'Only {issuers} may issue certificates.',
       caaRestricted: 'Certificate issuance is restricted.',
       mtastsNotNeeded: 'Not needed, because this domain does not receive email.',
-      mtastsOk: 'Published. Senders that support MTA-STS read your policy; in enforce mode they deliver only over an encrypted, verified connection.',
-      mtastsNo: 'Not set. Optional hardening that lets you require encrypted delivery from sending servers that support it.',
+      mtastsOk:
+        'Published. Senders that support MTA-STS read your policy; in enforce mode they deliver only over an encrypted, verified connection.',
+      mtastsNo:
+        'Not set. Optional hardening that lets you require encrypted delivery from sending servers that support it.',
       unknown: 'The lookup did not complete. Run the check again in a moment.',
     },
   },
@@ -131,10 +161,30 @@ export const en = {
     lead2: ') and fix anything that slips.',
     from: ' from {scanner}',
     items: [
-      { scanner: 'Mozilla HTTP Observatory', grade: 'A+', what: 'Security headers, including a strict Content Security Policy.', link: 'View the report' },
-      { scanner: 'Qualys SSL Labs', grade: 'A+', what: 'TLS 1.2 and 1.3 only, with HSTS on every response.', link: 'View the report' },
-      { scanner: 'Email spoofing', grade: 'Enforced', what: 'Our DMARC policy is p=reject: receiving servers refuse email that fakes our domain.', link: 'Run the check on us' },
-      { scanner: 'DNSSEC', grade: 'Signed', what: 'Our DNS answers are signed, so they cannot be forged on the way to you.', link: 'See the chain of trust' },
+      {
+        scanner: 'Mozilla HTTP Observatory',
+        grade: 'A+',
+        what: 'Security headers, including a strict Content Security Policy.',
+        link: 'View the report',
+      },
+      {
+        scanner: 'Qualys SSL Labs',
+        grade: 'A+',
+        what: 'TLS 1.2 and 1.3 only, with HSTS on every response.',
+        link: 'View the report',
+      },
+      {
+        scanner: 'Email spoofing',
+        grade: 'Enforced',
+        what: 'Our DMARC policy is p=reject: receiving servers refuse email that fakes our domain.',
+        link: 'Run the check on us',
+      },
+      {
+        scanner: 'DNSSEC',
+        grade: 'Signed',
+        what: 'Our DNS answers are signed, so they cannot be forged on the way to you.',
+        link: 'See the chain of trust',
+      },
     ],
   },
 
@@ -160,11 +210,20 @@ export const en = {
     title: 'How an engagement works',
     lead: 'The same five steps for every test, whether it covers one web app or your whole network.',
     steps: [
-      { title: 'Scope', text: 'A 30-minute call to agree what we test, when, and what is off-limits. You get a written scope and a fixed quote.' },
-      { title: 'Test', text: 'We work inside the agreed window and contact you straight away if we find something critical.' },
+      {
+        title: 'Scope',
+        text: 'A 30-minute call to agree what we test, when, and what is off-limits. You get a written scope and a fixed quote.',
+      },
+      {
+        title: 'Test',
+        text: 'We work inside the agreed window and contact you straight away if we find something critical.',
+      },
       { title: 'Report', text: 'Findings ranked by business risk, each with evidence, impact and step-by-step fixes.' },
       { title: 'Fix', text: 'Your team makes the changes. We answer questions along the way.' },
-      { title: 'Retest', text: 'We verify every fix and update the report, so you can share it with customers and auditors.' },
+      {
+        title: 'Retest',
+        text: 'We verify every fix and update the report, so you can share it with customers and auditors.',
+      },
     ],
     start: 'Start with step 1: book the scoping call',
   },
@@ -182,7 +241,8 @@ export const en = {
     statusValue: 'Fixed, verified on retest',
     evidence: 'Evidence',
     impact: 'Business impact',
-    impact1: 'Attackers can send invoices or payment requests that look like they come from your finance team. Because the policy is ',
+    impact1:
+      'Attackers can send invoices or payment requests that look like they come from your finance team. Because the policy is ',
     impact2: ', receiving mail servers are told to deliver them anyway.',
     fix: 'How to fix',
     fix1: 'Confirm SPF and DKIM pass for every service that sends your email.',
@@ -213,7 +273,8 @@ export const en = {
 
   contact: {
     lead: 'Tell us what you want tested and when. We set up a 30-minute call to agree the scope, and you get it in writing with a fixed quote before any testing starts.',
-    replyLive: 'We reply within 1 business day. Your request goes to our inbox over an encrypted connection, and we keep it only to reply.',
+    replyLive:
+      'We reply within 1 business day. Your request goes to our inbox over an encrypted connection, and we keep it only to reply.',
     replyMailto:
       'We reply within 1 business day. This site has no server: your request leaves from your own email app, and nothing you type here is stored.',
     security1: 'Found a security issue in one of our own systems? Please follow our ',
@@ -288,7 +349,8 @@ export const en = {
 
   privacy: {
     title: 'Privacy',
-    description: 'What this website does and does not collect, including how the domain check and the request form handle what you type.',
+    description:
+      'What this website does and does not collect, including how the domain check and the request form handle what you type.',
     lead: 'This website does not use cookies, analytics or advertising trackers, and it loads no third-party scripts. Here is what happens with the little it does handle.',
     glance: 'Privacy at a glance',
     summary: [
@@ -319,7 +381,8 @@ export const en = {
 
   security: {
     title: 'Report a vulnerability',
-    description: 'How to report a security issue in SecuritySolution.tech websites and systems, and what you can expect from us.',
+    description:
+      'How to report a security issue in SecuritySolution.tech websites and systems, and what you can expect from us.',
     lead: 'If you find a security issue in one of our websites or systems, we want to hear about it. Here is how to reach us, what happens next, and what stays out of scope.',
     howTitle: 'How to report',
     how: 'Email us with a description of the issue, the steps to reproduce it, and the impact you expect. Screenshots or a short proof of concept help us move faster.',
@@ -349,7 +412,8 @@ export const en = {
     harbour:
       'We will not take legal action against security research that follows this policy in good faith. We do not run a paid bug bounty at the moment.',
     thanksTitle: 'Acknowledgements',
-    thanks: 'Researchers who report a resolved issue are credited here if they want to be. No reports have been received yet.',
+    thanks:
+      'Researchers who report a resolved issue are credited here if they want to be. No reports have been received yet.',
     updated: 'Last updated 8 October 2026.',
   },
 

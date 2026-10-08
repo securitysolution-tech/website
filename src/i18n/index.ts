@@ -15,7 +15,18 @@ export { arLive };
 /** The text of a service that changes with the language; the rest is the spine in src/data. */
 export type ServiceText = Pick<
   Service,
-  'name' | 'plainName' | 'summary' | 'coverLead' | 'facts' | 'intro' | 'seoTitle' | 'seoDescription' | 'items' | 'deliverables' | 'goodFit' | 'note'
+  | 'name'
+  | 'plainName'
+  | 'summary'
+  | 'coverLead'
+  | 'facts'
+  | 'intro'
+  | 'seoTitle'
+  | 'seoDescription'
+  | 'items'
+  | 'deliverables'
+  | 'goodFit'
+  | 'note'
 >;
 export type FounderText = Pick<Founder, 'role' | 'bio' | 'highlights'> & { name?: string };
 
@@ -28,7 +39,8 @@ export interface Content {
 const dictionaries: Record<Locale, Dictionary> = { en, ar };
 const content: Partial<Record<Locale, Content>> = { ar: arContent };
 
-export const localeOf = (astro: Pick<AstroGlobal, 'currentLocale'>): Locale => (astro.currentLocale === 'ar' ? 'ar' : 'en');
+export const localeOf = (astro: Pick<AstroGlobal, 'currentLocale'>): Locale =>
+  astro.currentLocale === 'ar' ? 'ar' : 'en';
 
 export function getServices(locale: Locale): Service[] {
   const overlay = content[locale]?.services;
@@ -62,7 +74,9 @@ export function useI18n(astro: Pick<AstroGlobal, 'currentLocale' | 'url'>) {
     /** True while the locale is built but not yet linked or indexed. */
     hidden: locale !== 'en' && !arLive,
     /** The language toggle, shown once Arabic is live. Its label is in the language it leads to. */
-    toggle: arLive ? { href: switchHref, lang: otherLocale, label: otherLocale === 'ar' ? 'العربية' : 'English' } : null,
+    toggle: arLive
+      ? { href: switchHref, lang: otherLocale, label: otherLocale === 'ar' ? 'العربية' : 'English' }
+      : null,
     /** Addresses of this page in each language, for hreflang links. */
     alternates: { en: locale === 'en' ? path : switchHref, ar: locale === 'ar' ? path : switchHref },
     services: getServices(locale),

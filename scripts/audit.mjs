@@ -24,7 +24,20 @@ const summary = [];
 const problems = [];
 
 // --- A static server for dist/, the way GitHub Pages serves it ---------------------------
-const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.webmanifest': 'application/manifest+json', '.xml': 'application/xml', '.txt': 'text/plain' };
+const types = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css',
+  '.js': 'text/javascript',
+  '.json': 'application/json',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.ico': 'image/x-icon',
+  '.woff2': 'font/woff2',
+  '.webmanifest': 'application/manifest+json',
+  '.xml': 'application/xml',
+  '.txt': 'text/plain',
+};
 const server = createServer((req, res) => {
   let path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
   if (path.endsWith('/')) path += 'index.html';
@@ -34,7 +47,10 @@ const server = createServer((req, res) => {
     file = join(dist, '404.html');
     status = 404;
   }
-  res.writeHead(status, { 'content-type': types[extname(file)] ?? 'application/octet-stream', 'cache-control': 'no-store' });
+  res.writeHead(status, {
+    'content-type': types[extname(file)] ?? 'application/octet-stream',
+    'cache-control': 'no-store',
+  });
   res.end(readFileSync(file));
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
@@ -60,10 +76,14 @@ for (const url of urls) {
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text()); });
+  page.on('console', (m) => {
+    if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text());
+  });
   await page.addInitScript(() => {
     window.__cspv = [];
-    document.addEventListener('securitypolicyviolation', (e) => window.__cspv.push(`${e.violatedDirective} ${e.blockedURI}`));
+    document.addEventListener('securitypolicyviolation', (e) =>
+      window.__cspv.push(`${e.violatedDirective} ${e.blockedURI}`),
+    );
   });
   await page.goto(base + url, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
@@ -84,14 +104,26 @@ await browser.close();
 // --- Lighthouse on three pages ----------------------------------------------------------------
 const chrome = await launch({ chromeFlags });
 for (const url of ['/', '/services/offensive-testing/', '/privacy/']) {
-  const result = await lighthouse(base + url, { port: chrome.port, output: 'json', logLevel: 'error', onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'], budgets });
+  const result = await lighthouse(base + url, {
+    port: chrome.port,
+    output: 'json',
+    logLevel: 'error',
+    onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
+    budgets,
+  });
   const { categories, audits } = result.lhr;
   const score = (k) => Math.round((categories[k]?.score ?? 0) * 100);
   const metric = (k) => audits[k]?.displayValue ?? '?';
   const cls = audits['cumulative-layout-shift']?.numericValue ?? 0;
   const budget = audits['performance-budget'];
-  const over = (budget?.details?.items ?? []).filter((i) => i.sizeOverBudget > 0 || i.countOverBudget).map((i) => `${i.label}: ${i.sizeOverBudget ? Math.round(i.sizeOverBudget / 1024) + ' KiB over' : i.countOverBudget}`);
-  summary.push(`${url}: performance ${score('performance')}, accessibility ${score('accessibility')}, best practices ${score('best-practices')}, SEO ${score('seo')}; LCP ${metric('largest-contentful-paint')}, TBT ${metric('total-blocking-time')}, CLS ${metric('cumulative-layout-shift')}`);
+  const over = (budget?.details?.items ?? [])
+    .filter((i) => i.sizeOverBudget > 0 || i.countOverBudget)
+    .map(
+      (i) => `${i.label}: ${i.sizeOverBudget ? Math.round(i.sizeOverBudget / 1024) + ' KiB over' : i.countOverBudget}`,
+    );
+  summary.push(
+    `${url}: performance ${score('performance')}, accessibility ${score('accessibility')}, best practices ${score('best-practices')}, SEO ${score('seo')}; LCP ${metric('largest-contentful-paint')}, TBT ${metric('total-blocking-time')}, CLS ${metric('cumulative-layout-shift')}`,
+  );
   if (score('accessibility') < 100) problems.push(`${url}: accessibility ${score('accessibility')} (expected 100)`);
   if (score('best-practices') < 100) problems.push(`${url}: best practices ${score('best-practices')} (expected 100)`);
   if (score('seo') < 100) problems.push(`${url}: SEO ${score('seo')} (expected 100)`);
@@ -105,7 +137,10 @@ const report = summary.map((l) => `- ${l}`).join('\n');
 console.log(report);
 if (process.env.GITHUB_STEP_SUMMARY) {
   const { appendFileSync } = await import('node:fs');
-  appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## Site audit\n\n${report}\n${problems.length ? `\n### Problems\n\n${problems.map((p) => `- ${p}`).join('\n')}\n` : '\nNo problems.\n'}`);
+  appendFileSync(
+    process.env.GITHUB_STEP_SUMMARY,
+    `## Site audit\n\n${report}\n${problems.length ? `\n### Problems\n\n${problems.map((p) => `- ${p}`).join('\n')}\n` : '\nNo problems.\n'}`,
+  );
 }
 if (problems.length) {
   console.error(`\nAudit failed (${problems.length}):\n  ${problems.join('\n  ')}`);

@@ -20,7 +20,10 @@ const { slug } = Astro.props;
 const { t, href, cta, services, faqsFor, locale } = useI18n(Astro);
 const service = services.find((s) => s.slug === slug)!;
 // Rendered from this page's own head, in its language (public/og).
-const ogImage = { src: `/og/${locale === 'ar' ? 'ar/' : ''}${service.slug}.jpg`, alt: `${service.plainName}. ${service.intro}` };
+const ogImage = {
+  src: `/og/${locale === 'ar' ? 'ar/' : ''}${service.slug}.jpg`,
+  alt: `${service.plainName}. ${service.intro}`,
+};
 const others = services.filter((s) => s.slug !== service.slug);
 const faqs = faqsFor(service.slug);
 const pageUrl = new URL(href(`/services/${service.slug}/`), site.url).href;
@@ -61,7 +64,11 @@ const jsonLd = [
     <PageHead
       title={service.plainName}
       lead={service.intro}
-      crumbs={[{ label: t.page.home, href: href('/') }, { label: t.nav.services, href: href('/#services') }, { label: service.name }]}
+      crumbs={[
+        { label: t.page.home, href: href('/') },
+        { label: t.nav.services, href: href('/#services') },
+        { label: service.name },
+      ]}
       cta={{ label: cta.label, href: '#contact' }}
       gain={0.7}
     >
@@ -75,22 +82,18 @@ const jsonLd = [
           <p>{service.coverLead}</p>
         </div>
         <dl class="items">
-          {
-            service.items.map((i, n) => (
-              <div class="item">
-                <dt>{i.name}</dt>
-                <dd>{i.text}</dd>
-              </div>
-            ))
-          }
+          {service.items.map((i, n) => (
+            <div class="item">
+              <dt>{i.name}</dt>
+              <dd>{i.text}</dd>
+            </div>
+          ))}
         </dl>
-        {
-          service.standards.length > 0 && (
-            <p class="standards">
-              <span>{t.service.measured}</span> {service.standards.join(', ')}.
-            </p>
-          )
-        }
+        {service.standards.length > 0 && (
+          <p class="standards">
+            <span>{t.service.measured}</span> {service.standards.join(', ')}.
+          </p>
+        )}
         {service.note && <Callout title={t.service.goodToKnow}>{service.note}</Callout>}
       </div>
     </section>
@@ -99,11 +102,19 @@ const jsonLd = [
       <div class="container two">
         <div>
           <h2 class="block-title">{t.service.receive}</h2>
-          <ul class="ticks bullets">{service.deliverables.map((d) => <li>{d}</li>)}</ul>
+          <ul class="ticks bullets">
+            {service.deliverables.map((d) => (
+              <li>{d}</li>
+            ))}
+          </ul>
         </div>
         <div>
           <h2 class="block-title">{t.service.fit}</h2>
-          <ul class="ticks bullets">{service.goodFit.map((g) => <li>{g}</li>)}</ul>
+          <ul class="ticks bullets">
+            {service.goodFit.map((g) => (
+              <li>{g}</li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>
@@ -121,7 +132,9 @@ const jsonLd = [
           <p>{t.service.othersLead}</p>
         </div>
         <ul class="others" data-spotlight-root>
-          {others.map((o) => <ServiceCard service={o} items={3} />)}
+          {others.map((o) => (
+            <ServiceCard service={o} items={3} />
+          ))}
         </ul>
       </div>
     </section>

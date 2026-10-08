@@ -10,7 +10,10 @@ const tld = '.tech';
 const name = site.name.endsWith(tld) ? site.name.slice(0, -tld.length) : site.name;
 ---
 
-<span class:list={['wordmark', { small }]} translate="no">{name}<span class="tld">{tld}</span></span>
+<span class:list={['wordmark', { small }]} translate="no">
+  {name}
+  <span class="tld">{tld}</span>
+</span>
 
 <style>
   .wordmark {

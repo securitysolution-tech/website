@@ -40,7 +40,11 @@ export const founders: Founder[] = [
     id: 'mohammad',
     name: 'Mohammad Thabet Hassan',
     role: 'Co-founder',
-    highlights: ['B.Sc. Cyber Security, Canadian University Dubai', '3 IEEE-published papers', 'Coordinated vulnerability disclosure'],
+    highlights: [
+      'B.Sc. Cyber Security, Canadian University Dubai',
+      '3 IEEE-published papers',
+      'Coordinated vulnerability disclosure',
+    ],
     bio: 'First author of the three papers, on SQL-injection detection, voice-deepfake detection and over-the-air update security. Reports the vulnerabilities he finds in open-source software to its maintainers before anything is published.',
     links: [
       { label: 'LinkedIn', href: 'https://www.linkedin.com/in/mohammadthabet', icon: 'linkedin-logo' },

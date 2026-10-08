@@ -34,9 +34,13 @@ const { t, href } = useI18n(Astro);
   </h3>
   <p class="summary">{s.summary}</p>
   <ul class:list={['items', 'bullets', { two: columns === 2 }]} aria-label={fmt(t.services.includes, { name: s.name })}>
-    {s.items.slice(0, items).map((item) => <li>{item.name}</li>)}
+    {s.items.slice(0, items).map((item) => (
+      <li>{item.name}</li>
+    ))}
   </ul>
-  <span class="more" aria-hidden="true">{t.services.more}</span>
+  <span class="more" aria-hidden="true">
+    {t.services.more}
+  </span>
   <Ornament kind={s.icon} />
 </li>
 
@@ -113,8 +117,7 @@ const { t, href } = useI18n(Astro);
     --spot: rgb(var(--ink-accent-rgb) / 0.2);
     border-color: var(--ink-line);
     background:
-      radial-gradient(120% 70% at 100% 100%, rgb(var(--ink-accent-rgb) / 0.14), transparent 60%),
-      var(--ink-raised);
+      radial-gradient(120% 70% at 100% 100%, rgb(var(--ink-accent-rgb) / 0.14), transparent 60%), var(--ink-raised);
   }
 
   .card.ink:hover {
@@ -130,8 +133,7 @@ const { t, href } = useI18n(Astro);
       border-color: rgb(var(--ink-accent-rgb) / 0.32);
       background:
         radial-gradient(120% 80% at 100% 100%, rgb(var(--ink-accent-rgb) / 0.2), transparent 62%),
-        linear-gradient(165deg, rgb(var(--ink-accent-rgb) / 0.09), transparent 45%),
-        var(--ink-raised);
+        linear-gradient(165deg, rgb(var(--ink-accent-rgb) / 0.09), transparent 45%), var(--ink-raised);
     }
   }
 

@@ -21,7 +21,15 @@ test('treats an IPv4-mapped address as IPv4', () => {
 });
 
 test('falls back to one shared key when the address is missing or malformed', () => {
-  for (const bad of [null, '', 'garbage', '1:2:3', '1::2::3', '2001:db8:85a3:8d3:1319:8a2e:370:7348:extra', 'gggg::1']) {
+  for (const bad of [
+    null,
+    '',
+    'garbage',
+    '1:2:3',
+    '1::2::3',
+    '2001:db8:85a3:8d3:1319:8a2e:370:7348:extra',
+    'gggg::1',
+  ]) {
     assert.equal(clientKey(bad), 'unknown', `for ${bad}`);
   }
   assert.equal(ipv6Prefix('1::2::3'), null);

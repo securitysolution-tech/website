@@ -15,20 +15,20 @@ const steps = t.process.steps;
     </div>
 
     <ol class="steps">
-      {
-        steps.map((s, i) => (
-          <li class="step">
-            <span class="num" aria-hidden="true">
-              {i + 1}
-            </span>
-            <h3>{s.title}</h3>
-            <p>{s.text}</p>
-          </li>
-        ))
-      }
+      {steps.map((s, i) => (
+        <li class="step">
+          <span class="num" aria-hidden="true">
+            {i + 1}
+          </span>
+          <h3>{s.title}</h3>
+          <p>{s.text}</p>
+        </li>
+      ))}
     </ol>
 
-    <p class="start"><a href="#contact">{t.process.start}</a></p>
+    <p class="start">
+      <a href="#contact">{t.process.start}</a>
+    </p>
   </div>
 </section>
 
@@ -41,9 +41,7 @@ const steps = t.process.steps;
     overflow: clip;
     /* Keeps the band edges visible in dark mode, where paper and ink come close. */
     border-block: 1px solid var(--ink-line);
-    background:
-      radial-gradient(60% 80% at 0% 0%, rgb(var(--ink-accent-rgb) / 0.1), transparent 70%),
-      var(--ink-bg);
+    background: radial-gradient(60% 80% at 0% 0%, rgb(var(--ink-accent-rgb) / 0.1), transparent 70%), var(--ink-bg);
     /* The band as a whole drives the pinned story on wide screens. */
     view-timeline: --approach;
   }
@@ -156,11 +154,21 @@ const steps = t.process.steps;
         animation-range: entry 40% cover 55%;
       }
 
-      .step:nth-child(1) .num { animation-name: num-on-1; }
-      .step:nth-child(2) .num { animation-name: num-on-2; }
-      .step:nth-child(3) .num { animation-name: num-on-3; }
-      .step:nth-child(4) .num { animation-name: num-on-4; }
-      .step:nth-child(5) .num { animation-name: num-on-5; }
+      .step:nth-child(1) .num {
+        animation-name: num-on-1;
+      }
+      .step:nth-child(2) .num {
+        animation-name: num-on-2;
+      }
+      .step:nth-child(3) .num {
+        animation-name: num-on-3;
+      }
+      .step:nth-child(4) .num {
+        animation-name: num-on-4;
+      }
+      .step:nth-child(5) .num {
+        animation-name: num-on-5;
+      }
     }
 
     @media (prefers-reduced-motion: no-preference) and (max-width: 60rem) {
@@ -202,11 +210,21 @@ const steps = t.process.steps;
         animation-timeline: --approach;
       }
 
-      .step:nth-child(1) :is(h3, p) { animation-range: cover 34% cover 41%; }
-      .step:nth-child(2) :is(h3, p) { animation-range: cover 41% cover 48%; }
-      .step:nth-child(3) :is(h3, p) { animation-range: cover 48% cover 55%; }
-      .step:nth-child(4) :is(h3, p) { animation-range: cover 55% cover 62%; }
-      .step:nth-child(5) :is(h3, p) { animation-range: cover 61% cover 68%; }
+      .step:nth-child(1) :is(h3, p) {
+        animation-range: cover 34% cover 41%;
+      }
+      .step:nth-child(2) :is(h3, p) {
+        animation-range: cover 41% cover 48%;
+      }
+      .step:nth-child(3) :is(h3, p) {
+        animation-range: cover 48% cover 55%;
+      }
+      .step:nth-child(4) :is(h3, p) {
+        animation-range: cover 55% cover 62%;
+      }
+      .step:nth-child(5) :is(h3, p) {
+        animation-range: cover 61% cover 68%;
+      }
 
       .start {
         animation: enter linear both;
@@ -217,28 +235,66 @@ const steps = t.process.steps;
   }
 
   @keyframes num-on-1 {
-    0% { border-color: var(--ink-line); color: var(--ink-text-2); }
-    10%, 100% { border-color: var(--ink-accent); color: var(--ink-accent); }
+    0% {
+      border-color: var(--ink-line);
+      color: var(--ink-text-2);
+    }
+    10%,
+    100% {
+      border-color: var(--ink-accent);
+      color: var(--ink-accent);
+    }
   }
 
   @keyframes num-on-2 {
-    0%, 18% { border-color: var(--ink-line); color: var(--ink-text-2); }
-    32%, 100% { border-color: var(--ink-accent); color: var(--ink-accent); }
+    0%,
+    18% {
+      border-color: var(--ink-line);
+      color: var(--ink-text-2);
+    }
+    32%,
+    100% {
+      border-color: var(--ink-accent);
+      color: var(--ink-accent);
+    }
   }
 
   @keyframes num-on-3 {
-    0%, 43% { border-color: var(--ink-line); color: var(--ink-text-2); }
-    57%, 100% { border-color: var(--ink-accent); color: var(--ink-accent); }
+    0%,
+    43% {
+      border-color: var(--ink-line);
+      color: var(--ink-text-2);
+    }
+    57%,
+    100% {
+      border-color: var(--ink-accent);
+      color: var(--ink-accent);
+    }
   }
 
   @keyframes num-on-4 {
-    0%, 68% { border-color: var(--ink-line); color: var(--ink-text-2); }
-    82%, 100% { border-color: var(--ink-accent); color: var(--ink-accent); }
+    0%,
+    68% {
+      border-color: var(--ink-line);
+      color: var(--ink-text-2);
+    }
+    82%,
+    100% {
+      border-color: var(--ink-accent);
+      color: var(--ink-accent);
+    }
   }
 
   @keyframes num-on-5 {
-    0%, 90% { border-color: var(--ink-line); color: var(--ink-text-2); }
-    100% { border-color: var(--ink-accent); color: var(--ink-accent); }
+    0%,
+    90% {
+      border-color: var(--ink-line);
+      color: var(--ink-text-2);
+    }
+    100% {
+      border-color: var(--ink-accent);
+      color: var(--ink-accent);
+    }
   }
 
   @keyframes fill-x {

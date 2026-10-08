@@ -10,7 +10,12 @@ const p = t.privacy;
 ---
 
 <Base title={p.title} description={p.description}>
-  <PageHead title={p.title} lead={p.lead} crumbs={[{ label: t.page.home, href: href('/') }, { label: p.title }]} gain={0.5} />
+  <PageHead
+    title={p.title}
+    lead={p.lead}
+    crumbs={[{ label: t.page.home, href: href('/') }, { label: p.title }]}
+    gain={0.5}
+  />
 
   <article class="section">
     <div class="container prose">
@@ -30,8 +35,7 @@ const p = t.privacy;
 
       <h2>{p.rightsTitle}</h2>
       <p>
-        {p.rights1}{' '}
-        <a href={`mailto:${site.email}`}>{site.email}</a> {p.rights2}
+        {p.rights1} <a href={`mailto:${site.email}`}>{site.email}</a> {p.rights2}
       </p>
 
       <p class="updated">{p.updated}</p>

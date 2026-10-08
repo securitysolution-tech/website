@@ -11,7 +11,10 @@ const rules = [
   { re: /lorem ipsum/i, why: 'placeholder text' },
   { re: /\b(TODO|FIXME|TBD)\b/, why: 'unfinished marker' },
   { re: /[\u0660-\u0669]/, why: 'Arabic-Indic digit (the site uses Western digits in both languages)' },
-  { re: /\b(cutting[- ]edge|seamless(ly)?|elevate|unleash|revolutioni[sz]e|next[- ]gen|world[- ]class|best[- ]in[- ]class)\b/i, why: 'filler phrase' },
+  {
+    re: /\b(cutting[- ]edge|seamless(ly)?|elevate|unleash|revolutioni[sz]e|next[- ]gen|world[- ]class|best[- ]in[- ]class)\b/i,
+    why: 'filler phrase',
+  },
 ];
 
 const files = [];

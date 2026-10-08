@@ -38,7 +38,10 @@ function tags(record: string): Record<string, string> {
 
 function txtRecords(res: DnsResponse | null, prefix: RegExp): string[] {
   if (!res) return [];
-  return res.answers.filter((a) => a.type === RR.TXT).map((a) => txtValue(a.data)).filter((v) => prefix.test(v));
+  return res.answers
+    .filter((a) => a.type === RR.TXT)
+    .map((a) => txtValue(a.data))
+    .filter((v) => prefix.test(v));
 }
 
 interface DmarcInfo {
@@ -46,19 +49,36 @@ interface DmarcInfo {
   enforced: boolean;
 }
 
-export function evaluateDmarc(own: DnsResponse | null, inherited: DnsResponse | null, org: string, s: Summaries): DmarcInfo {
+export function evaluateDmarc(
+  own: DnsResponse | null,
+  inherited: DnsResponse | null,
+  org: string,
+  s: Summaries,
+): DmarcInfo {
   let records = txtRecords(own, /^v=dmarc1\b/i);
   let via = '';
   if (records.length === 0 && inherited) {
     records = txtRecords(inherited, /^v=dmarc1\b/i);
     if (records.length) via = fmt(s.inherited, { org });
   }
-  const result = (status: Status, summary: string, evidence: string[]): Result => ({ id: 'dmarc', status, summary, evidence });
+  const result = (status: Status, summary: string, evidence: string[]): Result => ({
+    id: 'dmarc',
+    status,
+    summary,
+    evidence,
+  });
   if (records.length === 0) {
     return { enforced: false, result: result('fail', s.dmarcNone, []) };
   }
   if (records.length > 1) {
-    return { enforced: false, result: result('fail', fmt(s.dmarcMany, { via, n: records.length }), records.map((r) => clip(r))) };
+    return {
+      enforced: false,
+      result: result(
+        'fail',
+        fmt(s.dmarcMany, { via, n: records.length }),
+        records.map((r) => clip(r)),
+      ),
+    };
   }
   const record = records[0];
   const t = tags(record);
@@ -70,7 +90,10 @@ export function evaluateDmarc(own: DnsResponse | null, inherited: DnsResponse | 
     if (pct < 100) {
       return { enforced: false, result: result('warn', fmt(s.dmarcPartial, { via, policy, pct }), evidence) };
     }
-    return { enforced: true, result: result('pass', fmt(policy === 'reject' ? s.dmarcReject : s.dmarcQuarantine, { via }), evidence) };
+    return {
+      enforced: true,
+      result: result('pass', fmt(policy === 'reject' ? s.dmarcReject : s.dmarcQuarantine, { via }), evidence),
+    };
   }
   if (policy === 'none') {
     return { enforced: false, result: result('warn', fmt(s.dmarcNone2, { via }), evidence) };
@@ -80,20 +103,33 @@ export function evaluateDmarc(own: DnsResponse | null, inherited: DnsResponse | 
 
 export function evaluateSpf(res: DnsResponse | null, dmarcEnforced: boolean, s: Summaries): Result {
   const records = txtRecords(res, /^v=spf1(\s|$)/i);
-  const result = (status: Status, summary: string, evidence: string[]): Result => ({ id: 'spf', status, summary, evidence });
+  const result = (status: Status, summary: string, evidence: string[]): Result => ({
+    id: 'spf',
+    status,
+    summary,
+    evidence,
+  });
   if (records.length === 0) return result('fail', s.spfNone, []);
-  if (records.length > 1) return result('fail', fmt(s.spfMany, { n: records.length }), records.map((r) => clip(r)));
+  if (records.length > 1)
+    return result(
+      'fail',
+      fmt(s.spfMany, { n: records.length }),
+      records.map((r) => clip(r)),
+    );
   const record = records[0];
   const evidence = [clip(record)];
   const terms = record.toLowerCase().split(/\s+/).slice(1);
-  const lookups = terms.filter((m) => /^[+\-~?]?(include:|a\b|a:|a\/|mx\b|mx:|mx\/|ptr|exists:)|^redirect=/.test(m)).length;
+  const lookups = terms.filter((m) =>
+    /^[+\-~?]?(include:|a\b|a:|a\/|mx\b|mx:|mx\/|ptr|exists:)|^redirect=/.test(m),
+  ).length;
   if (lookups > 10) return result('fail', fmt(s.spfLookups, { n: lookups }), evidence);
   const all = terms.find((m) => /^[+\-~?]?all$/.test(m));
   const qualifier = all ? (/^[+\-~?]/.test(all) ? all[0] : '+') : '';
   const redirect = terms.find((m) => m.startsWith('redirect='));
 
   if (qualifier === '-') return result('pass', s.spfStrict, evidence);
-  if (qualifier === '~') return dmarcEnforced ? result('pass', s.spfSoftOk, evidence) : result('warn', s.spfSoftWeak, evidence);
+  if (qualifier === '~')
+    return dmarcEnforced ? result('pass', s.spfSoftOk, evidence) : result('warn', s.spfSoftWeak, evidence);
   if (qualifier === '+') return result('fail', s.spfPlusAll, evidence);
   if (redirect) return result('info', fmt(s.spfRedirect, { target: redirect.slice(9) }), evidence);
   return result('warn', s.spfNoAll, evidence);
@@ -142,11 +178,21 @@ export function evaluateDnssec(res: DnsResponse | null, s: Summaries): Result {
 }
 
 export function evaluateCaa(res: DnsResponse | null, s: Summaries): Result {
-  const records = (res?.answers ?? []).filter((a) => a.type === RR.CAA).map((a) => caaValue(a.data)).filter(Boolean) as {
+  const records = (res?.answers ?? [])
+    .filter((a) => a.type === RR.CAA)
+    .map((a) => caaValue(a.data))
+    .filter(Boolean) as {
     tag: string;
     value: string;
   }[];
-  const issuers = [...new Set(records.filter((r) => r.tag === 'issue' || r.tag === 'issuewild').map((r) => r.value.split(';')[0].trim()).filter(Boolean))];
+  const issuers = [
+    ...new Set(
+      records
+        .filter((r) => r.tag === 'issue' || r.tag === 'issuewild')
+        .map((r) => r.value.split(';')[0].trim())
+        .filter(Boolean),
+    ),
+  ];
   if (records.length === 0) return { id: 'caa', status: 'warn', summary: s.caaNone, evidence: [] };
   return {
     id: 'caa',
@@ -159,7 +205,8 @@ export function evaluateCaa(res: DnsResponse | null, s: Summaries): Result {
 export function evaluateMtaSts(res: DnsResponse | null, receivesMail: boolean, s: Summaries): Result {
   if (!receivesMail) return { id: 'mtasts', status: 'info', summary: s.mtastsNotNeeded, evidence: [] };
   const records = txtRecords(res, /^v=stsv1\b/i);
-  if (records.length) return { id: 'mtasts', status: 'pass', summary: s.mtastsOk, evidence: records.map((r) => clip(r)) };
+  if (records.length)
+    return { id: 'mtasts', status: 'pass', summary: s.mtastsOk, evidence: records.map((r) => clip(r)) };
   return { id: 'mtasts', status: 'info', summary: s.mtastsNo, evidence: [] };
 }
 

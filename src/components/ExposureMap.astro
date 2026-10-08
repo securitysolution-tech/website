@@ -16,7 +16,8 @@ const { gain = 1 } = Astro.props;
   // the mount waits for the first contentful paint, two frames more so that paint is on
   // screen, and then an idle moment. The text and its entrance come first; the map develops
   // behind them, which its own fade-in was designed for.
-  const idle = (fn: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 1000 }) : setTimeout(fn, 200));
+  const idle = (fn: () => void) =>
+    'requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 1000 }) : setTimeout(fn, 200);
   const afterPaint = (fn: () => void) => {
     const go = () => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => idle(fn), 450)));
     if (performance.getEntriesByType('paint').some((e) => e.name === 'first-contentful-paint')) return go();

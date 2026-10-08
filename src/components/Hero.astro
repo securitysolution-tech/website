@@ -21,24 +21,28 @@ const records = [
 <section class="hero ink grain" aria-labelledby="hero-title">
   <ExposureMap />
   <div class="backdrop" aria-hidden="true" data-parallax>
-    {records.map((r) => <p data-r={r} />)}
+    {records.map((r) => (
+      <p data-r={r} />
+    ))}
   </div>
   <div class="glow" aria-hidden="true"></div>
 
   <div class="container intro">
     <h1 id="hero-title">
-      {
-        words.map((w) => (
-          <>
-            <span class="w">{w}</span>{' '}
-          </>
-        ))
-      }
+      {words.map((w) => (
+        <>
+          <span class="w">{w}</span>{' '}
+        </>
+      ))}
     </h1>
     <p class="lead">{t.hero.lead}</p>
     <div class="actions">
-      <a class="btn btn-primary" href={cta.href}>{cta.label}</a>
-      <a class="btn btn-secondary" href={href('/#services')}>{t.hero.seeServices}</a>
+      <a class="btn btn-primary" href={cta.href}>
+        {cta.label}
+      </a>
+      <a class="btn btn-secondary" href={href('/#services')}>
+        {t.hero.seeServices}
+      </a>
     </div>
   </div>
 </section>
@@ -180,18 +184,42 @@ const records = [
       animation: word-in var(--dur-enter) var(--ease-out) both;
     }
 
-    .w:nth-child(1) { animation-delay: 0ms; }
-    .w:nth-child(2) { animation-delay: 45ms; }
-    .w:nth-child(3) { animation-delay: 90ms; }
-    .w:nth-child(4) { animation-delay: 135ms; }
-    .w:nth-child(5) { animation-delay: 180ms; }
-    .w:nth-child(6) { animation-delay: 225ms; }
-    .w:nth-child(7) { animation-delay: 270ms; }
-    .w:nth-child(8) { animation-delay: 315ms; }
-    .w:nth-child(9) { animation-delay: 360ms; }
-    .w:nth-child(10) { animation-delay: 405ms; }
-    .w:nth-child(11) { animation-delay: 450ms; }
-    .w:nth-child(12) { animation-delay: 495ms; }
+    .w:nth-child(1) {
+      animation-delay: 0ms;
+    }
+    .w:nth-child(2) {
+      animation-delay: 45ms;
+    }
+    .w:nth-child(3) {
+      animation-delay: 90ms;
+    }
+    .w:nth-child(4) {
+      animation-delay: 135ms;
+    }
+    .w:nth-child(5) {
+      animation-delay: 180ms;
+    }
+    .w:nth-child(6) {
+      animation-delay: 225ms;
+    }
+    .w:nth-child(7) {
+      animation-delay: 270ms;
+    }
+    .w:nth-child(8) {
+      animation-delay: 315ms;
+    }
+    .w:nth-child(9) {
+      animation-delay: 360ms;
+    }
+    .w:nth-child(10) {
+      animation-delay: 405ms;
+    }
+    .w:nth-child(11) {
+      animation-delay: 450ms;
+    }
+    .w:nth-child(12) {
+      animation-delay: 495ms;
+    }
 
     .lead {
       --enter-y: 0.3em;
@@ -213,12 +241,24 @@ const records = [
       animation: record-in 820ms var(--ease-out) both;
     }
 
-    .backdrop p:nth-child(1) { animation-delay: 600ms; }
-    .backdrop p:nth-child(2) { animation-delay: 690ms; }
-    .backdrop p:nth-child(3) { animation-delay: 780ms; }
-    .backdrop p:nth-child(4) { animation-delay: 870ms; }
-    .backdrop p:nth-child(5) { animation-delay: 960ms; }
-    .backdrop p:nth-child(6) { animation-delay: 1050ms; }
+    .backdrop p:nth-child(1) {
+      animation-delay: 600ms;
+    }
+    .backdrop p:nth-child(2) {
+      animation-delay: 690ms;
+    }
+    .backdrop p:nth-child(3) {
+      animation-delay: 780ms;
+    }
+    .backdrop p:nth-child(4) {
+      animation-delay: 870ms;
+    }
+    .backdrop p:nth-child(5) {
+      animation-delay: 960ms;
+    }
+    .backdrop p:nth-child(6) {
+      animation-delay: 1050ms;
+    }
 
     .glow {
       animation: breathe 9s var(--ease-loop) 1.4s infinite alternate;

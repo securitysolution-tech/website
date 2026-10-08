@@ -28,10 +28,20 @@ const links = [
 
     <nav class="nav-desktop" aria-label={t.nav.primary}>
       <ul>
-        {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+        {links.map((l) => (
+          <li>
+            <a href={l.href}>{l.label}</a>
+          </li>
+        ))}
       </ul>
-      {toggle && <a class="lang" href={toggle.href} lang={toggle.lang} hreflang={toggle.lang}>{toggle.label}</a>}
-      <a class="btn btn-primary" href={contactHref}>{cta.label}</a>
+      {toggle && (
+        <a class="lang" href={toggle.href} lang={toggle.lang} hreflang={toggle.lang}>
+          {toggle.label}
+        </a>
+      )}
+      <a class="btn btn-primary" href={contactHref}>
+        {cta.label}
+      </a>
     </nav>
 
     <nav class="nav-mobile-wrap" aria-label={t.nav.menu}>
@@ -43,10 +53,20 @@ const links = [
         </summary>
         <div class="menu-panel ink">
           <ul>
-            {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+            {links.map((l) => (
+              <li>
+                <a href={l.href}>{l.label}</a>
+              </li>
+            ))}
           </ul>
-          {toggle && <a class="lang" href={toggle.href} lang={toggle.lang} hreflang={toggle.lang}>{toggle.label}</a>}
-          <a class="btn btn-primary" href={contactHref}>{cta.label}</a>
+          {toggle && (
+            <a class="lang" href={toggle.href} lang={toggle.lang} hreflang={toggle.lang}>
+              {toggle.label}
+            </a>
+          )}
+          <a class="btn btn-primary" href={contactHref}>
+            {cta.label}
+          </a>
         </div>
       </details>
     </nav>

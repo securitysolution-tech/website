@@ -50,7 +50,8 @@ export function scrollToElement(el: HTMLElement, options: { immediate?: boolean;
 const hasViewTransitions = 'PageRevealEvent' in window;
 
 function linkFrom(event: MouseEvent): HTMLAnchorElement | null {
-  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return null;
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+    return null;
   const link = (event.target as Element).closest<HTMLAnchorElement>('a[href]');
   // The skip link keeps its native behaviour, which also moves keyboard focus.
   if (!link || link.target || link.hasAttribute('download') || link.classList.contains('skip-link')) return null;

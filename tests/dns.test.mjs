@@ -12,9 +12,15 @@ test('txtValue joins quoted chunks and unescapes', () => {
 
 test('caaValue reads text and RFC 3597 forms', () => {
   assert.deepEqual(caaValue('0 issue "letsencrypt.org"'), { tag: 'issue', value: 'letsencrypt.org' });
-  assert.deepEqual(caaValue('128 IODEF "mailto:security@example.com"'), { tag: 'iodef', value: 'mailto:security@example.com' });
+  assert.deepEqual(caaValue('128 IODEF "mailto:security@example.com"'), {
+    tag: 'iodef',
+    value: 'mailto:security@example.com',
+  });
   // \# 22 00 05 69 73 73 75 65 6c 65 74 73 65 6e 63 72 79 70 74 2e 6f 72 67 => 0 issue letsencrypt.org
-  const hex = '\\# 22 ' + '00 05 ' + [...'issueletsencrypt.org'].map((c) => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ');
+  const hex =
+    '\\# 22 ' +
+    '00 05 ' +
+    [...'issueletsencrypt.org'].map((c) => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ');
   assert.deepEqual(caaValue(hex), { tag: 'issue', value: 'letsencrypt.org' });
   assert.equal(caaValue('garbage'), null);
 });

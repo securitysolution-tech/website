@@ -2,7 +2,15 @@
 // Run by `npm test` on Node, no network.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluateCaa, evaluateDmarc, evaluateDnssec, evaluateMtaSts, evaluateMx, evaluateSpf, verdictOf } from '../src/scripts/checks.ts';
+import {
+  evaluateCaa,
+  evaluateDmarc,
+  evaluateDnssec,
+  evaluateMtaSts,
+  evaluateMx,
+  evaluateSpf,
+  verdictOf,
+} from '../src/scripts/checks.ts';
 import { RR } from '../src/scripts/dns.ts';
 import { en } from '../src/i18n/en.ts';
 
@@ -83,7 +91,15 @@ test('DNSSEC follows the resolver flag', () => {
 
 test('CAA: none warns, issuers are listed', () => {
   assert.equal(evaluateCaa(none, s).status, 'warn');
-  const caa = { status: 0, ad: false, answers: [answer(RR.CAA, '0 issue "letsencrypt.org"'), answer(RR.CAA, '0 issuewild "digicert.com"'), answer(RR.CAA, '0 iodef "mailto:sec@example.ae"')] };
+  const caa = {
+    status: 0,
+    ad: false,
+    answers: [
+      answer(RR.CAA, '0 issue "letsencrypt.org"'),
+      answer(RR.CAA, '0 issuewild "digicert.com"'),
+      answer(RR.CAA, '0 iodef "mailto:sec@example.ae"'),
+    ],
+  };
   const r = evaluateCaa(caa, s);
   assert.equal(r.status, 'pass');
   assert.match(r.summary, /letsencrypt\.org, digicert\.com/);
@@ -99,7 +115,10 @@ test('MTA-STS: not needed without mail, published passes, absent is informationa
 
 test('the verdict counts only scored checks and keys spoofing on DMARC and SPF', () => {
   const r = (id, status) => ({ id, status, summary: '', evidence: [] });
-  const strong = verdictOf([r('dmarc', 'pass'), r('spf', 'pass'), r('mx', 'info'), r('dnssec', 'pass'), r('caa', 'warn'), r('mtasts', 'pass')], false);
+  const strong = verdictOf(
+    [r('dmarc', 'pass'), r('spf', 'pass'), r('mx', 'info'), r('dnssec', 'pass'), r('caa', 'warn'), r('mtasts', 'pass')],
+    false,
+  );
   assert.deepEqual(strong, { passed: 4, scored: 5, spoofing: 'strong', incomplete: false });
   assert.equal(verdictOf([r('dmarc', 'warn'), r('spf', 'pass')], false).spoofing, 'partial');
   assert.equal(verdictOf([r('dmarc', 'fail'), r('spf', 'pass')], false).spoofing, 'weak');

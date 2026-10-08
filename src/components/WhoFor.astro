@@ -19,16 +19,14 @@ const reasons = order.map((slug) => ({
       <p>{t.who.lead}</p>
     </div>
     <ul class="reasons">
-      {
-        reasons.map((r) => (
-          <li>
-            <a href={href(`/services/${r.slug}/`)}>
-              <strong>{r.text}</strong>
-              <span>{r.service}</span>
-            </a>
-          </li>
-        ))
-      }
+      {reasons.map((r) => (
+        <li>
+          <a href={href(`/services/${r.slug}/`)}>
+            <strong>{r.text}</strong>
+            <span>{r.service}</span>
+          </a>
+        </li>
+      ))}
     </ul>
   </div>
 </section>

@@ -69,7 +69,12 @@ test('applies the shared limits', () => {
   assert.equal(result.ok, false);
   if (result.ok) return;
   assert.deepEqual(result.fields, { name: 'too_long', company: 'too_long', message: 'too_long' });
-  const exact = validate({ ...good(), name: long(limits.name), company: long(limits.company), message: long(limits.message) });
+  const exact = validate({
+    ...good(),
+    name: long(limits.name),
+    company: long(limits.company),
+    message: long(limits.message),
+  });
   assert.equal(exact.ok, true);
 });
 

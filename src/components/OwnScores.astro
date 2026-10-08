@@ -22,28 +22,35 @@ const scores = t.scores.items.map((s, i) => ({ ...s, ...links[i] }));
     <div class="intro">
       <h2 id="scores-title">{t.scores.title}</h2>
       <p>
-        {t.scores.lead1}<a class="runs" href="https://github.com/securitysolution-tech/website/actions/workflows/posture.yml" rel="noopener">{t.scores.runs}<Icon name="arrow-up-right" class="icon ext" /></a>{t.scores.lead2}
+        {t.scores.lead1}
+        <a
+          class="runs"
+          href="https://github.com/securitysolution-tech/website/actions/workflows/posture.yml"
+          rel="noopener"
+        >
+          {t.scores.runs}
+          <Icon name="arrow-up-right" class="icon ext" />
+        </a>
+        {t.scores.lead2}
       </p>
     </div>
     <ul class="grid">
-      {
-        scores.map((s) => (
-          <li class="cell">
-            <div class="cell-in">
-              <p class="scanner">{s.scanner}</p>
-              <p class:list={['grade', { long: s.grade.length > 6 }]} translate="no">
-                {s.grade}
-              </p>
-              <p class="what">{s.what}</p>
-              <a href={s.href} class="report" rel={s.external ? 'noopener' : undefined}>
-                {s.link}
-                {s.external && <span class="visually-hidden">{fmt(t.scores.from, { scanner: s.scanner })}</span>}
-                {s.external && <Icon name="arrow-up-right" class="icon ext" />}
-              </a>
-            </div>
-          </li>
-        ))
-      }
+      {scores.map((s) => (
+        <li class="cell">
+          <div class="cell-in">
+            <p class="scanner">{s.scanner}</p>
+            <p class:list={['grade', { long: s.grade.length > 6 }]} translate="no">
+              {s.grade}
+            </p>
+            <p class="what">{s.what}</p>
+            <a href={s.href} class="report" rel={s.external ? 'noopener' : undefined}>
+              {s.link}
+              {s.external && <span class="visually-hidden">{fmt(t.scores.from, { scanner: s.scanner })}</span>}
+              {s.external && <Icon name="arrow-up-right" class="icon ext" />}
+            </a>
+          </div>
+        </li>
+      ))}
     </ul>
   </div>
 </section>

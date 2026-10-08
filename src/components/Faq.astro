@@ -28,22 +28,22 @@ const jsonLd = JSON.stringify({
   <div class="container layout">
     <div class="side">
       <h2 id={`${id}-title`}>{title}</h2>
-      <p>{lead} <a href="#contact">{t.faq.cta}</a>.</p>
+      <p>
+        {lead} <a href="#contact">{t.faq.cta}</a>.
+      </p>
     </div>
     <div class="list">
-      {
-        faqs.map((f) => (
-          <details class="qa" name={id}>
-            <summary>
-              <span>{f.q}</span>
-              <Icon name="caret-down" class="icon caret" />
-            </summary>
-            <div class="answer">
-              <p>{f.a}</p>
-            </div>
-          </details>
-        ))
-      }
+      {faqs.map((f) => (
+        <details class="qa" name={id}>
+          <summary>
+            <span>{f.q}</span>
+            <Icon name="caret-down" class="icon caret" />
+          </summary>
+          <div class="answer">
+            <p>{f.a}</p>
+          </div>
+        </details>
+      ))}
     </div>
   </div>
   <script type="application/ld+json" set:html={jsonLd} />

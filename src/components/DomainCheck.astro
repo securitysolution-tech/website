@@ -10,49 +10,75 @@ const ids = ['dmarc', 'spf', 'mx', 'dnssec', 'caa', 'mtasts'] as const;
 const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
 ---
 
-<section id="check" class="instrument" aria-labelledby="check-title" data-domain-check data-autorun={site.autorunDomain ?? undefined}>
+<section
+  id="check"
+  class="instrument"
+  aria-labelledby="check-title"
+  data-domain-check
+  data-autorun={site.autorunDomain ?? undefined}
+>
   <div class="panel-intro">
-  <div class="head">
-    <h2 id="check-title">{t.check.title}</h2>
-    <p>{t.check.lead}</p>
-  </div>
-
-  <form class="check-form" novalidate>
-    <label for="domain-input">{t.check.label}</label>
-    <div class="field">
-      <input
-        id="domain-input"
-        name="domain"
-        type="text"
-        inputmode="url"
-        autocomplete="off"
-        autocapitalize="none"
-        spellcheck="false"
-        maxlength="253"
-        placeholder={t.check.placeholder}
-        aria-describedby="check-privacy"
-        aria-errormessage="domain-error"
-      />
-      <button type="submit" class="run">{t.check.run}</button>
+    <div class="head">
+      <h2 id="check-title">{t.check.title}</h2>
+      <p>{t.check.lead}</p>
     </div>
-    <p id="domain-error" class="error" data-error role="alert" hidden></p>
-    <button type="button" class="retry" data-retry hidden>{t.check.retry}</button>
-  </form>
 
-  <p class="privacy" id="check-privacy">{t.check.privacy} <a href={href('/privacy/')}>{t.check.privacyLink}</a></p>
-  <noscript><p class="privacy">{t.check.noscript}</p></noscript>
+    <form class="check-form" novalidate>
+      <label for="domain-input">{t.check.label}</label>
+      <div class="field">
+        <input
+          id="domain-input"
+          name="domain"
+          type="text"
+          inputmode="url"
+          autocomplete="off"
+          autocapitalize="none"
+          spellcheck="false"
+          maxlength="253"
+          placeholder={t.check.placeholder}
+          aria-describedby="check-privacy"
+          aria-errormessage="domain-error"
+        />
+        <button type="submit" class="run">
+          {t.check.run}
+        </button>
+      </div>
+      <p id="domain-error" class="error" data-error role="alert" hidden></p>
+      <button type="button" class="retry" data-retry hidden>
+        {t.check.retry}
+      </button>
+    </form>
+
+    <p class="privacy" id="check-privacy">
+      {t.check.privacy} <a href={href('/privacy/')}>{t.check.privacyLink}</a>
+    </p>
+    <noscript>
+      <p class="privacy">{t.check.noscript}</p>
+    </noscript>
   </div>
 
   <div class="panel-results">
-  {/* Rendered for our own domain at build time, so the autorun shifts nothing when it starts. */}
-  <p class="target" data-target hidden={!site.autorunDomain}>
-    {t.check.resultsFor} <strong data-target-name translate="no">{site.autorunDomain ?? ''}</strong><span data-target-own hidden={!site.autorunDomain}>{t.check.ownDomain}</span>
-  </p>
+    {/* Rendered for our own domain at build time, so the autorun shifts nothing when it starts. */}
+    <p class="target" data-target hidden={!site.autorunDomain}>
+      {t.check.resultsFor}{' '}
+      <strong data-target-name translate="no">
+        {site.autorunDomain ?? ''}
+      </strong>
+      <span data-target-own hidden={!site.autorunDomain}>
+        {t.check.ownDomain}
+      </span>
+    </p>
 
-  <ol class="results" data-results aria-busy="false" aria-label={t.check.resultsLabel}>
-    {
-      checks.map((c) => (
-        <li class="row" data-check={c.id} data-status="idle" data-about={c.about} data-title={c.title} data-tech={c.tech}>
+    <ol class="results" data-results aria-busy="false" aria-label={t.check.resultsLabel}>
+      {checks.map((c) => (
+        <li
+          class="row"
+          data-check={c.id}
+          data-status="idle"
+          data-about={c.about}
+          data-title={c.title}
+          data-tech={c.tech}
+        >
           <span class="status" data-icon-slot aria-hidden="true" />
           <div class="row-body">
             <p class="row-title">
@@ -70,31 +96,42 @@ const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
             {t.check.notRun}
           </span>
         </li>
-      ))
-    }
-  </ol>
+      ))}
+    </ol>
 
-  <div class="verdict" data-verdict hidden>
-    <div>
-      <p class="verdict-main">{t.check.verdict} <strong data-spoofing></strong></p>
-      <p class="verdict-score" data-score></p>
+    <div class="verdict" data-verdict hidden>
+      <div>
+        <p class="verdict-main">
+          {t.check.verdict} <strong data-spoofing></strong>
+        </p>
+        <p class="verdict-score" data-score></p>
+      </div>
+      <a class="btn verdict-cta" href={cta.href}>
+        {cta.label}
+      </a>
     </div>
-    <a class="btn verdict-cta" href={cta.href}>{cta.label}</a>
-  </div>
 
-  <!-- The headline, made literal: what to fix first, failures before warnings. -->
-  <div class="fix" data-fix hidden>
-    <p class="fix-title">{t.check.fixFirst}</p>
-    <ol class="fix-list" data-fix-list></ol>
-  </div>
+    <!-- The headline, made literal: what to fix first, failures before warnings. -->
+    <div class="fix" data-fix hidden>
+      <p class="fix-title">{t.check.fixFirst}</p>
+      <ol class="fix-list" data-fix-list></ol>
+    </div>
   </div>
 
   <p class="visually-hidden" aria-live="polite" data-announce></p>
 
-  <template data-icon="pass"><Icon name="check-circle" /></template>
-  <template data-icon="warn"><Icon name="warning" /></template>
-  <template data-icon="fail"><Icon name="x-circle" /></template>
-  <template data-icon="info"><Icon name="info" /></template>
+  <template data-icon="pass">
+    <Icon name="check-circle" />
+  </template>
+  <template data-icon="warn">
+    <Icon name="warning" />
+  </template>
+  <template data-icon="fail">
+    <Icon name="x-circle" />
+  </template>
+  <template data-icon="info">
+    <Icon name="info" />
+  </template>
   <script type="application/json" data-i18n="check" set:html={toJsonBlock(checkStrings(t.check))} />
 </section>
 
@@ -224,7 +261,9 @@ const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
     font-weight: 650;
     cursor: pointer;
     white-space: nowrap;
-    transition: background-color 160ms ease, transform 120ms ease;
+    transition:
+      background-color 160ms ease,
+      transform 120ms ease;
   }
 
   .run:hover {

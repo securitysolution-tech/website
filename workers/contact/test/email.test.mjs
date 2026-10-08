@@ -51,7 +51,14 @@ test('describes the timing and flags very quick submissions', () => {
 });
 
 test('the shared format matches the message the form has always sent', () => {
-  const body = formatRequest({ name: 'A', email: 'a@b.co', company: '', needs: [], when: 'Just exploring', message: '' });
+  const body = formatRequest({
+    name: 'A',
+    email: 'a@b.co',
+    company: '',
+    needs: [],
+    when: 'Just exploring',
+    message: '',
+  });
   assert.equal(
     body,
     'Name: A\r\nEmail: a@b.co\r\nCompany: not given\r\nNeeds: not sure yet\r\nTimeline: Just exploring\r\n\r\nSent from the scoping request form on securitysolution.tech',

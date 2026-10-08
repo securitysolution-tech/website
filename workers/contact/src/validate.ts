@@ -28,7 +28,8 @@ const PAGE = /^\/[\w\-./]*$/;
 const text = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
 
 export function validate(data: unknown): Validation {
-  if (typeof data !== 'object' || data === null || Array.isArray(data)) return { ok: false, fields: { body: 'invalid' } };
+  if (typeof data !== 'object' || data === null || Array.isArray(data))
+    return { ok: false, fields: { body: 'invalid' } };
   const input = data as Record<string, unknown>;
   const fields: Partial<Record<keyof ContactRequest | 'body', FieldCode>> = {};
 
@@ -67,7 +68,10 @@ export function validate(data: unknown): Validation {
 
   // The honeypot is a field people never see; anything in it means a script filled the form.
   const spam = text(input.website) !== '';
-  const elapsed = typeof input.elapsed === 'number' && Number.isFinite(input.elapsed) && input.elapsed >= 0 ? Math.round(input.elapsed) : null;
+  const elapsed =
+    typeof input.elapsed === 'number' && Number.isFinite(input.elapsed) && input.elapsed >= 0
+      ? Math.round(input.elapsed)
+      : null;
   const page = text(input.page);
 
   return {

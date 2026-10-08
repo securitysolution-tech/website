@@ -95,7 +95,9 @@ function init(root: HTMLElement) {
     const level = v.incomplete ? 'incomplete' : v.spoofing;
     verdict.querySelector('[data-spoofing]')!.textContent = t.levels[level];
     verdict.dataset.level = level;
-    verdict.querySelector('[data-score]')!.textContent = v.incomplete ? t.incompleteScore : fmt(t.score, { passed: v.passed, scored: v.scored });
+    verdict.querySelector('[data-score]')!.textContent = v.incomplete
+      ? t.incompleteScore
+      : fmt(t.score, { passed: v.passed, scored: v.scored });
     verdict.hidden = false;
     const count = v.incomplete ? 0 : showFixFirst(results);
     if (v.incomplete && fix) fix.hidden = true;

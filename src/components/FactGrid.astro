@@ -21,14 +21,12 @@ const { facts, ink = false, label = t.page.keyFacts } = Astro.props;
 
 <div class:list={['facts', { ink }]} role="group" aria-label={label}>
   <dl>
-    {
-      facts.map((f) => (
-        <div class="fact">
-          <dt>{f.label}</dt>
-          <dd>{f.href ? <a href={f.href}>{f.value}</a> : f.value}</dd>
-        </div>
-      ))
-    }
+    {facts.map((f) => (
+      <div class="fact">
+        <dt>{f.label}</dt>
+        <dd>{f.href ? <a href={f.href}>{f.value}</a> : f.value}</dd>
+      </div>
+    ))}
   </dl>
 </div>
 

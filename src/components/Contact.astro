@@ -28,17 +28,16 @@ const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plai
       <p class="lead">{t.contact.lead}</p>
       <a class="address" href={mailto('Scoping call request')}>
         <Icon name="envelope-simple" class="icon mail" />
-        <span>{site.email.split('@')[0]}<wbr />@{site.email.split('@')[1]}</span>
+        <span>
+          {site.email.split('@')[0]}
+          <wbr />@{site.email.split('@')[1]}
+        </span>
       </a>
-      {
-        contactBackend.live ? (
-          <p class="small">{t.contact.replyLive}</p>
-        ) : (
-          <p class="small">{t.contact.replyMailto}</p>
-        )
-      }
+      {contactBackend.live ? <p class="small">{t.contact.replyLive}</p> : <p class="small">{t.contact.replyMailto}</p>}
       <p class="small">
-        {t.contact.security1}<a href={href('/security/')}>{t.contact.securityLink}</a>{t.contact.security2}
+        {t.contact.security1}
+        <a href={href('/security/')}>{t.contact.securityLink}</a>
+        {t.contact.security2}
       </p>
     </div>
 
@@ -70,7 +69,9 @@ const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plai
         </div>
 
         <div class="field">
-          <label for="cf-company">{t.contact.company} <span class="opt">{t.contact.optional}</span></label>
+          <label for="cf-company">
+            {t.contact.company} <span class="opt">{t.contact.optional}</span>
+          </label>
           <input
             id="cf-company"
             name="company"
@@ -86,60 +87,68 @@ const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plai
         <fieldset class="field">
           <legend>{t.contact.needs}</legend>
           <div class="choices">
-            {
-              needs.map((n, i) => (
-                <label class="choice">
-                  <input type="checkbox" name={`need-${i}`} value={n.value} id={`cf-need-${i}`} checked={n.checked} />
-                  <span>{n.label}</span>
-                </label>
-              ))
-            }
+            {needs.map((n, i) => (
+              <label class="choice">
+                <input type="checkbox" name={`need-${i}`} value={n.value} id={`cf-need-${i}`} checked={n.checked} />
+                <span>{n.label}</span>
+              </label>
+            ))}
           </div>
         </fieldset>
 
         <div class="field">
           <label for="cf-when">{t.contact.when}</label>
           <select id="cf-when" name="when">
-            {timelines.map((v) => <option value={v}>{t.contact.timelines[v]}</option>)}
+            {timelines.map((v) => (
+              <option value={v}>{t.contact.timelines[v]}</option>
+            ))}
           </select>
         </div>
 
         <div class="field">
-          <label for="cf-message">{t.contact.message} <span class="opt">{t.contact.optional}</span></label>
+          <label for="cf-message">
+            {t.contact.message} <span class="opt">{t.contact.optional}</span>
+          </label>
           <textarea id="cf-message" name="message" rows="3" maxlength="600" data-lenis-prevent></textarea>
         </div>
 
-        {
-          contactBackend.live && (
-            <div class="trap" inert>
-              <label for="cf-website">{t.contact.website}</label>
-              <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off" />
-            </div>
-          )
-        }
+        {contactBackend.live && (
+          <div class="trap" inert>
+            <label for="cf-website">{t.contact.website}</label>
+            <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+        )}
 
-        <button type="submit" class="btn btn-primary">{contactBackend.live ? t.contact.send : t.contact.prepare}</button>
+        <button type="submit" class="btn btn-primary">
+          {contactBackend.live ? t.contact.send : t.contact.prepare}
+        </button>
       </div>
       <p class="visually-hidden" aria-live="polite" data-status></p>
 
-      {
-        contactBackend.live && (
-          <div class="sent" data-sent hidden tabindex="-1">
-            <p class="ready">
-              {t.contact.sent1}<strong data-sent-email />{t.contact.sent2}
-            </p>
-            <button type="button" class="btn btn-secondary" data-again>
-              {t.contact.again}
-            </button>
-          </div>
-        )
-      }
+      {contactBackend.live && (
+        <div class="sent" data-sent hidden tabindex="-1">
+          <p class="ready">
+            {t.contact.sent1}
+            <strong data-sent-email />
+            {t.contact.sent2}
+          </p>
+          <button type="button" class="btn btn-secondary" data-again>
+            {t.contact.again}
+          </button>
+        </div>
+      )}
 
       <div class="composed" data-composed hidden>
-        <p class="ready" data-note>{t.contact.ready}</p>
+        <p class="ready" data-note>
+          {t.contact.ready}
+        </p>
         <div class="composed-actions">
-          <a class="btn btn-primary" data-mailto href={mailto('Scoping call request')}>{t.contact.open}</a>
-          <button type="button" class="btn btn-secondary" data-copy>{t.contact.copy}</button>
+          <a class="btn btn-primary" data-mailto href={mailto('Scoping call request')}>
+            {t.contact.open}
+          </a>
+          <button type="button" class="btn btn-secondary" data-copy>
+            {t.contact.copy}
+          </button>
         </div>
         <pre class="preview" data-preview translate="no" data-lenis-prevent></pre>
       </div>
@@ -329,7 +338,8 @@ const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plai
 
   select {
     appearance: none;
-    background-image: linear-gradient(45deg, transparent 50%, var(--ink-text-2) 50%),
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--ink-text-2) 50%),
       linear-gradient(135deg, var(--ink-text-2) 50%, transparent 50%);
     background-position:
       calc(100% - 1.25rem) 50%,

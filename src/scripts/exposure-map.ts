@@ -107,8 +107,12 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
   let lastDraw = 0;
   let lastTick = 0;
   let active = 0; // seconds the map has actually been running; a pause does not jump the scan
-  let px = 0, py = 0, tx = 0, ty = 0;
-  let sentPx = '', sentPy = '';
+  let px = 0,
+    py = 0,
+    tx = 0,
+    ty = 0;
+  let sentPx = '',
+    sentPy = '';
 
   const giveUp = (why: string) => {
     host.classList.remove('map-live');
@@ -217,9 +221,16 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
     gl.uniform2f(uPointer, px, py);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     if (parallax) {
-      const sx = px.toFixed(3), sy = py.toFixed(3);
-      if (sx !== sentPx) { parallax.style.setProperty('--px', sx); sentPx = sx; }
-      if (sy !== sentPy) { parallax.style.setProperty('--py', sy); sentPy = sy; }
+      const sx = px.toFixed(3),
+        sy = py.toFixed(3);
+      if (sx !== sentPx) {
+        parallax.style.setProperty('--px', sx);
+        sentPx = sx;
+      }
+      if (sy !== sentPy) {
+        parallax.style.setProperty('--py', sy);
+        sentPy = sy;
+      }
     }
   }
 
@@ -284,11 +295,15 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
 
     if (reduce.matches) {
       still();
-      new ResizeObserver(() => { if (resize()) draw(STILL_FRAME_TIME); }).observe(canvas);
+      new ResizeObserver(() => {
+        if (resize()) draw(STILL_FRAME_TIME);
+      }).observe(canvas);
       return;
     }
 
-    new ResizeObserver(() => { if (resize()) draw(active); }).observe(canvas);
+    new ResizeObserver(() => {
+      if (resize()) draw(active);
+    }).observe(canvas);
     // The loop starts when the canvas comes into view and stops when it leaves.
     new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;

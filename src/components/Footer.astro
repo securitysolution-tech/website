@@ -23,40 +23,58 @@ const current = (href: string) => (path === href ? 'page' : undefined);
         <Wordmark small />
       </a>
       <p>{t.footer.blurb}</p>
-      <p><a href={`mailto:${site.email}`}>{site.email}</a></p>
+      <p>
+        <a href={`mailto:${site.email}`}>{site.email}</a>
+      </p>
     </div>
 
     <nav aria-label={t.footer.services}>
       <h2>{t.footer.services}</h2>
       <ul>
-        {
-          services.map((s) => (
-            <li>
-              <a href={href(`/services/${s.slug}/`)} aria-current={current(href(`/services/${s.slug}/`))}>
-                {s.name}
-              </a>
-            </li>
-          ))
-        }
+        {services.map((s) => (
+          <li>
+            <a href={href(`/services/${s.slug}/`)} aria-current={current(href(`/services/${s.slug}/`))}>
+              {s.name}
+            </a>
+          </li>
+        ))}
       </ul>
     </nav>
 
     <nav aria-label={t.footer.company}>
       <h2>{t.footer.company}</h2>
       <ul>
-        <li><a href={href('/#approach')}>{t.nav.approach}</a></li>
-        <li><a href={href('/#team')}>{t.nav.team}</a></li>
-        <li><a href={href('/#faq')}>{t.nav.faq}</a></li>
-        <li><a href={contactHref}>{cta.label}</a></li>
+        <li>
+          <a href={href('/#approach')}>{t.nav.approach}</a>
+        </li>
+        <li>
+          <a href={href('/#team')}>{t.nav.team}</a>
+        </li>
+        <li>
+          <a href={href('/#faq')}>{t.nav.faq}</a>
+        </li>
+        <li>
+          <a href={contactHref}>{cta.label}</a>
+        </li>
       </ul>
     </nav>
 
     <nav aria-label={t.footer.trust}>
       <h2>{t.footer.trust}</h2>
       <ul>
-        <li><a href={href('/security/')} aria-current={current(href('/security/'))}>{t.footer.report}</a></li>
-        <li><a href={href('/privacy/')} aria-current={current(href('/privacy/'))}>{t.footer.privacy}</a></li>
-        <li><a href="/.well-known/security.txt">{t.footer.securityTxt}</a></li>
+        <li>
+          <a href={href('/security/')} aria-current={current(href('/security/'))}>
+            {t.footer.report}
+          </a>
+        </li>
+        <li>
+          <a href={href('/privacy/')} aria-current={current(href('/privacy/'))}>
+            {t.footer.privacy}
+          </a>
+        </li>
+        <li>
+          <a href="/.well-known/security.txt">{t.footer.securityTxt}</a>
+        </li>
         <li>
           <a class="ext" href="https://github.com/securitysolution-tech/website" rel="noopener">
             {t.footer.source}
@@ -68,10 +86,16 @@ const current = (href: string) => (path === href ? 'page' : undefined);
   </div>
 
   <div class="container legal">
-    <p>© {year} {site.name}</p>
+    <p>
+      © {year} {site.name}
+    </p>
     <p>
       {t.footer.legal} <a href={href('/privacy/')}>{t.footer.privacy}</a>
-      {toggle && <a class="lang" href={toggle.href} lang={toggle.lang} hreflang={toggle.lang}>{toggle.label}</a>}
+      {toggle && (
+        <a class="lang" href={toggle.href} lang={toggle.lang} hreflang={toggle.lang}>
+          {toggle.label}
+        </a>
+      )}
     </p>
   </div>
 </footer>
