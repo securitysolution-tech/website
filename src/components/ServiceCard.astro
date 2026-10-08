@@ -40,7 +40,7 @@ const { service: s, featured = false, tinted = false, items = 4, columns = 1, cl
 <style>
   .card {
     --highlight: rgb(255 255 255 / 0.7);
-    --spot: rgb(98 211 166 / 0.14);
+    --spot: rgb(var(--ink-accent-rgb) / 0.14);
     position: relative;
     isolation: isolate;
     overflow: clip;
@@ -87,7 +87,7 @@ const { service: s, featured = false, tinted = false, items = 4, columns = 1, cl
   @media (prefers-color-scheme: dark) {
     .card {
       --highlight: rgb(255 255 255 / 0.05);
-      --spot: rgb(98 211 166 / 0.12);
+      --spot: rgb(var(--ink-accent-rgb) / 0.12);
     }
   }
 
@@ -105,15 +105,15 @@ const { service: s, featured = false, tinted = false, items = 4, columns = 1, cl
 
   .card.ink {
     --highlight: rgb(255 255 255 / 0.06);
-    --spot: rgb(98 211 166 / 0.2);
+    --spot: rgb(var(--ink-accent-rgb) / 0.2);
     border-color: var(--ink-line);
     background:
-      radial-gradient(120% 70% at 100% 100%, rgb(98 211 166 / 0.14), transparent 60%),
+      radial-gradient(120% 70% at 100% 100%, rgb(var(--ink-accent-rgb) / 0.14), transparent 60%),
       var(--ink-raised);
   }
 
   .card.ink:hover {
-    border-color: rgb(98 211 166 / 0.45);
+    border-color: rgb(var(--ink-accent-rgb) / 0.45);
     box-shadow:
       inset 0 1px 0 var(--highlight),
       0 30px 60px -30px rgb(6 16 12 / 0.8);
@@ -122,10 +122,10 @@ const { service: s, featured = false, tinted = false, items = 4, columns = 1, cl
   /* In dark mode the featured card needs its own light, or it looks like the others. */
   @media (prefers-color-scheme: dark) {
     .card.ink {
-      border-color: rgb(98 211 166 / 0.32);
+      border-color: rgb(var(--ink-accent-rgb) / 0.32);
       background:
-        radial-gradient(120% 80% at 100% 100%, rgb(98 211 166 / 0.2), transparent 62%),
-        linear-gradient(165deg, rgb(98 211 166 / 0.09), transparent 45%),
+        radial-gradient(120% 80% at 100% 100%, rgb(var(--ink-accent-rgb) / 0.2), transparent 62%),
+        linear-gradient(165deg, rgb(var(--ink-accent-rgb) / 0.09), transparent 45%),
         var(--ink-raised);
     }
   }
@@ -143,7 +143,7 @@ const { service: s, featured = false, tinted = false, items = 4, columns = 1, cl
   }
 
   .ink .chip {
-    background: rgb(98 211 166 / 0.13);
+    background: rgb(var(--ink-accent-rgb) / 0.13);
     color: var(--ink-accent);
   }
 

@@ -49,7 +49,7 @@ const { title, lead, crumbs = [], cta, gain = 0.6 } = Astro.props;
     border-bottom: 1px solid var(--ink-line);
     padding-block: clamp(3rem, 2rem + 5vw, 6rem) clamp(3rem, 2rem + 4vw, 5rem);
     background:
-      radial-gradient(70% 90% at 100% 100%, rgb(98 211 166 / 0.14), transparent 65%),
+      radial-gradient(70% 90% at 100% 100%, rgb(var(--ink-accent-rgb) / 0.14), transparent 65%),
       var(--ink-bg);
   }
 

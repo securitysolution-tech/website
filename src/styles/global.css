@@ -2,7 +2,7 @@
   Design tokens
   Palette: cool limestone paper, deep green ink, one accent ("verified" green).
   Severity colours are functional only: they appear in check results and findings.
-  Radius rule: controls 10px, panels 16px, status badges 6px.
+  Radius rule: controls 10px, panels 16px, status badges and code wells 6px; sub-panels inside a panel use the control radius.
 */
 :root {
   color-scheme: light dark;
@@ -42,6 +42,10 @@
   --ink-text-2: #a9bbb2;
   --ink-accent: #62d3a6;
   --ink-accent-hover: #86e0bd;
+  /* The accent as channels, for translucent tints: rgb(var(--ink-accent-rgb) / 0.2) */
+  --ink-accent-rgb: 98 211 166;
+  /* Text that sits on the accent in either theme. */
+  --on-ink-accent: #07130e;
   --ink-control: #577266;
 
   --font: 'Archivo Variable', 'Archivo Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -49,6 +53,7 @@
   --font-display: 'Archivo Variable', 'Archivo Fallback Display', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace;
 
+  --step--2: 0.8125rem;
   --step--1: 0.875rem;
   --step-0: 1.0625rem;
   --step-1: 1.3125rem;
@@ -90,7 +95,7 @@
     --line-strong: #5b6b64;
     --accent: #5fcda0;
     --accent-hover: #7ad9b2;
-    --on-accent: #07130e;
+    --on-accent: var(--on-ink-accent);
     --accent-tint: #173328;
     --crit: #ff8f80;
     --warn: #f0c157;
@@ -160,7 +165,7 @@
 
 .ink .btn-primary {
   background: var(--ink-accent);
-  color: #07130e;
+  color: var(--on-ink-accent);
 }
 
 .ink .btn-primary:hover {
@@ -184,7 +189,7 @@
 
 .ink ::selection {
   background: var(--ink-accent);
-  color: #07130e;
+  color: var(--on-ink-accent);
 }
 
 *,

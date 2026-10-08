@@ -110,18 +110,18 @@ const records = [
     bottom: -35%;
     width: min(70vw, 900px);
     aspect-ratio: 1;
-    background: radial-gradient(closest-side, rgb(98 211 166 / 0.12), transparent);
+    background: radial-gradient(closest-side, rgb(var(--ink-accent-rgb) / 0.12), transparent);
     pointer-events: none;
   }
 
   /* Without WebGL the glow carries the atmosphere alone. */
   .hero.no-map .glow {
-    background: radial-gradient(closest-side, rgb(98 211 166 / 0.17), transparent);
+    background: radial-gradient(closest-side, rgb(var(--ink-accent-rgb) / 0.17), transparent);
   }
 
   .tray {
     padding: 6px;
-    border: 1px solid rgb(98 211 166 / 0.16);
+    border: 1px solid rgb(var(--ink-accent-rgb) / 0.16);
     border-radius: calc(var(--radius-panel) + 6px);
     background: var(--panel-2);
     box-shadow:

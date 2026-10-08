@@ -10,7 +10,7 @@ import ServiceCard from '../../components/ServiceCard.astro';
 import Contact from '../../components/Contact.astro';
 import { services, type Service } from '../../data/services';
 import { faqsFor } from '../../data/faq';
-import { contactCta } from '../../data/site';
+import { contactCta, site } from '../../data/site';
 
 export function getStaticPaths() {
   return services.map((service) => ({ params: { slug: service.slug }, props: { service } }));
@@ -23,9 +23,40 @@ interface Props {
 const { service } = Astro.props;
 const others = services.filter((s) => s.slug !== service.slug);
 const faqs = faqsFor(service.slug);
+const pageUrl = new URL(`/services/${service.slug}/`, site.url).href;
+
+const jsonLd = [
+  {
+    '@type': 'Service',
+    '@id': `${pageUrl}#service`,
+    name: service.plainName,
+    alternateName: service.name,
+    serviceType: service.plainName,
+    description: service.seoDescription,
+    url: pageUrl,
+    provider: { '@id': `${site.url}/#organization` },
+    areaServed: { '@type': 'Country', name: site.location },
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'What we cover',
+      itemListElement: service.items.map((i) => ({
+        '@type': 'Offer',
+        itemOffered: { '@type': 'Service', name: i.name, description: i.text },
+      })),
+    },
+  },
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${site.url}/` },
+      { '@type': 'ListItem', position: 2, name: 'Services', item: `${site.url}/#services` },
+      { '@type': 'ListItem', position: 3, name: service.name, item: pageUrl },
+    ],
+  },
+];
 ---
 
-<Base title={service.seoTitle} description={service.seoDescription} hasContact>
+<Base title={service.seoTitle} description={service.seoDescription} hasContact jsonLd={jsonLd}>
   <article>
     <PageHead
       title={service.plainName}
