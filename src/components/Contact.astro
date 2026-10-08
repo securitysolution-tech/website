@@ -131,6 +131,28 @@ const timelines = ['As soon as possible', 'Within a month', 'Within three months
     padding-block: clamp(3.5rem, 2.5rem + 4.5vw, 6rem);
   }
 
+  /* An accent hairline draws along the top edge as the band arrives. */
+  .contact::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: var(--ink-accent);
+    transform-origin: left center;
+    opacity: 0.9;
+    z-index: 1;
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .contact::before {
+        animation: draw-x linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 45%;
+      }
+    }
+  }
+
   .glow {
     position: absolute;
     z-index: -1;

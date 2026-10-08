@@ -174,10 +174,11 @@ const records = [
   /* The load sequence, about 1.2 s end to end: headline words, then the lead at once (it is the
      largest text on screen), the actions, the instrument, and finally the records printing. */
   @media (prefers-reduced-motion: no-preference) {
+    /* Each word rises and unsqueezes into its full width, without touching layout. */
     .w {
-      --enter-y: 0.45em;
       display: inline-block;
-      animation: enter var(--dur-enter) var(--ease-out) both;
+      transform-origin: left center;
+      animation: word-in var(--dur-enter) var(--ease-out) both;
     }
 
     .w:nth-child(1) { animation-delay: 0ms; }
@@ -225,6 +226,14 @@ const records = [
     from {
       opacity: 0;
       translate: 1.5rem 0;
+    }
+  }
+
+  @keyframes word-in {
+    from {
+      opacity: 0;
+      translate: 0 0.45em;
+      scale: 0.88 1;
     }
   }
 

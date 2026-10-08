@@ -537,6 +537,13 @@ kbd {
   }
 }
 
+/* A hairline that draws itself along an edge as a band arrives. */
+@keyframes draw-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
 /* Anything marked data-reveal rises into place over a fixed length of scroll as it enters;
    data-reveal-step trails neighbours in the same row by a beat, so a band reads left to right. */
 @supports (animation-timeline: view()) {

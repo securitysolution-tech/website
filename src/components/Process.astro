@@ -1,4 +1,6 @@
 ---
+import ExposureMap from './ExposureMap.astro';
+
 const steps = [
   {
     title: 'Scope',
@@ -24,6 +26,7 @@ const steps = [
 ---
 
 <section id="approach" class="section approach ink grain" aria-labelledby="approach-title">
+  <ExposureMap gain={0.35} />
   <div class="container">
     <div class="section-head">
       <h2 id="approach-title">How an engagement works</h2>
@@ -60,6 +63,20 @@ const steps = [
     background:
       radial-gradient(60% 80% at 0% 0%, rgb(var(--ink-accent-rgb) / 0.1), transparent 70%),
       var(--ink-bg);
+    /* The band as a whole drives the pinned story on wide screens. */
+    view-timeline: --approach;
+  }
+
+  /* An accent hairline draws along the top edge as the band arrives. */
+  .approach::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: var(--ink-accent);
+    transform-origin: left center;
+    opacity: 0.9;
+    z-index: 1;
   }
 
   .steps {
@@ -168,6 +185,52 @@ const steps = [
     @media (prefers-reduced-motion: no-preference) and (max-width: 60rem) {
       .steps::after {
         animation-name: fill-y;
+      }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .approach::before {
+        animation: draw-x linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 35%;
+      }
+    }
+
+    /* On wide screens the band becomes a short story: it is taller than the viewport, the
+       content pins while it passes, and the line, the numbers and each step's text arrive
+       in order as the visitor scrolls through. Phones and reduced motion keep the plain band. */
+    @media (prefers-reduced-motion: no-preference) and (min-width: 60rem) and (min-height: 40rem) {
+      .approach {
+        min-height: 160vh;
+      }
+
+      .approach .container {
+        position: sticky;
+        top: calc(var(--header-h) + 3rem);
+      }
+
+      .steps::after,
+      .num {
+        animation-timeline: --approach;
+        animation-range: cover 36% cover 66%;
+      }
+
+      .step h3,
+      .step p {
+        animation: enter linear both;
+        animation-timeline: --approach;
+      }
+
+      .step:nth-child(1) :is(h3, p) { animation-range: cover 34% cover 41%; }
+      .step:nth-child(2) :is(h3, p) { animation-range: cover 41% cover 48%; }
+      .step:nth-child(3) :is(h3, p) { animation-range: cover 48% cover 55%; }
+      .step:nth-child(4) :is(h3, p) { animation-range: cover 55% cover 62%; }
+      .step:nth-child(5) :is(h3, p) { animation-range: cover 61% cover 68%; }
+
+      .start {
+        animation: enter linear both;
+        animation-timeline: --approach;
+        animation-range: cover 66% cover 72%;
       }
     }
   }
