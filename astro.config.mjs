@@ -1,7 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
-import { arLive } from './src/i18n/locales.mjs';
+import { arLive, readinessLive } from './src/i18n/locales.mjs';
 
 export default defineConfig({
   site: 'https://securitysolution.tech',
@@ -40,7 +40,7 @@ export default defineConfig({
   integrations: [
     sitemap({
       // Arabic pages join the sitemap, with language alternates, once they are live.
-      filter: (page) => arLive || !page.includes('/ar/'),
+      filter: (page) => (arLive || !page.includes('/ar/')) && (readinessLive || !page.includes('/readiness')),
       ...(arLive ? { i18n: { defaultLocale: 'en', locales: { en: 'en-AE', ar: 'ar-AE' } } } : {}),
     }),
   ],
