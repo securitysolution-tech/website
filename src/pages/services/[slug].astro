@@ -17,7 +17,7 @@ const { service } = Astro.props;
 const others = services.filter((s) => s.slug !== service.slug);
 ---
 
-<Base title={service.seoTitle} description={service.seoDescription}>
+<Base title={service.seoTitle} description={service.seoDescription} hasContact>
   <article>
     <header class="page-head ink">
       <ExposureMap gain={0.7} />
@@ -29,7 +29,7 @@ const others = services.filter((s) => s.slug !== service.slug);
         </nav>
         <h1>{service.name}</h1>
         <p class="lead">{service.intro}</p>
-        <a class="btn btn-primary" href={contactCta.href}>{contactCta.label}</a>
+        <a class="btn btn-primary" href="#contact">{contactCta.label}</a>
       </div>
     </header>
 
@@ -54,11 +54,11 @@ const others = services.filter((s) => s.slug !== service.slug);
       <div class="container two">
         <div>
           <h2 class="block-title">What you receive</h2>
-          <ul class="ticks">{service.deliverables.map((d) => <li>{d}</li>)}</ul>
+          <ul class="ticks bullets">{service.deliverables.map((d) => <li>{d}</li>)}</ul>
         </div>
         <div>
           <h2 class="block-title">A good fit if</h2>
-          <ul class="ticks">{service.goodFit.map((g) => <li>{g}</li>)}</ul>
+          <ul class="ticks bullets">{service.goodFit.map((g) => <li>{g}</li>)}</ul>
         </div>
       </div>
     </section>
@@ -185,25 +185,8 @@ const others = services.filter((s) => s.slug !== service.slug);
   }
 
   .ticks {
-    list-style: none;
     display: grid;
     gap: var(--s-3);
-  }
-
-  .ticks li {
-    position: relative;
-    padding-left: 1.5rem;
-  }
-
-  .ticks li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.55em;
-    width: 0.625rem;
-    height: 0.625rem;
-    border-radius: 2px;
-    background: var(--accent);
   }
 
   .others {

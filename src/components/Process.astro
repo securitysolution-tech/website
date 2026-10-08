@@ -129,9 +129,11 @@ const steps = [
         animation-range: entry 40% cover 55%;
       }
 
-      /* Each number starts muted and ignites as the fill passes it. */
+      /* Each number starts muted and ignites as the fill passes it. Longhands on purpose:
+         the compiler's CSS pass rewrites a nameless animation shorthand to animation: none. */
       .num {
-        animation: linear both;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
         animation-timeline: view();
         animation-range: entry 40% cover 55%;
       }

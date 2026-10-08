@@ -92,10 +92,11 @@ const timelines = ['As soon as possible', 'Within a month', 'Within three months
 
       <div class="field">
         <label for="cf-message">Anything else <span class="opt">(optional)</span></label>
-        <textarea id="cf-message" name="message" rows="3" maxlength="600"></textarea>
+        <textarea id="cf-message" name="message" rows="3" maxlength="600" data-lenis-prevent></textarea>
       </div>
 
-      <button type="submit" class="btn btn-primary">{contactCta.label}</button>
+      <button type="submit" class="btn btn-primary">Prepare my request</button>
+      <p class="visually-hidden" aria-live="polite" data-status></p>
 
       <div class="composed" data-composed hidden>
         <p class="ready">Your request is ready. Send it from your email app, or copy it into any message.</p>
@@ -103,7 +104,7 @@ const timelines = ['As soon as possible', 'Within a month', 'Within three months
           <a class="btn btn-primary" data-mailto href={mailto('Scoping call request')}>Open in your email app</a>
           <button type="button" class="btn btn-secondary" data-copy>Copy the message</button>
         </div>
-        <pre class="preview" data-preview translate="no"></pre>
+        <pre class="preview" data-preview translate="no" data-lenis-prevent></pre>
       </div>
     </form>
   </div>
@@ -267,6 +268,15 @@ const timelines = ['As soon as possible', 'Within a month', 'Within three months
   textarea::placeholder {
     color: var(--ink-text-2);
     opacity: 1;
+  }
+
+  /* The drawn chevron is a background, which forced-colour modes remove; use the native one there. */
+  @media (forced-colors: active) {
+    select {
+      appearance: auto;
+      background-image: none;
+      padding-right: 0.875rem;
+    }
   }
 
   input:hover,

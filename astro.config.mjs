@@ -16,7 +16,9 @@ export default defineConfig({
       assetsInlineLimit: 0,
       // lightningcss 1.33 folds animation-timeline into the animation shorthand,
       // which browsers reject, so every scroll-driven animation dies in minified
-      // builds. esbuild keeps the longhands apart.
+      // builds. esbuild keeps the longhands apart. Component <style> blocks still
+      // pass through lightningcss in the Astro compiler, so scroll-driven rules in
+      // components use animation longhands, and scripts/check-css.mjs guards the output.
       cssMinify: 'esbuild',
     },
   },

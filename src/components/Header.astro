@@ -4,6 +4,12 @@ import Wordmark from './Wordmark.astro';
 import Icon from './Icon.astro';
 import { contactCta } from '../data/site';
 
+interface Props {
+  /** Where the call to action goes: the page's own form when it has one, else the home page's. */
+  contactHref?: string;
+}
+const { contactHref = contactCta.href } = Astro.props;
+
 const links = [
   { label: 'Services', href: '/#services' },
   { label: 'Approach', href: '/#approach' },
@@ -23,7 +29,7 @@ const links = [
       <ul>
         {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
       </ul>
-      <a class="btn btn-primary" href={contactCta.href}>{contactCta.label}</a>
+      <a class="btn btn-primary" href={contactHref}>{contactCta.label}</a>
     </nav>
 
     <details class="nav-mobile">
@@ -36,7 +42,7 @@ const links = [
         <ul>
           {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
         </ul>
-        <a class="btn btn-primary" href={contactCta.href}>{contactCta.label}</a>
+        <a class="btn btn-primary" href={contactHref}>{contactCta.label}</a>
       </nav>
     </details>
   </div>

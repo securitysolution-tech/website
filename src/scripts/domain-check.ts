@@ -1,5 +1,6 @@
 import { DomainNotFoundError, runChecks, type Result, type Status, type Verdict } from './checks';
 import { normaliseDomain } from './dns';
+import { reduceMotion, scrollToElement } from './navigate';
 
 const labels: Record<Status, string> = { pass: 'Pass', warn: 'Warning', fail: 'Fail', info: 'Info' };
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -9,6 +10,7 @@ function init(root: HTMLElement) {
   const input = root.querySelector<HTMLInputElement>('input[name="domain"]')!;
   const button = root.querySelector<HTMLButtonElement>('button[type="submit"]')!;
   const error = root.querySelector<HTMLElement>('[data-error]')!;
+  const retry = root.querySelector<HTMLButtonElement>('[data-retry]');
   const list = root.querySelector<HTMLOListElement>('[data-results]')!;
   const target = root.querySelector<HTMLElement>('[data-target]')!;
   const targetName = root.querySelector<HTMLElement>('[data-target-name]')!;
@@ -16,10 +18,20 @@ function init(root: HTMLElement) {
   const ownDomain = root.dataset.autorun ?? '';
   const verdict = root.querySelector<HTMLElement>('[data-verdict]')!;
   const announce = root.querySelector<HTMLElement>('[data-announce]')!;
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   const rows = new Map<string, HTMLLIElement>();
   list.querySelectorAll<HTMLLIElement>('[data-check]').forEach((li) => rows.set(li.dataset.check!, li));
+
+  // "Show record" reads "Hide record" while the evidence is open.
+  rows.forEach((li) => {
+    const evidence = li.querySelector<HTMLDetailsElement>('[data-evidence]');
+    const summary = evidence?.querySelector('summary');
+    if (evidence && summary) {
+      evidence.addEventListener('toggle', () => {
+        summary.textContent = evidence.open ? 'Hide record' : 'Show record';
+      });
+    }
+  });
 
   const icon = (name: string) => {
     const tpl = root.querySelector<HTMLTemplateElement>(`template[data-icon="${name}"]`);
@@ -78,35 +90,53 @@ function init(root: HTMLElement) {
   }
 
   function showVerdict(domain: string, v: Verdict, results: Result[]) {
-    verdict.querySelector('[data-spoofing]')!.textContent = v.spoofing;
-    verdict.dataset.level = v.spoofing.toLowerCase();
-    verdict.querySelector('[data-score]')!.textContent = `${v.passed} of ${v.scored} checks passed`;
+    const spoofing = v.incomplete ? 'Incomplete' : v.spoofing;
+    verdict.querySelector('[data-spoofing]')!.textContent = spoofing;
+    verdict.dataset.level = spoofing.toLowerCase();
+    verdict.querySelector('[data-score]')!.textContent = v.incomplete
+      ? 'Some lookups did not complete. Run the check again in a moment.'
+      : `${v.passed} of ${v.scored} checks passed`;
     verdict.hidden = false;
-    const count = showFixFirst(results);
-    announce.textContent =
-      `Check complete for ${domain}. Spoofing protection is ${v.spoofing.toLowerCase()}. ${v.passed} of ${v.scored} checks passed.` +
-      (count ? ` ${count} ${count === 1 ? 'item' : 'items'} to fix first.` : '');
+    const count = v.incomplete ? 0 : showFixFirst(results);
+    if (v.incomplete && fix) fix.hidden = true;
+    announce.textContent = v.incomplete
+      ? `Check incomplete for ${domain}. Some lookups did not complete. Run the check again in a moment.`
+      : `Check complete for ${domain}. Spoofing protection is ${v.spoofing.toLowerCase()}. ${v.passed} of ${v.scored} checks passed.` +
+        (count ? ` ${count} ${count === 1 ? 'item' : 'items'} to fix first.` : '');
     if (domain !== ownDomain) document.dispatchEvent(new CustomEvent('domaincheck', { detail: { domain } }));
   }
 
-  function showError(message: string) {
+  function showError(message: string, canRetry = false) {
     error.textContent = message;
     error.hidden = false;
     input.setAttribute('aria-invalid', 'true');
+    if (retry) retry.hidden = !canRetry;
   }
 
   function clearError() {
     error.hidden = true;
     error.textContent = '';
     input.removeAttribute('aria-invalid');
+    if (retry) retry.hidden = true;
   }
 
   let runId = 0;
+  let controller: AbortController | null = null;
+  let shown = ''; // the domain whose results are on screen
+  let lastRequested = '';
 
-  async function run(domain: string) {
+  // The autorun (our own domain on page load) never locks the form and fails silently:
+  // a visitor's submit takes over at any moment, and the stale run is cancelled.
+  async function run(domain: string, autorun = false) {
     const id = ++runId;
-    button.disabled = true;
-    button.textContent = 'Checking…';
+    controller?.abort();
+    controller = new AbortController();
+    const { signal } = controller;
+    shown = '';
+    if (!autorun) {
+      lastRequested = domain;
+      button.textContent = 'Checking…';
+    }
     list.setAttribute('aria-busy', 'true');
     verdict.hidden = true;
     if (fix) fix.hidden = true;
@@ -122,26 +152,31 @@ function init(root: HTMLElement) {
       queue = queue.then(async () => {
         if (id !== runId) return;
         render(r);
-        if (!reduce.matches) await wait(150);
+        if (!reduceMotion.matches) await wait(150);
       });
     };
 
     try {
-      const { results, verdict: v } = await runChecks(domain, reveal);
+      const { results, verdict: v } = await runChecks(domain, reveal, signal);
       await queue;
-      if (id === runId) showVerdict(domain, v, results);
+      if (id !== runId) return;
+      shown = domain;
+      showVerdict(domain, v, results);
     } catch (err) {
       if (id !== runId) return;
       rows.forEach((li) => setState(li, 'idle', li.dataset.about ?? ''));
       target.hidden = true;
-      showError(
-        err instanceof DomainNotFoundError
-          ? `${domain} does not exist in DNS. Check the spelling and try again.`
-          : 'The DNS lookups could not be completed. Your network may block DNS-over-HTTPS, so try again on another connection.',
-      );
+      if (autorun) return;
+      if (err instanceof DomainNotFoundError) {
+        showError(`${domain} does not exist in DNS. Check the spelling and try again.`);
+      } else {
+        showError(
+          'The DNS lookups could not be completed. Your network may block DNS-over-HTTPS, so try again on another connection.',
+          true,
+        );
+      }
     } finally {
       if (id === runId) {
-        button.disabled = false;
         button.textContent = 'Run check';
         list.setAttribute('aria-busy', 'false');
       }
@@ -163,6 +198,12 @@ function init(root: HTMLElement) {
     run(domain);
   });
 
+  retry?.addEventListener('click', () => {
+    if (!lastRequested) return;
+    clearError();
+    run(lastRequested);
+  });
+
   input.addEventListener('input', () => {
     if (!error.hidden) clearError();
   });
@@ -178,11 +219,11 @@ function init(root: HTMLElement) {
   const linked = fromHash();
   if (linked) {
     input.value = linked;
-    root.scrollIntoView({ block: 'start' });
+    requestAnimationFrame(() => scrollToElement(root, { immediate: true, focus: false }));
     run(linked);
   } else if (ownDomain) {
     // Show our own results on load, and leave the field empty for the visitor's domain.
-    run(ownDomain);
+    run(ownDomain, true);
   }
 
   // In-page links such as "/#check=example.com" only change the hash.
@@ -191,8 +232,9 @@ function init(root: HTMLElement) {
     if (!domain) return;
     input.value = domain;
     clearError();
-    root.scrollIntoView({ block: 'start', behavior: reduce.matches ? 'auto' : 'smooth' });
-    run(domain);
+    scrollToElement(root, { focus: false });
+    // Back and forward restore a fragment whose results may already be on screen.
+    if (domain !== shown) run(domain);
   });
 }
 

@@ -12,7 +12,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "test": "node scripts/check-links.mjs && node scripts/check-copy.mjs && html-validate \"dist/**/*.html\"",
+    "test": "node scripts/check-links.mjs && node scripts/check-copy.mjs && node scripts/check-css.mjs && html-validate \"dist/**/*.html\"",
     "astro": "astro"
   },
   "dependencies": {

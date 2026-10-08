@@ -524,10 +524,20 @@ html.lenis {
   scroll-behavior: auto;
 }
 
-/* Departure fade for browsers without cross-document view transitions (set by transitions.ts). */
-html.leaving body {
-  opacity: 0;
+/* Departure fade for browsers without cross-document view transitions (set by navigate.ts).
+   Only the content fades; the header stays, so dark-topped pages never flash light. */
+main,
+.site-footer {
   transition: opacity 140ms ease;
+}
+
+html.leaving :is(main, .site-footer) {
+  opacity: 0;
+}
+
+/* In-page navigation moves focus to the section; the whole region does not need a ring. */
+:is(section, article, main)[tabindex='-1']:focus {
+  outline: none;
 }
 
 .top-sentinel {
@@ -620,13 +630,38 @@ html.leaving body {
   }
 }
 
-/* Square bullets are drawn as backgrounds, which forced-colour modes remove. */
+/* Square bullets, shared by every list that uses them (and by prose lists). */
+:is(.bullets, .prose ul) {
+  list-style: none;
+  padding-left: 0;
+}
+
+:is(.bullets, .prose ul) li {
+  position: relative;
+  padding-left: 1.1rem;
+}
+
+:is(.bullets, .prose ul) li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.8;
+}
+
+.ink :is(.bullets, .prose ul) li::before {
+  background: var(--ink-accent);
+}
+
+/* The squares are backgrounds, which forced-colour modes remove; draw them in the text colour there. */
 @media (forced-colors: active) {
-  .items li::before,
-  .ticks li::before,
-  .include li::before,
-  .creds li::before {
+  :is(.bullets, .prose ul) li::before {
     background: CanvasText;
+    opacity: 1;
   }
 }
 

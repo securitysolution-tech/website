@@ -48,10 +48,12 @@ const checks = [
       <button type="submit" class="run">Run check</button>
     </div>
     <p id="domain-error" class="error" data-error role="alert" hidden></p>
+    <button type="button" class="retry" data-retry hidden>Try again</button>
   </form>
 
   <p class="privacy" id="check-privacy">
-    Runs in your browser through Cloudflare’s public DNS resolver. We never receive the domain you type.
+    Runs in your browser through Cloudflare’s public DNS resolver, with Google Public DNS as a fallback. We never
+    receive the domain you type. <a href="/privacy/">Privacy</a>
   </p>
   <noscript><p class="privacy">The check needs JavaScript, which is turned off in this browser.</p></noscript>
   </div>
@@ -250,6 +252,29 @@ const checks = [
     font-size: var(--step--1);
   }
 
+  .retry {
+    justify-self: start;
+    min-height: 2.5rem;
+    padding: 0 0.875rem;
+    border: 1px solid var(--panel-control);
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--panel-ink);
+    font: inherit;
+    font-size: var(--step--1);
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 160ms ease;
+  }
+
+  .retry:hover {
+    border-color: var(--panel-ink-2);
+  }
+
+  .privacy a {
+    color: var(--panel-ink);
+  }
+
   .target {
     font-size: var(--step--1);
   }
@@ -437,6 +462,9 @@ const checks = [
   }
   .verdict[data-level='weak'] strong {
     color: var(--p-fail);
+  }
+  .verdict[data-level='incomplete'] strong {
+    color: var(--p-info);
   }
 
   .verdict-score {

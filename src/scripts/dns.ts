@@ -28,9 +28,11 @@ const resolvers = [
 
 const TIMEOUT_MS = 6000;
 
-async function fetchJson(url: string): Promise<any> {
+async function fetchJson(url: string, signal?: AbortSignal): Promise<any> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  // A superseded check cancels its requests through the caller's signal.
+  signal?.addEventListener('abort', () => controller.abort(), { once: true });
   try {
     const res = await fetch(url, {
       headers: { accept: 'application/dns-json' },
@@ -46,11 +48,12 @@ async function fetchJson(url: string): Promise<any> {
   }
 }
 
-export async function query(name: string, type: RRName): Promise<DnsResponse> {
+export async function query(name: string, type: RRName, signal?: AbortSignal): Promise<DnsResponse> {
   let lastError: unknown;
   for (const build of resolvers) {
+    if (signal?.aborted) throw new Error('Cancelled');
     try {
-      const json = await fetchJson(build(name, type));
+      const json = await fetchJson(build(name, type), signal);
       // Status 2 (SERVFAIL) from one resolver is worth retrying on the other.
       if (json.Status === 2) {
         lastError = new Error('SERVFAIL');

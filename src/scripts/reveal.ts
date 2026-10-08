@@ -17,7 +17,7 @@ if (!scrollDriven) {
           reveal.unobserve(entry.target);
         }
       },
-      { rootMargin: '0px 0px -12% 0px', threshold: 0.15 },
+      { rootMargin: '0px 0px -12% 0px', threshold: 0 },
     );
     document
       .querySelectorAll('.scores .cell, .bento .card, .finding, .people .person, .items .item, .steps')
@@ -32,8 +32,9 @@ if (!scrollDriven) {
   new IntersectionObserver(([entry]) => header?.classList.toggle('scrolled', !entry.isIntersecting)).observe(sentinel);
 }
 
-// Scroll-spy: the primary navigation marks the section in view and slides its underline there.
+// Scroll-spy: the navigation marks the section in view, and the desktop list slides its underline there.
 const links = [...document.querySelectorAll<HTMLAnchorElement>('.nav-desktop ul a[href*="#"]')];
+const menuLinks = [...document.querySelectorAll<HTMLAnchorElement>('.menu-panel ul a[href*="#"]')];
 const sections = links
   .map((link) => ({ link, section: document.getElementById(link.hash.slice(1)) }))
   .filter((pair): pair is { link: HTMLAnchorElement; section: HTMLElement } => pair.section !== null);
@@ -42,8 +43,8 @@ if (sections.length) {
   const list = links[0].closest<HTMLElement>('ul')!;
   const visible = new Set<Element>();
   const setActive = (link: HTMLAnchorElement | null) => {
-    for (const l of links) {
-      if (l === link) l.setAttribute('aria-current', 'true');
+    for (const l of [...links, ...menuLinks]) {
+      if (link && l.hash === link.hash) l.setAttribute('aria-current', 'location');
       else l.removeAttribute('aria-current');
     }
     if (link) {

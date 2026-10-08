@@ -15,6 +15,13 @@ function init(form: HTMLFormElement) {
   const mailLink = form.querySelector<HTMLAnchorElement>('[data-mailto]')!;
   const copyButton = form.querySelector<HTMLButtonElement>('[data-copy]')!;
   const preview = form.querySelector<HTMLElement>('[data-preview]')!;
+  const status = form.querySelector<HTMLElement>('[data-status]');
+  const copyLabel = copyButton.textContent ?? 'Copy the message';
+  let copyTimer = 0;
+
+  const say = (text: string) => {
+    if (status) status.textContent = text;
+  };
 
   const errorFor = (input: HTMLElement) => document.getElementById(input.getAttribute('aria-errormessage') ?? '');
 
@@ -23,6 +30,7 @@ function init(form: HTMLFormElement) {
     if (el) {
       el.textContent = message;
       el.hidden = false;
+      input.setAttribute('aria-describedby', el.id);
     }
     input.setAttribute('aria-invalid', 'true');
   }
@@ -34,6 +42,7 @@ function init(form: HTMLFormElement) {
       el.textContent = '';
     }
     input.removeAttribute('aria-invalid');
+    input.removeAttribute('aria-describedby');
   }
 
   function validate(): HTMLInputElement | null {
@@ -67,44 +76,64 @@ function init(form: HTMLFormElement) {
     const message = fields.message.value.trim();
     if (message) lines.push('', message);
     lines.push('', 'Sent from the scoping request form on securitysolution.tech');
-    let body = lines.join('\r\n');
-    let href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    // Long mailto links are cut short by some email apps; keep the message within reach.
-    while (href.length > 1900 && body.length > 200) {
-      body = body.slice(0, body.length - 100);
-      href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const body = lines.join('\r\n');
+    const mailto = (text: string) => `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+    // Long mailto links are cut short by some email apps, so only the link is shortened,
+    // on whole characters; the preview and the clipboard always carry the full message.
+    let linkBody = body;
+    let href = mailto(linkBody);
+    while (href.length > 1900 && linkBody.length > 200) {
+      linkBody = [...linkBody].slice(0, -100).join('');
+      href = mailto(linkBody);
     }
-    return { subject, body, href };
+    return { subject, body, href, shortened: linkBody !== body };
   }
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const invalid = validate();
     if (invalid) {
+      say('Check the highlighted fields.');
       invalid.focus();
       return;
     }
-    const { subject, body, href } = compose();
+    const { subject, body, href, shortened } = compose();
     mailLink.href = href;
     preview.textContent = `To: ${email}\r\nSubject: ${subject}\r\n\r\n${body}`;
     composed.hidden = false;
+    say(
+      shortened
+        ? 'Your request is ready. The message is long, so copy it rather than opening your email app.'
+        : 'Your request is ready. Send it from your email app, or copy it.',
+    );
     mailLink.focus();
   });
 
-  for (const input of [fields.name, fields.email]) {
-    input.addEventListener('input', () => clearError(input));
-  }
+  // Edits after composing make the prepared message stale; hide it until the next submit.
+  form.addEventListener('input', (event) => {
+    const el = event.target;
+    if (el === fields.name || el === fields.email) clearError(el as HTMLInputElement);
+    if (!composed.hidden) composed.hidden = true;
+  });
 
   copyButton.addEventListener('click', async () => {
-    const label = copyButton.textContent;
+    clearTimeout(copyTimer);
     try {
       await navigator.clipboard.writeText(preview.textContent ?? '');
       copyButton.textContent = 'Copied';
+      say('Message copied.');
     } catch {
-      copyButton.textContent = 'Select the text above and copy it';
+      // No clipboard access: select the message below so a manual copy is one keystroke away.
+      const range = document.createRange();
+      range.selectNodeContents(preview);
+      const selection = getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      copyButton.textContent = 'Copy the selected text below';
+      say('The message below is selected. Copy it with your keyboard.');
     }
-    setTimeout(() => {
-      copyButton.textContent = label;
+    copyTimer = window.setTimeout(() => {
+      copyButton.textContent = copyLabel;
     }, 2200);
   });
 

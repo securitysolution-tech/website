@@ -29,7 +29,7 @@ const initials = (name: string) => {
             </span>
             <h3>{f.name}</h3>
             <p class="role">{f.role}</p>
-            <ul class="creds" aria-label={`${f.name} at a glance`}>
+            <ul class="creds bullets" aria-label={`${f.name} at a glance`}>
               {f.highlights.map((h) => (
                 <li>{h}</li>
               ))}
@@ -121,23 +121,6 @@ const initials = (name: string) => {
     font-size: var(--step--1);
     color: var(--ink);
     font-weight: 540;
-  }
-
-  .creds li {
-    position: relative;
-    padding-left: 1.1rem;
-  }
-
-  .creds li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.5em;
-    width: 0.45rem;
-    height: 0.45rem;
-    border-radius: 2px;
-    background: var(--accent);
-    opacity: 0.8;
   }
 
   .bio {

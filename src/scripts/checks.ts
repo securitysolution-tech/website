@@ -14,6 +14,8 @@ export interface Verdict {
   passed: number;
   scored: number;
   spoofing: 'Strong' | 'Partial' | 'Weak';
+  /** True when the DMARC or SPF lookup did not complete, so the spoofing verdict cannot be trusted. */
+  incomplete: boolean;
 }
 
 export class DomainNotFoundError extends Error {}
@@ -291,17 +293,21 @@ function evaluateMtaSts(res: DnsResponse | null, receivesMail: boolean): Result 
  * Runs every check for a domain. `onResult` fires as each result is ready,
  * so the interface can fill in rows as answers arrive.
  */
-export async function runChecks(domain: string, onResult: (r: Result) => void): Promise<{ results: Result[]; verdict: Verdict }> {
-  const safe = (p: Promise<DnsResponse>) => p.then((r) => r).catch(() => null);
+export async function runChecks(
+  domain: string,
+  onResult: (r: Result) => void,
+  signal?: AbortSignal,
+): Promise<{ results: Result[]; verdict: Verdict }> {
+  const safe = (p: Promise<DnsResponse>) => p.catch(() => null);
   const org = orgDomain(domain);
 
-  const nsP = safe(query(domain, 'NS'));
-  const txtP = safe(query(domain, 'TXT'));
-  const dmarcP = safe(query(`_dmarc.${domain}`, 'TXT'));
-  const dmarcOrgP = org !== domain ? safe(query(`_dmarc.${org}`, 'TXT')) : Promise.resolve(null);
-  const mxP = safe(query(domain, 'MX'));
-  const caaP = safe(query(domain, 'CAA'));
-  const stsP = safe(query(`_mta-sts.${domain}`, 'TXT'));
+  const nsP = safe(query(domain, 'NS', signal));
+  const txtP = safe(query(domain, 'TXT', signal));
+  const dmarcP = safe(query(`_dmarc.${domain}`, 'TXT', signal));
+  const dmarcOrgP = org !== domain ? safe(query(`_dmarc.${org}`, 'TXT', signal)) : Promise.resolve(null);
+  const mxP = safe(query(domain, 'MX', signal));
+  const caaP = safe(query(domain, 'CAA', signal));
+  const stsP = safe(query(`_mta-sts.${domain}`, 'TXT', signal));
 
   const ns = await nsP;
   if (ns && ns.status === 3) throw new DomainNotFoundError(domain);
@@ -340,6 +346,7 @@ export async function runChecks(domain: string, onResult: (r: Result) => void): 
   const d = results.dmarc?.status;
   const s = results.spf?.status;
   const spoofing: Verdict['spoofing'] = d === 'pass' && s === 'pass' ? 'Strong' : d === 'fail' || s === 'fail' ? 'Weak' : 'Partial';
+  const incomplete = !dmarc || !txt;
 
-  return { results: list, verdict: { passed, scored: scored.length, spoofing } };
+  return { results: list, verdict: { passed, scored: scored.length, spoofing, incomplete } };
 }

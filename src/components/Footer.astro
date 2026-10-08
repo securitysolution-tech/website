@@ -4,6 +4,10 @@ import Wordmark from './Wordmark.astro';
 import { services } from '../data/services';
 import { contactCta, site } from '../data/site';
 
+interface Props {
+  contactHref?: string;
+}
+const { contactHref = contactCta.href } = Astro.props;
 const year = new Date().getFullYear();
 ---
 
@@ -33,7 +37,7 @@ const year = new Date().getFullYear();
         <li><a href="/#approach">Approach</a></li>
         <li><a href="/#team">Team</a></li>
         <li><a href="/#faq">FAQ</a></li>
-        <li><a href={contactCta.href}>{contactCta.label}</a></li>
+        <li><a href={contactHref}>{contactCta.label}</a></li>
       </ul>
     </nav>
 

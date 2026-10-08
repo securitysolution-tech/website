@@ -1,7 +1,7 @@
 // The exposure map behind the hero: slowly drifting contour lines, read by a scan
 // sweep every few seconds. First-party WebGL2 in about 4 KB, no library. It draws one
-// still frame under reduced motion, stops when scrolled out of view, and leaves the
-// CSS glow alone when WebGL is unavailable.
+// still frame under reduced motion, runs only while in view, survives a lost context,
+// and leaves the CSS glow alone when WebGL is unavailable or software-rendered.
 
 const VERT = `#version 300 es
 in vec2 p;
@@ -50,13 +50,15 @@ void main() {
   float major = 1.0 - smoothstep(0.0, aa, abs(fract(k / 3.0) - 0.5) * 3.0);
 
   // The scan: a soft band crossing left to right about every eleven seconds.
+  // (d * d rather than pow(): a negative base is undefined in GLSL ES.)
   float sx = fract(u_time / 11.0) * 1.4 - 0.2;
-  float sweep = exp(-pow((uv.x - sx) / 0.07, 2.0));
+  float d = (uv.x - sx) / 0.07;
+  float sweep = exp(-d * d);
   float wake = smoothstep(sx - 0.35, sx, uv.x) * (1.0 - step(sx, uv.x));
 
   // Keep the headline column quiet, soften the band edges, add a light vignette.
   float left = smoothstep(0.18, 0.62, uv.x);
-  float edge = smoothstep(0.0, 0.12, uv.y) * smoothstep(1.0, 0.82, uv.y);
+  float edge = smoothstep(0.0, 0.12, uv.y) * (1.0 - smoothstep(0.82, 1.0, uv.y));
   float vig = 1.0 - 0.35 * length((uv - vec2(0.65, 0.5)) * vec2(1.0, 1.4));
 
   // A faint elevation tint between the lines gives the field depth, like a shaded relief map.
@@ -67,108 +69,180 @@ void main() {
   o = vec4(mint * a, a);
 }`;
 
+const STILL_FRAME_TIME = 7.1; // the scan band resting on the right
+
 export function mountExposureMap(canvas: HTMLCanvasElement) {
   const host = canvas.parentElement;
   if (!host) return;
-  const gl = canvas.getContext('webgl2', {
-    alpha: true,
-    antialias: false,
-    premultipliedAlpha: true,
-    powerPreference: 'low-power',
-  });
-  if (!gl) {
-    host.classList.add('no-map');
-    return;
-  }
 
-  const compile = (type: number, src: string) => {
-    const shader = gl.createShader(type)!;
-    gl.shaderSource(shader, src);
-    gl.compileShader(shader);
-    return shader;
-  };
-  const program = gl.createProgram()!;
-  gl.attachShader(program, compile(gl.VERTEX_SHADER, VERT));
-  gl.attachShader(program, compile(gl.FRAGMENT_SHADER, FRAG));
-  gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    host.classList.add('no-map');
-    return;
-  }
-  gl.useProgram(program);
-
-  // One triangle that covers the clip space; the fragment shader does the rest.
-  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  const position = gl.getAttribLocation(program, 'p');
-  gl.enableVertexAttribArray(position);
-  gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
-
-  const uRes = gl.getUniformLocation(program, 'u_res');
-  const uTime = gl.getUniformLocation(program, 'u_time');
-  const uPointer = gl.getUniformLocation(program, 'u_pointer');
-  gl.uniform1f(gl.getUniformLocation(program, 'u_gain'), Number(canvas.dataset.gain ?? '1'));
-
+  const coarse = matchMedia('(pointer: coarse)').matches;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
-  const start = performance.now();
-  let px = 0, py = 0, tx = 0, ty = 0;
-  let visible = true;
-  let last = 0;
-  let raf = 0;
-
-  function resize() {
-    const dpr = Math.min(devicePixelRatio || 1, 1.25);
-    const w = Math.round(canvas.clientWidth * dpr);
-    const h = Math.round(canvas.clientHeight * dpr);
-    if (w === canvas.width && h === canvas.height) return;
-    canvas.width = w;
-    canvas.height = h;
-    gl!.viewport(0, 0, w, h);
-    gl!.uniform2f(uRes, w, h);
-  }
-
+  const gain = Number(canvas.dataset.gain ?? '1');
   // A sibling marked data-parallax (the record lines) drifts against the map under the pointer.
   const parallax = host.querySelector<HTMLElement>('[data-parallax]');
+  // About 30 frames a second on desktops and 20 on phones: plenty for terrain that drifts this slowly.
+  const frameInterval = coarse ? 48 : 31;
+  const dprCap = coarse ? 1 : 1.25;
 
-  function draw(t: number) {
-    px += (tx - px) * 0.06;
-    py += (ty - py) * 0.06;
-    gl!.uniform1f(uTime, t);
-    gl!.uniform2f(uPointer, px, py);
-    gl!.drawArrays(gl!.TRIANGLES, 0, 3);
+  let gl: WebGL2RenderingContext | null = null;
+  let uRes: WebGLUniformLocation | null = null;
+  let uTime: WebGLUniformLocation | null = null;
+  let uPointer: WebGLUniformLocation | null = null;
+  let lost = false;
+  let visible = false;
+  let raf = 0;
+  let lastDraw = 0;
+  let lastTick = 0;
+  let active = 0; // seconds the map has actually been running; a pause does not jump the scan
+  let px = 0, py = 0, tx = 0, ty = 0;
+  let sentPx = '', sentPy = '';
+
+  const giveUp = (why: string) => {
+    host.classList.remove('map-live');
+    host.classList.add('no-map');
+    console.warn(`exposure map: ${why}`);
+  };
+
+  function setup(): boolean {
+    gl = canvas.getContext('webgl2', {
+      alpha: true,
+      antialias: false,
+      premultipliedAlpha: true,
+      powerPreference: 'low-power',
+      failIfMajorPerformanceCaveat: true,
+    });
+    if (!gl) return false;
+    const ctx = gl;
+    const compile = (type: number, src: string) => {
+      const shader = ctx.createShader(type);
+      if (!shader) return null;
+      ctx.shaderSource(shader, src);
+      ctx.compileShader(shader);
+      if (!ctx.getShaderParameter(shader, ctx.COMPILE_STATUS)) {
+        console.warn(ctx.getShaderInfoLog(shader));
+        ctx.deleteShader(shader);
+        return null;
+      }
+      return shader;
+    };
+    const vs = compile(ctx.VERTEX_SHADER, VERT);
+    const fs = compile(ctx.FRAGMENT_SHADER, FRAG);
+    const program = ctx.createProgram();
+    if (!vs || !fs || !program) return false;
+    ctx.attachShader(program, vs);
+    ctx.attachShader(program, fs);
+    ctx.linkProgram(program);
+    ctx.deleteShader(vs);
+    ctx.deleteShader(fs);
+    if (!ctx.getProgramParameter(program, ctx.LINK_STATUS)) {
+      console.warn(ctx.getProgramInfoLog(program));
+      return false;
+    }
+    ctx.useProgram(program);
+
+    // One triangle that covers the clip space; the fragment shader does the rest.
+    ctx.bindBuffer(ctx.ARRAY_BUFFER, ctx.createBuffer());
+    ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), ctx.STATIC_DRAW);
+    const position = ctx.getAttribLocation(program, 'p');
+    ctx.enableVertexAttribArray(position);
+    ctx.vertexAttribPointer(position, 2, ctx.FLOAT, false, 0, 0);
+
+    uRes = ctx.getUniformLocation(program, 'u_res');
+    uTime = ctx.getUniformLocation(program, 'u_time');
+    uPointer = ctx.getUniformLocation(program, 'u_pointer');
+    ctx.uniform1f(ctx.getUniformLocation(program, 'u_gain'), gain);
+    return true;
+  }
+
+  function resize(): boolean {
+    if (!gl) return false;
+    const dpr = Math.min(devicePixelRatio || 1, dprCap);
+    const w = Math.round(canvas.clientWidth * dpr);
+    const h = Math.round(canvas.clientHeight * dpr);
+    if (w === canvas.width && h === canvas.height) return false;
+    canvas.width = w;
+    canvas.height = h;
+    gl.viewport(0, 0, w, h);
+    gl.uniform2f(uRes, w, h);
+    return true;
+  }
+
+  function draw(time: number) {
+    if (!gl || lost) return;
+    gl.uniform1f(uTime, time);
+    gl.uniform2f(uPointer, px, py);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
     if (parallax) {
-      parallax.style.setProperty('--px', px.toFixed(3));
-      parallax.style.setProperty('--py', py.toFixed(3));
+      const sx = px.toFixed(3), sy = py.toFixed(3);
+      if (sx !== sentPx) { parallax.style.setProperty('--px', sx); sentPx = sx; }
+      if (sy !== sentPy) { parallax.style.setProperty('--py', sy); sentPy = sy; }
     }
   }
 
-  // About 30 frames a second is plenty for terrain that drifts this slowly.
   function frame(now: number) {
     raf = 0;
-    if (!visible || document.hidden) return;
-    if (now - last >= 31) {
-      last = now;
-      draw((now - start) / 1000);
+    if (!visible || lost || document.hidden) {
+      lastTick = 0;
+      return;
+    }
+    if (lastTick) active += Math.min(now - lastTick, 100) / 1000;
+    lastTick = now;
+    if (now - lastDraw >= frameInterval) {
+      lastDraw = now;
+      px += (tx - px) * 0.06;
+      py += (ty - py) * 0.06;
+      draw(active);
     }
     schedule();
   }
+
   function schedule() {
     if (!raf) raf = requestAnimationFrame(frame);
   }
 
-  resize();
-  if (reduce.matches) {
-    // One composed still, with the scan band resting on the right.
-    new ResizeObserver(() => { resize(); draw(7.1); }).observe(canvas);
-    draw(7.1);
-    host.classList.add('map-live');
+  const still = () => {
+    resize();
+    draw(STILL_FRAME_TIME);
+  };
+
+  if (!setup()) {
+    giveUp('WebGL2 unavailable, software-rendered, or the shader failed to build');
     return;
   }
 
-  new ResizeObserver(resize).observe(canvas);
+  canvas.addEventListener('webglcontextlost', (event) => {
+    event.preventDefault(); // allows the context to be restored
+    lost = true;
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    host.classList.remove('map-live');
+    host.classList.add('no-map');
+  });
+  canvas.addEventListener('webglcontextrestored', () => {
+    lost = false;
+    if (!setup()) return;
+    host.classList.remove('no-map');
+    host.classList.add('map-live');
+    canvas.width = 0; // force the viewport and resolution uniform to be set again
+    if (reduce.matches) still();
+    else { resize(); schedule(); }
+  });
+
+  resize();
+  host.classList.add('map-live');
+
+  if (reduce.matches) {
+    still();
+    new ResizeObserver(() => { if (resize()) draw(STILL_FRAME_TIME); }).observe(canvas);
+    return;
+  }
+
+  new ResizeObserver(() => { if (resize()) draw(active); }).observe(canvas);
+  // The loop starts when the canvas comes into view and stops when it leaves.
   new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting;
     if (visible) schedule();
+    else lastTick = 0;
   }).observe(canvas);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) schedule();
@@ -183,6 +257,4 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
       { passive: true },
     );
   }
-  host.classList.add('map-live');
-  schedule();
 }

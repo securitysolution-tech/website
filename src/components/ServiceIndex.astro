@@ -26,7 +26,7 @@ import { services } from '../data/services';
               <a href={`/services/${s.slug}/`}>{s.name}</a>
             </h3>
             <p class="summary">{s.summary}</p>
-            <ul class="items" aria-label={`${s.name} includes`}>
+            <ul class="items bullets" aria-label={`${s.name} includes`}>
               {(i === 0 ? s.items : s.items.slice(0, 4)).map((item) => (
                 <li>{item.name}</li>
               ))}
@@ -217,27 +217,6 @@ import { services } from '../data/services';
   .card-4 .items {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: var(--s-6);
-  }
-
-  .items li {
-    position: relative;
-    padding-left: 1.1rem;
-  }
-
-  .items li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.55em;
-    width: 0.45rem;
-    height: 0.45rem;
-    border-radius: 2px;
-    background: var(--accent);
-    opacity: 0.8;
-  }
-
-  .ink .items li::before {
-    background: var(--ink-accent);
   }
 
   .more {
