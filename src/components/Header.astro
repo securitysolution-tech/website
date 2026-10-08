@@ -135,6 +135,36 @@ const links = [
     gap: var(--s-5);
   }
 
+  .nav-desktop ul {
+    position: relative;
+  }
+
+  /* The underline slides to whichever section is in view (reveal.ts sets --ul-x and --ul-w). */
+  .nav-desktop ul::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -0.45rem;
+    width: 1px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--ink-accent);
+    transform: translateX(var(--ul-x, 0px)) scaleX(var(--ul-w, 0));
+    transform-origin: left center;
+    opacity: 0;
+    transition:
+      transform 460ms var(--ease-out),
+      opacity 200ms ease;
+  }
+
+  .nav-desktop ul.has-active::after {
+    opacity: 1;
+  }
+
+  .nav-desktop ul a[aria-current] {
+    color: var(--ink-text);
+  }
+
   .nav-desktop ul a,
   .menu-panel ul a {
     color: var(--ink-text-2);
@@ -213,6 +243,22 @@ const links = [
       gap: var(--s-5);
       padding: var(--s-5) var(--gutter) var(--s-6);
       border-bottom: 1px solid var(--ink-line);
+    }
+
+    /* The panel unfolds on open; @starting-style gives the first frame something to transition from. */
+    @media (prefers-reduced-motion: no-preference) {
+      .menu-panel {
+        transition:
+          opacity 240ms var(--ease-out),
+          transform 340ms var(--ease-out);
+      }
+
+      @starting-style {
+        .nav-mobile[open] .menu-panel {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+      }
     }
 
     .menu-panel ul {

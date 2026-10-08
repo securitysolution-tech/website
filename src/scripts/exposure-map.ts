@@ -127,12 +127,19 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
     gl!.uniform2f(uRes, w, h);
   }
 
+  // A sibling marked data-parallax (the record lines) drifts against the map under the pointer.
+  const parallax = host.querySelector<HTMLElement>('[data-parallax]');
+
   function draw(t: number) {
     px += (tx - px) * 0.06;
     py += (ty - py) * 0.06;
     gl!.uniform1f(uTime, t);
     gl!.uniform2f(uPointer, px, py);
     gl!.drawArrays(gl!.TRIANGLES, 0, 3);
+    if (parallax) {
+      parallax.style.setProperty('--px', px.toFixed(3));
+      parallax.style.setProperty('--py', py.toFixed(3));
+    }
   }
 
   // About 30 frames a second is plenty for terrain that drifts this slowly.

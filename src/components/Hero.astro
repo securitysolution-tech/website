@@ -20,7 +20,7 @@ const records = [
 
 <section class="hero ink" aria-labelledby="hero-title">
   <ExposureMap />
-  <div class="backdrop" aria-hidden="true">
+  <div class="backdrop" aria-hidden="true" data-parallax>
     {records.map((r) => <p data-r={r} />)}
   </div>
   <div class="glow" aria-hidden="true"></div>
@@ -83,6 +83,8 @@ const records = [
     mask-image: linear-gradient(90deg, transparent 0%, transparent 52%, #000 72%, #000 96%, transparent 100%);
     pointer-events: none;
     user-select: none;
+    /* Drifts against the map under a fine pointer (exposure-map.ts sets --px and --py). */
+    transform: translate(calc(var(--px, 0) * -10px), calc(var(--py, 0) * 8px));
   }
 
   @media (max-width: 54rem) {
