@@ -2,7 +2,7 @@
 import type { AstroGlobal } from 'astro';
 import { en, type Dictionary } from './en';
 import { ar, arContent } from './ar';
-import { arLive } from './locales.mjs';
+import { arLive, readinessLive } from './locales.mjs';
 import { services as serviceData, type Service } from '../data/services';
 import { faqs as faqData, type FaqItem } from '../data/faq';
 import { founders as founderData, type Founder } from '../data/site';
@@ -10,7 +10,7 @@ import { founders as founderData, type Founder } from '../data/site';
 export type Locale = 'en' | 'ar';
 export const locales: Locale[] = ['en', 'ar'];
 export const defaultLocale: Locale = 'en';
-export { arLive };
+export { arLive, readinessLive };
 
 /** The text of a service that changes with the language; the rest is the spine in src/data. */
 export type ServiceText = Pick<

@@ -115,6 +115,8 @@ for (const url of urls) {
 }
 await browser.close();
 
+// Readiness is noindex until the owner reviews it, so it is covered by the axe/CSP pass on
+// every page above but kept out of the Lighthouse SEO gate (a noindex page scores low there).
 // --- Lighthouse on three pages ----------------------------------------------------------------
 const chrome = await launch({ chromeFlags });
 for (const url of ['/', '/ar/', '/services/offensive-testing/', '/privacy/']) {

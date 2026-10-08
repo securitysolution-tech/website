@@ -1,0 +1,23 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHead from '../PageHead.astro';
+import Readiness from '../Readiness.astro';
+import Contact from '../Contact.astro';
+import { readinessLive, useI18n } from '../../i18n';
+
+const { t, href } = useI18n(Astro);
+const r = t.readiness;
+---
+
+<Base title={r.title} description={r.lead} noindex={!readinessLive} hasContact>
+  <article>
+    <PageHead
+      title={r.title}
+      lead={r.lead}
+      crumbs={[{ label: t.page.home, href: href('/') }, { label: r.navLabel }]}
+      gain={0.5}
+    />
+    <Readiness />
+  </article>
+  <Contact />
+</Base>
