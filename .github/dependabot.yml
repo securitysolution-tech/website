@@ -20,6 +20,13 @@ updates:
       - dependency-name: typescript
         update-types: ['version-update:semver-major']
 
+  - package-ecosystem: npm
+    directory: /workers/contact
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+
   - package-ecosystem: github-actions
     directory: /
     schedule:

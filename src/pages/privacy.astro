@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import PageHead from '../components/PageHead.astro';
 import FactGrid from '../components/FactGrid.astro';
-import { site } from '../data/site';
+import { contactBackend, site } from '../data/site';
 
 const summary = [
   { label: 'Cookies', value: 'None' },
@@ -33,10 +33,22 @@ const summary = [
       </p>
 
       <h2>The request form</h2>
-      <p>
-        The form on the home page composes your request in your browser and hands it to your own email app, or to your
-        clipboard. Nothing you type in it is sent to this site or stored by it.
-      </p>
+      {
+        contactBackend.live ? (
+          <p>
+            The form on the home page and the service pages sends your request to our inbox as an email, over an
+            encrypted connection, through a small service we run on Cloudflare. The email carries what you typed, the
+            page you sent it from and the time. The service keeps a short delivery log without your details, and
+            Cloudflare handles the delivery under its own privacy policy. If sending fails, the form prepares the same
+            message for your own email app instead.
+          </p>
+        ) : (
+          <p>
+            The form on the home page and the service pages composes your request in your browser and hands it to your
+            own email app, or to your clipboard. Nothing you type in it is sent to this site or stored by it.
+          </p>
+        )
+      }
 
       <h2>Hosting</h2>
       <p>
@@ -44,7 +56,7 @@ const summary = [
         request details to deliver pages and protect the site from abuse.
       </p>
 
-      <h2>When you email us</h2>
+      <h2>When you contact us</h2>
       <p>
         We use your message and contact details only to reply and to provide the services you ask about. We do not sell
         them or share them for marketing, and we keep correspondence only as long as that purpose requires.

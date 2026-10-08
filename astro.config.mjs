@@ -21,6 +21,11 @@ export default defineConfig({
       // components use animation longhands, and scripts/check-css.mjs guards the output.
       cssMinify: 'esbuild',
     },
+    server: {
+      // `npm run dev` in workers/contact answers /api locally; the browser keeps this origin,
+      // which the Worker's .dev.vars allows.
+      proxy: { '/api': 'http://127.0.0.1:8787' },
+    },
   },
   integrations: [sitemap()],
   devToolbar: { enabled: false },

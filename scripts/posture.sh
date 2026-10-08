@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Outside-in check of the live site's security posture: response headers,
-# redirects, TLS, DNSSEC, email authentication and the published policies.
+# redirects, TLS, DNSSEC, email authentication, the contact endpoint and the
+# published policies.
 # Runs daily from .github/workflows/posture.yml, which opens an issue when
 # anything regresses. Needs bash, curl, jq, openssl and GNU date.
 #
@@ -200,6 +201,25 @@ while IFS= read -r host; do
 done < <(records "$DOMAIN" MX 15 | awk '{ sub(/\.$/, "", $2); print $2 }')
 verdict "MTA-STS: policy covers every MX host" "not covered:${unmatched:- (no policy)}" \
   [ -z "$unmatched" -a -s "$TMP/patterns" ]
+
+# --- Contact endpoint -------------------------------------------------------
+# A Worker on this one route (workers/contact). Until it is deployed, the path
+# is the GitHub Pages 404 page and the checks are skipped.
+
+got=$("${CURL[@]}" -o /dev/null -D "$TMP/contact.h" -w '%{http_code}' "$SITE/api/contact")
+if [ "$got" = 404 ] && ! grep -qi '^content-type: *application/json' "$TMP/contact.h"; then
+  report SKIP "contact endpoint: not deployed"
+else
+  verdict "contact endpoint: GET refused" "status $got" [ "$got" = 405 ]
+  cc=$(tr -d '\r' <"$TMP/contact.h" | awk 'tolower($1) == "cache-control:" { print tolower($0) }')
+  verdict "contact endpoint: responses not cached" "got '${cc:-absent}'" [ -n "$(grep no-store <<<"$cc")" ]
+  got=$("${CURL[@]}" -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' \
+    -H 'origin: https://evil.example' --data '{}' "$SITE/api/contact")
+  verdict "contact endpoint: cross-origin POST refused" "status $got" [ "$got" = 403 ]
+  got=$("${CURL[@]}" -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' \
+    -H "origin: $SITE" --data '{}' "$SITE/api/contact")
+  verdict "contact endpoint: empty request rejected" "status $got" [ "$got" = 400 ]
+fi
 
 # --- Published policies -----------------------------------------------------
 

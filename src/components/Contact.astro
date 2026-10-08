@@ -1,8 +1,9 @@
 ---
 import Icon from './Icon.astro';
 import ExposureMap from './ExposureMap.astro';
-import { contactCta, mailto, site } from '../data/site';
+import { contactBackend, contactCta, mailto, site } from '../data/site';
 import { services } from '../data/services';
+import { timelines } from '../data/contact';
 
 interface Props {
   /** A need to tick in advance, on pages about one service. */
@@ -12,7 +13,6 @@ const { need } = Astro.props;
 
 // The needs are the services, in the buyer's words, so the form and the pages agree.
 const needs = services.map((s) => s.plainName);
-const timelines = ['As soon as possible', 'Within a month', 'Within three months', 'Just exploring'];
 ---
 
 <section id="contact" class="contact ink grain" aria-labelledby="contact-title">
@@ -29,85 +29,119 @@ const timelines = ['As soon as possible', 'Within a month', 'Within three months
         <Icon name="envelope-simple" class="icon mail" />
         <span>{site.email.split('@')[0]}<wbr />@{site.email.split('@')[1]}</span>
       </a>
-      <p class="small">
-        We reply within 1 business day. This site has no server: your request leaves from your own email app, and
-        nothing you type here is stored.
-      </p>
+      {
+        contactBackend.live ? (
+          <p class="small">
+            We reply within 1 business day. Your request goes to our inbox over an encrypted connection, and we keep it
+            only to reply.
+          </p>
+        ) : (
+          <p class="small">
+            We reply within 1 business day. This site has no server: your request leaves from your own email app, and
+            nothing you type here is stored.
+          </p>
+        )
+      }
       <p class="small">
         Found a security issue in one of our own systems? Please follow our <a href="/security/">disclosure policy</a>.
       </p>
     </div>
 
-    <!-- The form composes the request; the visitor's email app sends it. -->
+    <!-- Live backend: the request is posted to /api/contact. Otherwise, and as the fallback,
+         the form composes the request and the visitor's email app sends it. -->
     <form class="request" novalidate data-contact-form data-to={site.email} aria-labelledby="request-title">
       <h3 id="request-title">Your request</h3>
 
-      <div class="field">
-        <label for="cf-name">Your name</label>
-        <input id="cf-name" name="name" type="text" autocomplete="name" required aria-errormessage="cf-name-error" />
-        <p class="hint error" id="cf-name-error" hidden></p>
-      </div>
-
-      <div class="field">
-        <label for="cf-email">Work email</label>
-        <input
-          id="cf-email"
-          name="email"
-          type="email"
-          inputmode="email"
-          autocomplete="email"
-          spellcheck="false"
-          required
-          aria-errormessage="cf-email-error"
-        />
-        <p class="hint error" id="cf-email-error" hidden></p>
-      </div>
-
-      <div class="field">
-        <label for="cf-company">Company website <span class="opt">(optional)</span></label>
-        <input
-          id="cf-company"
-          name="company"
-          type="text"
-          inputmode="url"
-          autocomplete="url"
-          autocapitalize="none"
-          spellcheck="false"
-          placeholder="yourcompany.ae"
-        />
-      </div>
-
-      <fieldset class="field">
-        <legend>What do you need?</legend>
-        <div class="choices">
-          {
-            needs.map((n, i) => (
-              <label class="choice">
-                <input type="checkbox" name={`need-${i}`} value={n} id={`cf-need-${i}`} checked={n === need} />
-                <span>{n}</span>
-              </label>
-            ))
-          }
+      <div class="entry" data-entry>
+        <div class="field">
+          <label for="cf-name">Your name</label>
+          <input id="cf-name" name="name" type="text" autocomplete="name" required aria-errormessage="cf-name-error" />
+          <p class="hint error" id="cf-name-error" hidden></p>
         </div>
-      </fieldset>
 
-      <div class="field">
-        <label for="cf-when">When</label>
-        <select id="cf-when" name="when">
-          {timelines.map((t) => <option value={t}>{t}</option>)}
-        </select>
+        <div class="field">
+          <label for="cf-email">Work email</label>
+          <input
+            id="cf-email"
+            name="email"
+            type="email"
+            inputmode="email"
+            autocomplete="email"
+            spellcheck="false"
+            required
+            aria-errormessage="cf-email-error"
+          />
+          <p class="hint error" id="cf-email-error" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="cf-company">Company website <span class="opt">(optional)</span></label>
+          <input
+            id="cf-company"
+            name="company"
+            type="text"
+            inputmode="url"
+            autocomplete="url"
+            autocapitalize="none"
+            spellcheck="false"
+            placeholder="yourcompany.ae"
+          />
+        </div>
+
+        <fieldset class="field">
+          <legend>What do you need?</legend>
+          <div class="choices">
+            {
+              needs.map((n, i) => (
+                <label class="choice">
+                  <input type="checkbox" name={`need-${i}`} value={n} id={`cf-need-${i}`} checked={n === need} />
+                  <span>{n}</span>
+                </label>
+              ))
+            }
+          </div>
+        </fieldset>
+
+        <div class="field">
+          <label for="cf-when">When</label>
+          <select id="cf-when" name="when">
+            {timelines.map((t) => <option value={t}>{t}</option>)}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="cf-message">Anything else <span class="opt">(optional)</span></label>
+          <textarea id="cf-message" name="message" rows="3" maxlength="600" data-lenis-prevent></textarea>
+        </div>
+
+        {
+          contactBackend.live && (
+            <div class="trap" inert>
+              <label for="cf-website">Website</label>
+              <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+            </div>
+          )
+        }
+
+        <button type="submit" class="btn btn-primary">{contactBackend.live ? 'Send request' : 'Prepare my request'}</button>
       </div>
-
-      <div class="field">
-        <label for="cf-message">Anything else <span class="opt">(optional)</span></label>
-        <textarea id="cf-message" name="message" rows="3" maxlength="600" data-lenis-prevent></textarea>
-      </div>
-
-      <button type="submit" class="btn btn-primary">Prepare my request</button>
       <p class="visually-hidden" aria-live="polite" data-status></p>
 
+      {
+        contactBackend.live && (
+          <div class="sent" data-sent hidden tabindex="-1">
+            <p class="ready">
+              Your request is sent. We reply within 1 business day to <strong data-sent-email />.
+            </p>
+            <button type="button" class="btn btn-secondary" data-again>
+              Send another request
+            </button>
+          </div>
+        )
+      }
+
       <div class="composed" data-composed hidden>
-        <p class="ready">Your request is ready. Send it from your email app, or copy it into any message.</p>
+        <p class="ready" data-note>Your request is ready. Send it from your email app, or copy it into any message.</p>
         <div class="composed-actions">
           <a class="btn btn-primary" data-mailto href={mailto('Scoping call request')}>Open in your email app</a>
           <button type="button" class="btn btn-secondary" data-copy>Copy the message</button>
@@ -240,6 +274,22 @@ const timelines = ['As soon as possible', 'Within a month', 'Within three months
     font-size: var(--step-1);
   }
 
+  .entry {
+    display: grid;
+    gap: var(--s-4);
+  }
+
+  /* A field people never see; scripts that fill every input give themselves away. */
+  .trap {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: clip;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
   .field {
     display: grid;
     gap: var(--s-2);
@@ -358,11 +408,25 @@ const timelines = ['As soon as possible', 'Within a month', 'Within three months
     justify-self: start;
   }
 
-  .composed {
+  .request .btn-primary[aria-disabled='true'] {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .composed,
+  .sent {
     display: grid;
     gap: var(--s-3);
     padding-top: var(--s-4);
     border-top: 1px solid var(--ink-line);
+  }
+
+  .sent {
+    justify-items: start;
+  }
+
+  .sent:focus {
+    outline: none;
   }
 
   .ready {
@@ -402,6 +466,7 @@ const timelines = ['As soon as possible', 'Within a month', 'Within three months
     }
 
     .request .btn-primary,
+    .sent .btn,
     .composed-actions .btn {
       justify-self: stretch;
       width: 100%;
