@@ -68,6 +68,8 @@ const steps = [
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: var(--s-5);
     position: relative;
+    /* One timeline for the line and the numbers, so they are physically linked in every layout. */
+    view-timeline: --steps;
   }
 
   /* The line that connects the steps: a grey track with an accent fill on top. */
@@ -143,7 +145,7 @@ const steps = [
     @media (prefers-reduced-motion: no-preference) {
       .steps::after {
         animation: fill-x linear both;
-        animation-timeline: view();
+        animation-timeline: --steps;
         animation-range: entry 40% cover 55%;
       }
 
@@ -152,7 +154,7 @@ const steps = [
       .num {
         animation-timing-function: linear;
         animation-fill-mode: both;
-        animation-timeline: view();
+        animation-timeline: --steps;
         animation-range: entry 40% cover 55%;
       }
 

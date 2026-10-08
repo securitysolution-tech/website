@@ -11,7 +11,19 @@ const { gain = 1 } = Astro.props;
 
 <script>
   import { mountExposureMap } from '../scripts/exposure-map';
-  document.querySelectorAll<HTMLCanvasElement>('[data-exposure-map]').forEach(mountExposureMap);
+  // A scene is built only when its canvas is near the viewport, so a page never compiles
+  // a shader for a band the visitor has not reached.
+  const near = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        near.unobserve(entry.target);
+        mountExposureMap(entry.target as HTMLCanvasElement);
+      }
+    },
+    { rootMargin: '300px 0px' },
+  );
+  document.querySelectorAll<HTMLCanvasElement>('[data-exposure-map]').forEach((canvas) => near.observe(canvas));
 </script>
 
 <style>
@@ -23,6 +35,13 @@ const { gain = 1 } = Astro.props;
     width: 100%;
     height: 100%;
     pointer-events: none;
+    /* Fades in once the scene is running, instead of popping in with its first frame. */
+    opacity: 0;
+    transition: opacity 1.2s var(--ease-out);
+  }
+
+  :global(.map-live) > .exposure-map {
+    opacity: 1;
   }
 
   @media (forced-colors: active) {

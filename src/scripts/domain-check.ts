@@ -146,10 +146,14 @@ function init(root: HTMLElement) {
     target.hidden = false;
     rows.forEach((li) => setState(li, 'checking', 'Looking this up…'));
 
-    // Rows fill in one after another so the eye can follow the results.
+    // Rows fill in one after another so the eye can follow the results. On page load the
+    // first row waits for the instrument to finish rising, so the fill is actually seen.
+    const holdUntil = autorun && !reduceMotion.matches ? performance.now() + 1100 : 0;
     let queue = Promise.resolve();
     const reveal = (r: Result) => {
       queue = queue.then(async () => {
+        if (id !== runId) return;
+        if (holdUntil > performance.now()) await wait(holdUntil - performance.now());
         if (id !== runId) return;
         render(r);
         if (!reduceMotion.matches) await wait(150);

@@ -76,8 +76,8 @@ const jsonLd = [
         </div>
         <dl class="items">
           {
-            service.items.map((i) => (
-              <div class="item">
+            service.items.map((i, n) => (
+              <div class="item" data-reveal data-reveal-step={n % 2}>
                 <dt>{i.name}</dt>
                 <dd>{i.text}</dd>
               </div>
@@ -97,11 +97,11 @@ const jsonLd = [
 
     <section class="section split" aria-label="Deliverables and fit">
       <div class="container two">
-        <div>
+        <div data-reveal>
           <h2 class="block-title">What you receive</h2>
           <ul class="ticks bullets">{service.deliverables.map((d) => <li>{d}</li>)}</ul>
         </div>
-        <div>
+        <div data-reveal data-reveal-step="1">
           <h2 class="block-title">A good fit if</h2>
           <ul class="ticks bullets">{service.goodFit.map((g) => <li>{g}</li>)}</ul>
         </div>
@@ -121,7 +121,7 @@ const jsonLd = [
           <p>Each one stands on its own. Together they cover testing, monitoring and compliance.</p>
         </div>
         <ul class="others" data-spotlight-root>
-          {others.map((o) => <ServiceCard service={o} items={3} />)}
+          {others.map((o, n) => <ServiceCard service={o} items={3} step={n} />)}
         </ul>
       </div>
     </section>

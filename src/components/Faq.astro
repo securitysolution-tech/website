@@ -147,14 +147,17 @@ const jsonLd = JSON.stringify({
 
       .qa::details-content {
         block-size: 0;
+        opacity: 0;
         overflow-y: clip;
         transition:
-          block-size 300ms var(--ease-out),
-          content-visibility 300ms allow-discrete;
+          block-size var(--dur-base) var(--ease-out),
+          opacity var(--dur-base) var(--ease-out),
+          content-visibility var(--dur-base) allow-discrete;
       }
 
       .qa[open]::details-content {
         block-size: auto;
+        opacity: 1;
       }
     }
   }

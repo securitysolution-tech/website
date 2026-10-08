@@ -80,7 +80,31 @@
   /* Line lengths are in em, not ch: ch is the width of a "0" in the active font, so it shifts when Archivo replaces the fallback. */
   --measure: 37.245em;
   --header-h: 4.25rem;
+
+  /* Motion tokens. Three curves, five durations, one stagger, one rise. */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-loop: cubic-bezier(0.45, 0, 0.55, 1);
+  --dur-press: 120ms;
+  --dur-quick: 180ms;
+  --dur-base: 260ms;
+  --dur-slow: 420ms;
+  --dur-enter: 720ms;
+  --stagger: 50ms;
+  --rise: 14px;
+}
+
+/* Pointer offsets written by exposure-map.ts: registered so they stay on the element that uses them. */
+@property --px {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --py {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -361,9 +385,10 @@ kbd {
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    transform 120ms ease;
+    background-color var(--dur-quick) ease,
+    border-color var(--dur-quick) ease,
+    box-shadow var(--dur-quick) ease,
+    transform var(--dur-press) ease;
 }
 
 .btn:active {
@@ -418,6 +443,7 @@ kbd {
 .btn-secondary:hover {
   background: var(--raised);
   border-color: var(--ink-2);
+  transform: translateY(-1px);
 }
 
 .icon {
@@ -485,9 +511,11 @@ kbd {
   view-transition-name: site-header;
 }
 
+::view-transition-group(*),
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 200ms;
+  animation-duration: var(--dur-base);
+  animation-timing-function: var(--ease-standard);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -499,35 +527,43 @@ kbd {
   }
 }
 
-/* from-only on purpose: at rest the effect yields to the underlying style, so hover
-   transforms on the same elements keep working after the reveal has finished. */
-@keyframes rise-in {
+/* The one entrance: fade and rise. from-only on purpose, and on `translate` rather than
+   `transform`, so at rest the effect yields to the underlying style and hover transforms on
+   the same elements keep working. --enter-y overrides the distance per element. */
+@keyframes enter {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    translate: 0 var(--enter-y, var(--rise));
   }
 }
 
-/* Cards and panels rise into place as they scroll into view, settled by half entry. */
+/* Anything marked data-reveal rises into place over a fixed length of scroll as it enters;
+   data-reveal-step trails neighbours in the same row by a beat, so a band reads left to right. */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    :is(.scores .cell, .bento .card, .finding, .people .person, .items .item) {
-      animation: rise-in linear both;
+    [data-reveal] {
+      animation: enter linear both;
       animation-timeline: view();
-      animation-range: entry 8% entry 48%;
+      animation-range: entry 0px entry 160px;
     }
 
-    /* Neighbours in a row trail by a beat, so each band reads left to right. */
-    :is(.scores .cell:nth-child(2), .bento .card-2, .people .person:nth-child(2), .items .item:nth-child(even)) {
-      animation-range: entry 16% entry 56%;
+    [data-reveal-step='1'] {
+      animation-range: entry 40px entry 200px;
     }
 
-    :is(.scores .cell:nth-child(3)) {
-      animation-range: entry 24% entry 64%;
+    [data-reveal-step='2'] {
+      animation-range: entry 80px entry 240px;
     }
 
-    :is(.scores .cell:nth-child(4), .bento .card-4) {
-      animation-range: entry 32% entry 72%;
+    [data-reveal-step='3'] {
+      animation-range: entry 120px entry 280px;
+    }
+  }
+
+  /* In one-column layouts there is no row to read across. */
+  @media (prefers-reduced-motion: no-preference) and (max-width: 40rem) {
+    [data-reveal-step] {
+      animation-range: entry 0px entry 160px;
     }
   }
 }
@@ -564,39 +600,34 @@ html.leaving :is(main, .site-footer) {
 
 /* Where scroll-driven animations are missing, reveal.ts marks elements and these transitions play. */
 @supports not (animation-timeline: view()) {
-  html.io :is(.scores .cell, .bento .card, .finding, .people .person, .items .item) {
+  html.io [data-reveal] {
     opacity: 0;
-    transform: translateY(14px);
+    translate: 0 var(--enter-y, var(--rise));
     transition:
-      opacity 640ms var(--ease-out),
-      transform 640ms var(--ease-out);
+      opacity var(--dur-enter) var(--ease-out),
+      translate var(--dur-enter) var(--ease-out);
   }
 
-  html.io :is(.scores .cell:nth-child(2), .bento .card-2, .people .person:nth-child(2), .items .item:nth-child(even)) {
-    transition-delay: 90ms;
+  html.io [data-reveal-step='1'] {
+    transition-delay: calc(var(--stagger) * 2);
   }
 
-  html.io .scores .cell:nth-child(3) {
-    transition-delay: 180ms;
+  html.io [data-reveal-step='2'] {
+    transition-delay: calc(var(--stagger) * 4);
   }
 
-  html.io :is(.scores .cell:nth-child(4), .bento .card-4) {
-    transition-delay: 270ms;
+  html.io [data-reveal-step='3'] {
+    transition-delay: calc(var(--stagger) * 6);
   }
 
-  html.io :is(.scores .cell, .bento .card, .finding, .people .person, .items .item).in {
+  html.io [data-reveal].in {
     opacity: 1;
-    transform: none;
-    transition-delay: 0ms;
-  }
-
-  html.io .bento .card.in:hover {
-    transform: translateY(-3px);
+    translate: none;
   }
 
   html.io .steps::after {
     transform: scaleX(0);
-    transition: transform 1.4s cubic-bezier(0.2, 0.6, 0.2, 1);
+    transition: transform 1.4s var(--ease-standard);
   }
 
   html.io .steps.in::after {
@@ -607,8 +638,8 @@ html.leaving :is(main, .site-footer) {
     border-color: var(--ink-line);
     color: var(--ink-text-2);
     transition:
-      border-color 300ms ease,
-      color 300ms ease;
+      border-color var(--dur-base) ease,
+      color var(--dur-base) ease;
   }
 
   html.io .steps.in .num {
@@ -628,19 +659,19 @@ html.leaving :is(main, .site-footer) {
   }
 }
 
-@supports not (animation-timeline: scroll()) {
-  .site-header {
-    transition:
-      box-shadow 300ms ease,
-      background-color 300ms ease;
-  }
+/* The scrolled header, driven by a sentinel observer where scroll-driven animations are
+   missing or motion is reduced (the frosted state is information, not motion). */
+.site-header {
+  transition:
+    box-shadow var(--dur-base) ease,
+    background-color var(--dur-base) ease;
+}
 
-  .site-header.scrolled {
-    background: color-mix(in srgb, var(--ink-bg) 82%, transparent);
-    box-shadow: 0 14px 34px -22px rgb(2 8 6 / 0.85);
-    -webkit-backdrop-filter: blur(14px) saturate(1.3);
-    backdrop-filter: blur(14px) saturate(1.3);
-  }
+.site-header.scrolled {
+  background: color-mix(in srgb, var(--ink-bg) 82%, transparent);
+  box-shadow: 0 14px 34px -22px rgb(2 8 6 / 0.85);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
 }
 
 /* Square bullets, shared by every list that uses them (and by prose lists). */

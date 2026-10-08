@@ -59,8 +59,9 @@ const checks = [
   </div>
 
   <div class="panel-results">
-  <p class="target" data-target hidden>
-    Results for <strong data-target-name translate="no"></strong><span data-target-own hidden>, our own domain. Try yours.</span>
+  {/* Rendered for our own domain at build time, so the autorun shifts nothing when it starts. */}
+  <p class="target" data-target hidden={!site.autorunDomain}>
+    Results for <strong data-target-name translate="no">{site.autorunDomain ?? ''}</strong><span data-target-own hidden={!site.autorunDomain}>, our own domain. Try yours.</span>
   </p>
 
   <ol class="results" data-results aria-busy="false" aria-label="Check results">
@@ -202,6 +203,11 @@ const checks = [
     color: var(--panel-ink);
     font: inherit;
     font-size: 1rem;
+    transition: border-color var(--dur-quick) ease;
+  }
+
+  input:hover {
+    border-color: var(--panel-ink-2);
   }
 
   input::placeholder {
@@ -222,6 +228,7 @@ const checks = [
 
   .run {
     min-height: 3rem;
+    min-width: 7.25rem; /* "Run check" and "Checking…" take the same room */
     padding: 0 1.25rem;
     border: 0;
     border-radius: var(--radius-control);
@@ -412,6 +419,7 @@ const checks = [
     cursor: pointer;
     text-decoration: underline;
     text-underline-offset: 0.2em;
+    transition: color var(--dur-quick) ease;
   }
 
   .evidence summary:hover {
@@ -448,6 +456,12 @@ const checks = [
     border-radius: var(--radius-control);
     background: var(--panel-2);
     border: 1px solid var(--panel-line);
+  }
+
+  /* Keeps its room while the results come in, so the page below never jumps. */
+  .verdict[hidden] {
+    display: flex !important;
+    visibility: hidden;
   }
 
   .verdict-main {

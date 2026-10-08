@@ -8,13 +8,39 @@ import Lenis from 'lenis';
 
 export const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
-const lenis = reduceMotion.matches || !finePointer ? null : new Lenis({ lerp: 0.1, autoRaf: true, anchors: false });
+const lenis = reduceMotion.matches || !finePointer ? null : new Lenis({ lerp: 0.1, autoRaf: false, anchors: false });
+
+// Lenis only needs frames while it is moving. The loop wakes on input and sleeps a few
+// frames after the last movement, so an idle page costs nothing.
+let frame = 0;
+let idle = 0;
+function tick(now: number) {
+  frame = 0;
+  if (!lenis) return;
+  lenis.raf(now);
+  idle = lenis.isScrolling ? 0 : idle + 1;
+  if (idle < 20) frame = requestAnimationFrame(tick);
+}
+function wake() {
+  if (lenis && !frame) {
+    idle = 0;
+    frame = requestAnimationFrame(tick);
+  }
+}
+if (lenis) {
+  addEventListener('wheel', wake, { passive: true });
+  addEventListener('scroll', wake, { passive: true });
+  addEventListener('keydown', wake, { passive: true });
+  wake();
+}
 
 /** Scrolls an element to the top of the viewport (the page's scroll-padding keeps it below the header). */
 export function scrollToElement(el: HTMLElement, options: { immediate?: boolean; focus?: boolean } = {}) {
   const immediate = options.immediate || reduceMotion.matches;
-  if (lenis) lenis.scrollTo(el, { immediate });
-  else el.scrollIntoView({ block: 'start', behavior: immediate ? 'auto' : 'smooth' });
+  if (lenis) {
+    wake();
+    lenis.scrollTo(el, { immediate });
+  } else el.scrollIntoView({ block: 'start', behavior: immediate ? 'auto' : 'smooth' });
   if (options.focus !== false) {
     if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
     el.focus({ preventScroll: true });

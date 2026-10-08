@@ -12,7 +12,7 @@ import Icon from './Icon.astro';
       </p>
     </div>
 
-    <figure class="finding">
+    <figure class="finding" data-reveal>
       <div class="finding-head">
         <span class="severity">High</span>
         <h3>Anyone can send email that appears to come from your company</h3>
@@ -74,6 +74,8 @@ import Icon from './Icon.astro';
     overflow: hidden;
     /* clip, not a scroll container: the view() timelines inside must reach the viewport */
     overflow: clip;
+    /* One timeline for the severity bar and the retest line: finding, fix, verified, in order. */
+    view-timeline: --finding;
   }
 
   .finding-head {
@@ -101,14 +103,14 @@ import Icon from './Icon.astro';
     @media (prefers-reduced-motion: no-preference) {
       .finding-head::before {
         animation: draw-y linear both;
-        animation-timeline: view();
-        animation-range: entry 10% entry 70%;
+        animation-timeline: --finding;
+        animation-range: entry 10% cover 30%;
       }
 
       .retest {
-        animation: rise-in linear both;
-        animation-timeline: view();
-        animation-range: entry 20% entry 95%;
+        animation: enter linear both;
+        animation-timeline: --finding;
+        animation-range: cover 30% cover 45%;
       }
     }
   }
@@ -116,11 +118,24 @@ import Icon from './Icon.astro';
   @supports not (animation-timeline: view()) {
     :global(html.io) .finding-head::before {
       transform: scaleY(0);
-      transition: transform 700ms var(--ease-out) 200ms;
+      transition: transform var(--dur-enter) var(--ease-out) 200ms;
     }
 
     :global(html.io) .finding.in .finding-head::before {
       transform: none;
+    }
+
+    :global(html.io) .retest {
+      opacity: 0;
+      translate: 0 var(--rise);
+      transition:
+        opacity var(--dur-enter) var(--ease-out) 500ms,
+        translate var(--dur-enter) var(--ease-out) 500ms;
+    }
+
+    :global(html.io) .finding.in .retest {
+      opacity: 1;
+      translate: none;
     }
   }
 

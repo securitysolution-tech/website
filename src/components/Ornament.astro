@@ -114,35 +114,43 @@ const { kind } = Astro.props;
     transform-origin: left center;
   }
 
+  /* The loops exist from the start but sit paused; hover or keyboard focus runs them, and
+     leaving pauses them where they are instead of snapping back. */
   @media (prefers-reduced-motion: no-preference) {
-    :global(.card:hover) .sweep {
-      animation: sweep 5s linear infinite;
+    .sweep {
+      animation: sweep 5s linear infinite paused;
     }
 
-    :global(.card:hover) .ring {
-      animation: ping 2.4s ease-in-out infinite;
+    .ring {
+      animation: ping 2.4s var(--ease-loop) infinite paused;
     }
 
-    :global(.card:hover) .r2 {
+    .r2 {
       animation-delay: 0.3s;
     }
 
-    :global(.card:hover) .r3 {
+    .r3 {
       animation-delay: 0.6s;
     }
 
-    :global(.card:hover) .ledger path {
-      animation: settle-x 700ms var(--ease-out) both;
+    .links {
+      animation: flow 1.6s linear infinite paused;
+    }
+
+    :global(.card:hover) :is(.sweep, .ring, .links),
+    :global(.card:focus-within) :is(.sweep, .ring, .links) {
+      animation-play-state: running;
+    }
+
+    :global(.card:hover) .ledger path,
+    :global(.card:focus-within) .ledger path {
+      animation: settle-x var(--dur-enter) var(--ease-out) both;
     }
 
     :global(.card:hover) .ledger path:nth-child(2) { animation-delay: 60ms; }
     :global(.card:hover) .ledger path:nth-child(3) { animation-delay: 120ms; }
     :global(.card:hover) .ledger path:nth-child(4) { animation-delay: 180ms; }
     :global(.card:hover) .ledger path:nth-child(5) { animation-delay: 240ms; }
-
-    :global(.card:hover) .links {
-      animation: flow 1.6s linear infinite;
-    }
   }
 
   @keyframes sweep {

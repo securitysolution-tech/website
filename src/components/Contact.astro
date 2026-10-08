@@ -179,6 +179,7 @@ const timelines = ['As soon as possible', 'Within a month', 'Within three months
     color: var(--ink-accent);
     text-decoration-thickness: 2px;
     text-underline-offset: 0.18em;
+    transition: color var(--dur-quick) ease;
   }
 
   .address :global(.mail) {
@@ -365,19 +366,6 @@ const timelines = ['As soon as possible', 'Within a month', 'Within three months
     word-break: break-word;
     max-height: 16rem;
     overflow: auto;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .composed:not([hidden]) {
-      animation: settle-in 320ms var(--ease-out);
-    }
-  }
-
-  @keyframes settle-in {
-    from {
-      opacity: 0;
-      transform: translateY(6px);
-    }
   }
 
   @media (max-width: 54rem) {

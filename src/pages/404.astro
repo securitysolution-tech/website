@@ -33,7 +33,7 @@ import { services } from '../data/services';
     <div class="container">
       <h2 id="nf-services">Our services</h2>
       <ul class="grid" data-spotlight-root>
-        {services.map((s) => <ServiceCard service={s} items={3} />)}
+        {services.map((s, n) => <ServiceCard service={s} items={3} step={n % 2} />)}
       </ul>
     </div>
   </section>

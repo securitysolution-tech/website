@@ -19,8 +19,8 @@ const reasons = [
     </div>
     <ul class="reasons">
       {
-        reasons.map((r) => (
-          <li>
+        reasons.map((r, i) => (
+          <li data-reveal data-reveal-step={i}>
             <a href={`/services/${r.slug}/`}>
               <strong>{r.text}</strong>
               <span>{r.service}</span>

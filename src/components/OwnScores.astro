@@ -54,18 +54,21 @@ const scores = [
     </div>
     <ul class="grid">
       {
-        scores.map((s) => (
+        scores.map((s, i) => (
           <li class="cell">
-            <p class="scanner">{s.scanner}</p>
-            <p class:list={['grade', { long: s.grade.length > 6 }]} translate="no">
-              {s.grade}
-            </p>
-            <p class="what">{s.what}</p>
-            <a href={s.href} class="report" rel={s.external ? 'noopener' : undefined}>
-              {s.linkLabel}
-              {s.external && <span class="visually-hidden"> from {s.scanner}</span>}
-              {s.external && <Icon name="arrow-up-right" class="icon ext" />}
-            </a>
+            {/* The content rises, not the cell, so the grid's hairlines never show through. */}
+            <div class="cell-in" data-reveal data-reveal-step={i}>
+              <p class="scanner">{s.scanner}</p>
+              <p class:list={['grade', { long: s.grade.length > 6 }]} translate="no">
+                {s.grade}
+              </p>
+              <p class="what">{s.what}</p>
+              <a href={s.href} class="report" rel={s.external ? 'noopener' : undefined}>
+                {s.linkLabel}
+                {s.external && <span class="visually-hidden"> from {s.scanner}</span>}
+                {s.external && <Icon name="arrow-up-right" class="icon ext" />}
+              </a>
+            </div>
           </li>
         ))
       }
@@ -108,11 +111,15 @@ const scores = [
   }
 
   .cell {
+    padding: clamp(1.25rem, 1rem + 1.2vw, 1.75rem);
+    background: var(--raised);
+  }
+
+  .cell-in {
     display: grid;
     grid-template-rows: auto auto 1fr auto;
     gap: var(--s-2);
-    padding: clamp(1.25rem, 1rem + 1.2vw, 1.75rem);
-    background: var(--raised);
+    height: 100%;
   }
 
   .scanner {

@@ -101,6 +101,13 @@ function init(form: HTMLFormElement) {
     mailLink.href = href;
     preview.textContent = `To: ${email}\r\nSubject: ${subject}\r\n\r\n${body}`;
     composed.hidden = false;
+    // Settles in every time it is prepared, not only the first.
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      composed.animate([{ opacity: 0, translate: '0 6px' }, { opacity: 1, translate: '0 0' }], {
+        duration: 320,
+        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      });
+    }
     say(
       shortened
         ? 'Your request is ready. The message is long, so copy it rather than opening your email app.'
