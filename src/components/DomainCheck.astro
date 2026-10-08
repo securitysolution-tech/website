@@ -62,6 +62,14 @@ const own = site.autorunDomain ?? '';
           {t.check.verdict} <strong data-spoofing></strong>
         </p>
         <p class="verdict-score" data-score></p>
+        <p class="share">
+          <button type="button" data-copy-link>
+            {t.check.share.copy}
+          </button>
+          <a data-mail-results href={`mailto:?subject=${encodeURIComponent('Domain check')}`}>
+            {t.check.share.email}
+          </a>
+        </p>
       </div>
       <a class="btn verdict-cta" href={cta.href}>
         {cta.label}
@@ -266,6 +274,15 @@ const own = site.autorunDomain ?? '';
   .spoof[data-level='blocked'] .stamp {
     color: #0a6b4c;
     background: rgb(10 107 76 / 0.1);
+  }
+
+  .spoof[data-level='quarantined'] .stamp {
+    color: #8a5a00;
+    background: rgb(138 90 0 / 0.1);
+  }
+
+  .spoof[data-level='quarantined'] .spoof-note {
+    color: var(--p-warn);
   }
 
   .spoof-note {
@@ -484,6 +501,45 @@ const own = site.autorunDomain ?? '';
   .verdict-score {
     color: var(--panel-ink-2);
     font-size: var(--step--1);
+  }
+
+  /* Passing the results on: two quiet actions under the score. */
+  .share {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-4);
+    margin-top: var(--s-2);
+    font-size: var(--step--1);
+  }
+
+  .share button,
+  .share a {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--panel-ink-2);
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+    transition: color var(--dur-quick) ease;
+  }
+
+  .share button:hover,
+  .share a:hover {
+    color: var(--panel-ink);
+  }
+
+  .share button:focus-visible,
+  .share a:focus-visible {
+    outline-color: var(--pass);
+  }
+
+  @media (pointer: coarse) {
+    .share button,
+    .share a {
+      padding-block: 0.4rem;
+    }
   }
 
   .verdict-cta {

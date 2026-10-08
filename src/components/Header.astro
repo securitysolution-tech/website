@@ -44,6 +44,10 @@ const links = [
       </a>
     </nav>
 
+    <a class="btn btn-primary bar-cta" href={contactHref}>
+      {t.site.ctaShort}
+    </a>
+
     <nav class="nav-mobile-wrap" aria-label={t.nav.menu}>
       <details class="nav-mobile">
         <summary class="menu-btn">
@@ -212,8 +216,19 @@ const links = [
     padding-inline: 1.1rem;
   }
 
-  .nav-mobile-wrap {
+  .nav-mobile-wrap,
+  .bar-cta {
     display: none;
+  }
+
+  /* Between the phone and the desktop bar there is room for the call itself, shortened. */
+  @media (min-width: 30rem) and (max-width: 54rem) {
+    .bar-cta {
+      display: inline-flex;
+      margin-inline-start: auto;
+      min-height: 2.625rem;
+      padding-inline: 1rem;
+    }
   }
 
   @media (max-width: 54rem) {

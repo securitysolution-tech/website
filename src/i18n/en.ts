@@ -18,6 +18,8 @@ export const en = {
     location: 'United Arab Emirates',
     /** The one call to action, everywhere it appears. */
     cta: 'Book a scoping call',
+    /** The same call, where there is no room for the whole phrase. */
+    ctaShort: 'Book a call',
     skip: 'Skip to content',
   },
 
@@ -87,10 +89,24 @@ export const en = {
       body: 'Please settle the attached invoice by the end of the day.',
       delivered: 'Would be delivered',
       blocked: 'Blocked',
+      quarantined: 'Sent to spam',
       deliveredNote:
         'Anyone can send a message like this with your name on it. Your domain does not tell receiving servers to refuse it.',
       blockedNote: 'Your domain tells receiving servers to refuse mail like this.',
+      quarantinedNote:
+        'Your domain tells receiving servers to put mail like this in spam. Refusing it outright is one line away.',
       note: 'A preview, in your browser. Nothing is sent.',
+    },
+    /** Passing the results on: a link to them, or an email to the people who can fix them. */
+    share: {
+      copy: 'Copy a link to these results',
+      copied: 'Link copied',
+      email: 'Email this to your IT team',
+      subject: 'Domain check: {domain}',
+      intro: 'Domain check for {domain}, run on securitysolution.tech.',
+      fixFirst: 'Fix first:',
+      results: 'All results:',
+      again: 'Run it again: {url}',
     },
     /** The record lines behind the headline, when a domain has none. */
     noRecord: 'no {tech} record',
@@ -328,6 +344,7 @@ export const en = {
     },
     message: 'Anything else',
     website: 'Website',
+    noscript: 'The form needs JavaScript. Email us instead:',
     send: 'Send request',
     prepare: 'Prepare my request',
     sent1: 'Your request is sent. We reply within 1 business day to ',

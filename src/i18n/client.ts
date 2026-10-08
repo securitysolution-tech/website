@@ -22,6 +22,7 @@ export type CheckStrings = Pick<
   | 'looking'
   | 'run'
   | 'spoof'
+  | 'share'
   | 'noRecord'
   | 'signed'
   | 'unsigned'
@@ -46,6 +47,7 @@ export const checkStrings = (c: Dictionary['check'], hero: Dictionary['hero']['r
   looking: c.looking,
   run: c.run,
   spoof: c.spoof,
+  share: c.share,
   noRecord: c.noRecord,
   signed: c.signed,
   unsigned: c.unsigned,

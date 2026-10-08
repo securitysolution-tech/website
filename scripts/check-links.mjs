@@ -34,7 +34,8 @@ for (const [pagePath, { html }] of pages) {
     if (/^(https?:|data:|tel:)/.test(value)) continue;
     if (value.startsWith('mailto:')) {
       const address = value.slice(7).split('?')[0];
-      if (!address.endsWith(`@${SITE_EMAIL_DOMAIN}`)) problems.push(`${pagePath}: unexpected mail address ${address}`);
+      // No address opens a blank message for the visitor to address (the results email).
+      if (address && !address.endsWith(`@${SITE_EMAIL_DOMAIN}`)) problems.push(`${pagePath}: unexpected mail address ${address}`);
       continue;
     }
     const url = new URL(value, `https://example.invalid${pagePath}`);

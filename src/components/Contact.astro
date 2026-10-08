@@ -124,6 +124,11 @@ const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plai
         </button>
       </div>
       <p class="visually-hidden" aria-live="polite" data-status></p>
+      <noscript>
+        <p class="small">
+          {t.contact.noscript} <a href={mailto('Scoping call request')}>{site.email}</a>
+        </p>
+      </noscript>
 
       {contactBackend.live && (
         <div class="sent" data-sent hidden tabindex="-1">

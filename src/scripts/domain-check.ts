@@ -31,6 +31,10 @@ function init(root: HTMLElement) {
   const spoofStamp = root.querySelector<HTMLElement>('[data-spoof-stamp]');
   const spoofNote = root.querySelector<HTMLElement>('[data-spoof-note]');
   const canvas = root.querySelector<HTMLCanvasElement>('[data-exposure-map]');
+  const copyLink = root.querySelector<HTMLButtonElement>('[data-copy-link]');
+  const mailResults = root.querySelector<HTMLAnchorElement>('[data-mail-results]');
+  const copyLabel = copyLink?.textContent ?? '';
+  let copyTimer = 0;
 
   const rows = new Map<string, HTMLLIElement>();
   list.querySelectorAll<HTMLLIElement>('[data-check]').forEach((li) => rows.set(li.dataset.check!, li));
@@ -112,10 +116,14 @@ function init(root: HTMLElement) {
       spoofStamp.textContent = t.checking;
       spoofNote.textContent = '';
     } else {
-      const blocked = results.find((r) => r.id === 'dmarc')?.status === 'pass';
-      spoof.dataset.level = blocked ? 'blocked' : 'delivered';
-      spoofStamp.textContent = blocked ? t.spoof.blocked : t.spoof.delivered;
-      spoofNote.textContent = blocked ? t.spoof.blockedNote : t.spoof.deliveredNote;
+      // Enforced at reject refuses the mail; enforced at quarantine sends it to spam.
+      const dmarc = results.find((r) => r.id === 'dmarc');
+      const enforced = dmarc?.status === 'pass';
+      const quarantine = enforced && /\bp=quarantine\b/i.test(dmarc?.evidence[0] ?? '');
+      const level = quarantine ? 'quarantined' : enforced ? 'blocked' : 'delivered';
+      spoof.dataset.level = level;
+      spoofStamp.textContent = t.spoof[level];
+      spoofNote.textContent = t.spoof[`${level}Note`];
     }
     spoof.hidden = false;
     spoof.classList.remove('in');
@@ -160,6 +168,48 @@ function init(root: HTMLElement) {
     });
   }
 
+  // The results as an email to whoever can act on them, and as a link to this page.
+  function offerResults(domain: string, v: Verdict, results: Result[]) {
+    const url = `${location.origin}${location.pathname}#check=${encodeURIComponent(domain)}`;
+    if (mailResults) {
+      const name = (r: Result) => `${rows.get(r.id)?.dataset.title ?? r.id} (${rows.get(r.id)?.dataset.tech ?? r.id})`;
+      const clip = (s: string) => (s.length > 160 ? `${s.slice(0, 160)}…` : s);
+      const fixes = results
+        .filter((r) => (r.status === 'fail' || r.status === 'warn') && r.id in priority)
+        .sort((a, b) => (a.status === b.status ? priority[a.id] - priority[b.id] : a.status === 'fail' ? -1 : 1));
+      const lines = [
+        fmt(t.share.intro, { domain }),
+        `${t.levels[v.spoofing]}. ${fmt(t.score, { passed: v.passed, scored: v.scored })}`,
+        '',
+      ];
+      if (fixes.length)
+        lines.push(t.share.fixFirst, ...fixes.map((r, i) => `${i + 1}. ${name(r)}: ${clip(r.summary)}`), '');
+      lines.push(
+        t.share.results,
+        ...results.map((r) => `- ${name(r)}: ${t.labels[r.status]}. ${clip(r.summary)}`),
+        '',
+        fmt(t.share.again, { url }),
+      );
+      mailResults.href = `mailto:?subject=${encodeURIComponent(fmt(t.share.subject, { domain }))}&body=${encodeURIComponent(lines.join('\r\n'))}`;
+    }
+    if (copyLink) {
+      copyLink.onclick = async () => {
+        clearTimeout(copyTimer);
+        try {
+          await navigator.clipboard.writeText(url);
+        } catch {
+          // No clipboard access: the address bar already holds the same link.
+          history.replaceState(null, '', `#check=${encodeURIComponent(domain)}`);
+        }
+        copyLink.textContent = t.share.copied;
+        announce.textContent = t.share.copied;
+        copyTimer = window.setTimeout(() => {
+          copyLink.textContent = copyLabel;
+        }, 2200);
+      };
+    }
+  }
+
   function showVerdict(domain: string, v: Verdict, results: Result[], autorun: boolean) {
     const level = v.incomplete ? 'incomplete' : v.spoofing;
     verdict.querySelector('[data-spoofing]')!.textContent = t.levels[level];
@@ -174,6 +224,7 @@ function init(root: HTMLElement) {
       if (spoof) spoof.hidden = true;
     } else {
       showSpoof(domain, results);
+      offerResults(domain, v, results);
       if (!autorun) {
         if (title) title.textContent = fmt(t.hero[v.spoofing], { domain: isolate(domain) });
         printRecords(domain, results);
