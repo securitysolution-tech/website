@@ -469,6 +469,25 @@ const checks = [
     .verdict:not([hidden]) {
       animation: settle 400ms var(--ease-out);
     }
+
+    /* Where the browser can animate to an intrinsic size, the record unfolds instead of popping. */
+    @supports (interpolate-size: allow-keywords) {
+      .evidence {
+        interpolate-size: allow-keywords;
+      }
+
+      .evidence::details-content {
+        block-size: 0;
+        overflow-y: clip;
+        transition:
+          block-size 260ms var(--ease-out),
+          content-visibility 260ms allow-discrete;
+      }
+
+      .evidence[open]::details-content {
+        block-size: auto;
+      }
+    }
   }
 
   @keyframes pulse {

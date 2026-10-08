@@ -80,8 +80,9 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #0d1411;
-    --raised: #131c18;
+    /* Paper sits two steps above the ink bands, so the page keeps its band rhythm in the dark. */
+    --paper: #101814;
+    --raised: #17211c;
     --ink: #e4ebe7;
     --ink-2: #a6b4ad;
     --ink-3: #8c9a93;
@@ -426,11 +427,74 @@ kbd {
   padding-left: 1.25rem;
 }
 
+/*
+  Motion. One load moment (the hero), scroll-driven reveals that settle as
+  content enters, and a short cross-page fade. Everything here is skipped
+  when the visitor asks for reduced motion.
+*/
+
+/* Pages fade into each other; the header holds still across navigations. */
+@view-transition {
+  navigation: auto;
+}
+
+.site-header {
+  view-transition-name: site-header;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* from-only on purpose: at rest the effect yields to the underlying style, so hover
+   transforms on the same elements keep working after the reveal has finished. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+/* Cards and panels rise into place as they scroll into view, settled by half entry. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    :is(.scores .cell, .bento .card, .finding, .people .person, .items .item) {
+      animation: rise-in linear both;
+      animation-timeline: view();
+      animation-range: entry 8% entry 48%;
+    }
+
+    /* Neighbours in a row trail by a beat, so each band reads left to right. */
+    :is(.scores .cell:nth-child(2), .bento .card-2, .people .person:nth-child(2), .items .item:nth-child(even)) {
+      animation-range: entry 16% entry 56%;
+    }
+
+    :is(.scores .cell:nth-child(3)) {
+      animation-range: entry 24% entry 64%;
+    }
+
+    :is(.scores .cell:nth-child(4), .bento .card-4) {
+      animation-range: entry 32% entry 72%;
+    }
+  }
+}
+
 /* Square bullets are drawn as backgrounds, which forced-colour modes remove. */
 @media (forced-colors: active) {
   .items li::before,
   .ticks li::before,
-  .include li::before {
+  .include li::before,
+  .creds li::before {
     background: CanvasText;
   }
 }

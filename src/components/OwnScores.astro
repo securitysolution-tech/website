@@ -101,6 +101,8 @@ const scores = [
     border-radius: var(--radius-panel);
     background: var(--line);
     overflow: hidden;
+    /* clip, not a scroll container: view() timelines inside must reach the viewport */
+    overflow: clip;
   }
 
   .cell {
@@ -152,6 +154,11 @@ const scores = [
   .report :global(.ext) {
     width: 1em;
     height: 1em;
+    transition: transform 180ms var(--ease-out);
+  }
+
+  .report:hover :global(.ext) {
+    transform: translate(2px, -2px);
   }
 
   @media (max-width: 64rem) {

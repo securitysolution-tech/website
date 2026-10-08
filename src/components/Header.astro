@@ -58,6 +58,34 @@ const links = [
     border-bottom: 1px solid var(--ink-line);
   }
 
+  /* Once the page scrolls, the bar lifts off it with a shadow. */
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .site-header {
+        animation: header-lift linear both;
+        animation-timeline: scroll();
+        animation-range: 0 140px;
+      }
+    }
+  }
+
+  @keyframes header-lift {
+    to {
+      box-shadow: 0 14px 34px -22px rgb(2 8 6 / 0.85);
+    }
+  }
+
+  .brand :global(.mark-core) {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 240ms var(--ease-out);
+  }
+
+  .brand:hover :global(.mark-core),
+  .brand:focus-visible :global(.mark-core) {
+    transform: scale(1.2);
+  }
+
   .bar {
     display: flex;
     align-items: center;

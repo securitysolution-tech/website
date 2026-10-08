@@ -14,6 +14,10 @@ export default defineConfig({
   vite: {
     build: {
       assetsInlineLimit: 0,
+      // lightningcss 1.33 folds animation-timeline into the animation shorthand,
+      // which browsers reject, so every scroll-driven animation dies in minified
+      // builds. esbuild keeps the longhands apart.
+      cssMinify: 'esbuild',
     },
   },
   integrations: [sitemap()],

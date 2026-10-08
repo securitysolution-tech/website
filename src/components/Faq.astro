@@ -138,6 +138,27 @@ const jsonLd = JSON.stringify({
     }
   }
 
+  /* Where the browser can animate to an intrinsic size, the answer unfolds instead of popping. */
+  @supports (interpolate-size: allow-keywords) {
+    @media (prefers-reduced-motion: no-preference) {
+      .qa {
+        interpolate-size: allow-keywords;
+      }
+
+      .qa::details-content {
+        block-size: 0;
+        overflow-y: clip;
+        transition:
+          block-size 300ms var(--ease-out),
+          content-visibility 300ms allow-discrete;
+      }
+
+      .qa[open]::details-content {
+        block-size: auto;
+      }
+    }
+  }
+
   @keyframes reveal {
     from {
       opacity: 0;

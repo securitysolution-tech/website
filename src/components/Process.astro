@@ -50,6 +50,10 @@ const steps = [
   .approach {
     position: relative;
     overflow: hidden;
+    /* clip, not a scroll container: the line fill's view() timeline must reach the viewport */
+    overflow: clip;
+    /* Keeps the band edges visible in dark mode, where paper and ink come close. */
+    border-block: 1px solid var(--ink-line);
     background:
       radial-gradient(60% 80% at 0% 0%, rgb(98 211 166 / 0.1), transparent 70%),
       var(--ink-bg);
@@ -123,6 +127,19 @@ const steps = [
         animation-timeline: view();
         animation-range: entry 40% cover 55%;
       }
+
+      /* Each number starts muted and ignites as the fill passes it. */
+      .num {
+        animation: linear both;
+        animation-timeline: view();
+        animation-range: entry 40% cover 55%;
+      }
+
+      .step:nth-child(1) .num { animation-name: num-on-1; }
+      .step:nth-child(2) .num { animation-name: num-on-2; }
+      .step:nth-child(3) .num { animation-name: num-on-3; }
+      .step:nth-child(4) .num { animation-name: num-on-4; }
+      .step:nth-child(5) .num { animation-name: num-on-5; }
     }
 
     @media (prefers-reduced-motion: no-preference) and (max-width: 60rem) {
@@ -130,6 +147,31 @@ const steps = [
         animation-name: fill-y;
       }
     }
+  }
+
+  @keyframes num-on-1 {
+    0% { border-color: var(--ink-line); color: var(--ink-text-2); }
+    10%, 100% { border-color: var(--ink-accent); color: var(--ink-accent); }
+  }
+
+  @keyframes num-on-2 {
+    0%, 18% { border-color: var(--ink-line); color: var(--ink-text-2); }
+    32%, 100% { border-color: var(--ink-accent); color: var(--ink-accent); }
+  }
+
+  @keyframes num-on-3 {
+    0%, 43% { border-color: var(--ink-line); color: var(--ink-text-2); }
+    57%, 100% { border-color: var(--ink-accent); color: var(--ink-accent); }
+  }
+
+  @keyframes num-on-4 {
+    0%, 68% { border-color: var(--ink-line); color: var(--ink-text-2); }
+    82%, 100% { border-color: var(--ink-accent); color: var(--ink-accent); }
+  }
+
+  @keyframes num-on-5 {
+    0%, 90% { border-color: var(--ink-line); color: var(--ink-text-2); }
+    100% { border-color: var(--ink-accent); color: var(--ink-accent); }
   }
 
   @keyframes fill-x {

@@ -22,6 +22,8 @@ const others = services.filter((s) => s.slug !== service.slug);
       <div class="container">
         <nav class="crumbs" aria-label="Breadcrumb">
           <a href="/#services">Services</a>
+          <span class="sep" aria-hidden="true">/</span>
+          <span aria-current="page">{service.name}</span>
         </nav>
         <h1>{service.name}</h1>
         <p class="lead">{service.intro}</p>
@@ -83,6 +85,7 @@ const others = services.filter((s) => s.slug !== service.slug);
   .page-head {
     position: relative;
     overflow: hidden;
+    border-bottom: 1px solid var(--ink-line);
     padding-block: clamp(3rem, 2rem + 5vw, 6rem) clamp(3rem, 2rem + 4vw, 5rem);
     background:
       radial-gradient(70% 90% at 100% 100%, rgb(98 211 166 / 0.14), transparent 65%),
@@ -95,9 +98,29 @@ const others = services.filter((s) => s.slug !== service.slug);
     justify-items: start;
   }
 
+  .crumbs {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    color: var(--ink-text-2);
+    font-size: var(--step--1);
+    font-weight: 560;
+  }
+
   .crumbs a {
     color: var(--ink-text-2);
-    font-weight: 560;
+  }
+
+  .crumbs a:hover {
+    color: var(--ink-text);
+  }
+
+  .crumbs .sep {
+    opacity: 0.6;
+  }
+
+  .crumbs [aria-current] {
+    color: var(--ink-text);
   }
 
   h1 {

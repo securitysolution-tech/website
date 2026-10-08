@@ -5,14 +5,15 @@ import { contactCta } from '../data/site';
 const headline = 'Know where you’re exposed, and what to fix first.';
 const words = headline.split(' ');
 
-// Real records and headers from this site, used as a quiet backdrop.
+// The six live records the domain check below verifies, in the order its rows run.
+// All real: the backdrop is the same material the instrument reads.
 const records = [
   '_dmarc.securitysolution.tech.   TXT   "v=DMARC1; p=reject; sp=reject"',
-  'securitysolution.tech.   DS   2371 13 2 83D179A04A2DDD7173869A47E1A5E861',
-  'content-security-policy: default-src \'none\'; script-src \'self\'; frame-ancestors \'none\'',
-  'securitysolution.tech.   CAA   0 issue "letsencrypt.org"',
-  'strict-transport-security: max-age=31536000; includeSubDomains; preload',
   'securitysolution.tech.   TXT   "v=spf1 include:_spf.mx.cloudflare.net ~all"',
+  'securitysolution.tech.   MX   41 route1.mx.cloudflare.net.',
+  'securitysolution.tech.   DS   2371 13 2 83D179A04A2DDD7173869A47E1A5E861',
+  'securitysolution.tech.   CAA   0 issue "letsencrypt.org"',
+  '_mta-sts.securitysolution.tech.   TXT   "v=STSv1; id=20261006T1200Z"',
 ];
 ---
 
@@ -53,6 +54,8 @@ const records = [
     position: relative;
     overflow: hidden;
     isolation: isolate;
+    /* In dark mode the band and the page are close in tone; the hairline keeps the edge. */
+    border-bottom: 1px solid var(--ink-line);
     padding-block: clamp(3rem, 2rem + 5vw, 6rem) calc(var(--overlap) + clamp(3rem, 2rem + 3vw, 4.5rem));
   }
 
@@ -70,9 +73,9 @@ const records = [
     font-size: clamp(0.85rem, 0.65rem + 0.8vw, 1.15rem);
     white-space: nowrap;
     color: var(--ink-text);
-    opacity: 0.09;
-    -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 54%, #000 72%, #000 94%, transparent 100%);
-    mask-image: linear-gradient(90deg, transparent 0%, transparent 54%, #000 72%, #000 94%, transparent 100%);
+    opacity: 0.1;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 52%, #000 72%, #000 96%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, transparent 52%, #000 72%, #000 96%, transparent 100%);
     pointer-events: none;
     user-select: none;
   }
@@ -91,14 +94,6 @@ const records = [
   /* Rendered as generated content: pure decoration, never read as page text. */
   .backdrop p::before {
     content: attr(data-r);
-  }
-
-  .backdrop p:nth-child(odd) {
-    transform: translateX(-4%);
-  }
-
-  .backdrop p:nth-child(even) {
-    transform: translateX(3%);
   }
 
   .glow {
@@ -154,6 +149,26 @@ const records = [
   }
 
   @media (prefers-reduced-motion: no-preference) {
+    /* The records print one by one once the headline has landed, like a zone being read. */
+    .backdrop p {
+      animation: record-in 820ms var(--ease-out) both;
+    }
+
+    .backdrop p:nth-child(1) { animation-delay: 620ms; }
+    .backdrop p:nth-child(2) { animation-delay: 730ms; }
+    .backdrop p:nth-child(3) { animation-delay: 840ms; }
+    .backdrop p:nth-child(4) { animation-delay: 950ms; }
+    .backdrop p:nth-child(5) { animation-delay: 1060ms; }
+    .backdrop p:nth-child(6) { animation-delay: 1170ms; }
+
+    .glow {
+      animation: breathe 9s ease-in-out 1.4s infinite alternate;
+    }
+
+    .check-wrap {
+      animation: rise 760ms var(--ease-out) 720ms both;
+    }
+
     .w {
       display: inline-block;
       animation: rise 760ms var(--ease-out) both;
@@ -186,6 +201,26 @@ const records = [
     to {
       opacity: 1;
       transform: none;
+    }
+  }
+
+  @keyframes record-in {
+    from {
+      opacity: 0;
+      transform: translateX(1.5rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes breathe {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.07);
     }
   }
 </style>
