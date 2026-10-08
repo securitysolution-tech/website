@@ -70,7 +70,13 @@ const urls = pages.map((p) => (p === '//' ? '/' : p)).concat(['/404.html']);
 
 // --- axe, CSP and errors on every page -----------------------------------------------------
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--no-sandbox'] });
-const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 }, bypassCSP: true });
+// Motion is reduced for the audit: it measures resting states, not a badge halfway through
+// its fade. The site honours the preference, so nothing else differs.
+const ctx = await browser.newContext({
+  viewport: { width: 1280, height: 860 },
+  bypassCSP: true,
+  reducedMotion: 'reduce',
+});
 const axePath = require.resolve('axe-core/axe.min.js');
 for (const url of urls) {
   const page = await ctx.newPage();
