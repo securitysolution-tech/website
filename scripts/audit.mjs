@@ -91,7 +91,15 @@ for (const url of urls) {
   await page.addScriptTag({ path: axePath });
   const violations = await page.evaluate(async () => {
     const r = await window.axe.run(document, { resultTypes: ['violations'] });
-    return r.violations.map((v) => `${v.impact} ${v.id}: ${v.help} (${v.nodes.length})`);
+    // Each node with what axe measured, so a failure in CI can be read without rerunning it.
+    return r.violations.map((v) => {
+      const nodes = v.nodes.slice(0, 6).map((n) => {
+        const d = n.any[0]?.data;
+        const measured = d?.contrastRatio ? ` ${d.fgColor} on ${d.bgColor} = ${d.contrastRatio}` : '';
+        return `${n.target.join(' ')}${measured}`;
+      });
+      return `${v.impact} ${v.id}: ${v.help} (${v.nodes.length}): ${nodes.join(' | ')}`;
+    });
   });
   for (const v of violations) problems.push(`${url}: axe ${v}`);
   for (const v of cspv) problems.push(`${url}: CSP violation ${v}`);

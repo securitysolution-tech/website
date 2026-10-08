@@ -220,7 +220,7 @@ const own = site.autorunDomain ?? '';
   .k {
     flex: none;
     width: 3.6em;
-    color: #5e6b65;
+    color: #4b5853;
   }
 
   .v {
@@ -254,7 +254,7 @@ const own = site.autorunDomain ?? '';
   }
 
   .spoof[data-level='checking'] .stamp {
-    color: #5e6b65;
+    color: #4b5853;
     border-style: dashed;
   }
 
@@ -541,9 +541,12 @@ const own = site.autorunDomain ?? '';
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .fix:not([hidden]),
-    .spoof.in {
+    .fix:not([hidden]) {
       animation: settle 400ms var(--ease-out);
+    }
+
+    .spoof.in {
+      animation: land 400ms var(--ease-out);
     }
 
     .row[data-status='checking'] .status::before {
@@ -603,6 +606,15 @@ const own = site.autorunDomain ?? '';
     to {
       opacity: 1;
       transform: scale(1);
+    }
+  }
+
+  @keyframes land {
+    from {
+      transform: translateY(6px);
+    }
+    to {
+      transform: none;
     }
   }
 
