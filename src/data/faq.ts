@@ -7,6 +7,11 @@ export interface FaqItem {
 
 export const faqs: FaqItem[] = [
   {
+    q: 'Do you only check email and DNS?',
+    a: 'No. The check on this page reads what is public about your domain in five seconds, and it is free. A penetration test goes inside, under a written scope: web apps, APIs, mobile apps, networks, cloud accounts and AI features. Security monitoring and compliance readiness are separate services, listed above.',
+    on: ['home', 'offensive-testing'],
+  },
+  {
     q: 'How much does a penetration test cost?',
     a: 'It depends on the scope: how many applications, user roles, APIs and IP addresses are in play. After a 30-minute scoping call you get a written scope and a fixed quote, so the price does not change halfway through.',
     on: ['home', 'offensive-testing', 'ai-cloud-security'],

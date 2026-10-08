@@ -45,7 +45,7 @@ export const en = {
 
   hero: {
     headline: 'Can anyone send email as your company?',
-    lead: 'Type your domain. In five seconds you see what an attacker sees: spoofing, signed DNS, certificates. Nothing you type leaves your browser.',
+    lead: 'Type your domain for a five-second read of what an attacker sees. A penetration test goes much further: web apps, APIs, mobile apps, networks, cloud and people, by the same team you talk to.',
     example: 'See a passing domain: ours',
     /** The headline once a check has run, by how well spoofing is held off. */
     result: {
@@ -180,6 +180,13 @@ export const en = {
     },
   },
 
+  /** The handoff from the five-second check to the practice, right under the instrument. */
+  bridge: {
+    title: 'That was the five-second version',
+    lead: 'The check reads what is public about a domain. A penetration test goes inside, under a written scope, and covers the parts attackers actually use:',
+    surfaces: ['Web apps', 'APIs', 'Mobile apps', 'Networks', 'Cloud accounts', 'AI features', 'People'],
+  },
+
   scores: {
     title: 'We test our own site first',
     lead1: 'Independent scanners grade this website. We re-check it every day (',
@@ -258,30 +265,28 @@ export const en = {
     title: 'Reports your team can act on',
     lead: 'Every finding says what we found, why it matters to the business, and exactly how to fix it. This is what one looks like.',
     severity: 'High',
-    heading: 'Anyone can send email that appears to come from your company',
+    heading: 'Any customer could read every other customer’s invoices',
     affected: 'Affected',
-    affectedValue: 'example.com mail domain',
+    affectedValue: 'Customer portal API',
     category: 'Category',
-    categoryValue: 'Email security',
+    categoryValue: 'Access control',
     status: 'Status',
     statusValue: 'Fixed, verified on retest',
     evidence: 'Evidence',
+    evidence1: 'GET /api/invoices/10422   logged in as customer A',
+    evidence2: '200 OK                    the invoice belongs to customer B',
     impact: 'Business impact',
-    impact1:
-      'Attackers can send invoices or payment requests that look like they come from your finance team. Because the policy is ',
-    impact2: ', receiving mail servers are told to deliver them anyway.',
+    impactText:
+      'Every invoice, with customer names and amounts, was readable by anyone with a login, including a trial account created in two minutes. That is personal data under the UAE data protection law, and a breach you would have to report.',
     fix: 'How to fix',
-    fix1: 'Confirm SPF and DKIM pass for every service that sends your email.',
-    fix2a: 'Change the policy to ',
-    fix2b: ' and review the DMARC reports for 2 weeks.',
-    fix3a: 'Move to ',
-    fix3b: ' once legitimate mail passes.',
+    fix1: 'Check on the server that the invoice belongs to the logged-in customer before returning it.',
+    fix2: 'Add a test that requests another customer’s invoice and expects a refusal.',
+    fix3: 'Review every endpoint that takes an id in the address, not only this one.',
     retest: 'Retest',
-    retest1: 'Fixed and verified. The policy is now ',
-    retest2: '.',
+    retestText: 'Fixed and verified. Other customers’ invoices now return 403 Forbidden.',
     caption:
-      'Example finding. The company and domain are illustrative. The domain check above rates the same record as a warning; a report also weighs the business impact, which is why this one is High.',
-    captionLink: 'Run the check on your domain',
+      'Example finding. The company and the API are illustrative; the flaw is the one we find most often in web applications and APIs, broken object-level authorization, first on the OWASP API Security Top 10.',
+    captionLink: 'See how we test for it',
   },
 
   team: {

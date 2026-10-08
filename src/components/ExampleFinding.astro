@@ -36,43 +36,27 @@ const f = t.finding;
       <div class="finding-body">
         <div class="col">
           <h4>{f.evidence}</h4>
-          <pre translate="no"><code>_dmarc.example.com  TXT  "v=DMARC1; p=none"</code></pre>
+          <pre translate="no"><code>{f.evidence1}{'\n'}{f.evidence2}</code></pre>
           <h4>{f.impact}</h4>
-          <p>
-            {f.impact1}
-            <code translate="no">p=none</code>
-            {f.impact2}
-          </p>
+          <p>{f.impactText}</p>
         </div>
         <div class="col">
           <h4>{f.fix}</h4>
           <ol class="fix">
             <li>{f.fix1}</li>
-            <li>
-              {f.fix2a}
-              <code translate="no">p=quarantine</code>
-              {f.fix2b}
-            </li>
-            <li>
-              {f.fix3a}
-              <code translate="no">p=reject</code>
-              {f.fix3b}
-            </li>
+            <li>{f.fix2}</li>
+            <li>{f.fix3}</li>
           </ol>
           <h4>{f.retest}</h4>
           <p class="retest">
             <Icon name="check-circle" />
-            <span>
-              {f.retest1}
-              <code translate="no">p=reject</code>
-              {f.retest2}
-            </span>
+            <span>{f.retestText}</span>
           </p>
         </div>
       </div>
       <figcaption>
         {f.caption}
-        <a href={href('/#check')}>{f.captionLink}</a>
+        <a href={href('/services/offensive-testing/')}>{f.captionLink}</a>
       </figcaption>
     </figure>
   </div>
