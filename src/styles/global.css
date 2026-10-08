@@ -466,7 +466,7 @@ kbd {
 
 .skip-link {
   position: absolute;
-  left: var(--s-4);
+  inset-inline-start: var(--s-4);
   top: -100%;
   z-index: 100;
   padding: var(--s-3) var(--s-4);
@@ -493,7 +493,7 @@ kbd {
 .prose ul {
   display: grid;
   gap: var(--s-2);
-  padding-left: 1.25rem;
+  padding-inline-start: 1.25rem;
 }
 
 /*
@@ -684,18 +684,18 @@ html.leaving :is(main, .site-footer) {
 /* Square bullets, shared by every list that uses them (and by prose lists). */
 :is(.bullets, .prose ul) {
   list-style: none;
-  padding-left: 0;
+  padding-inline-start: 0;
 }
 
 :is(.bullets, .prose ul) li {
   position: relative;
-  padding-left: 1.1rem;
+  padding-inline-start: 1.1rem;
 }
 
 :is(.bullets, .prose ul) li::before {
   content: '';
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 0.55em;
   width: 0.45rem;
   height: 0.45rem;

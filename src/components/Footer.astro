@@ -8,7 +8,7 @@ import { useI18n } from '../i18n';
 interface Props {
   contactHref?: string;
 }
-const { t, href, cta, services } = useI18n(Astro);
+const { t, href, cta, services, toggle } = useI18n(Astro);
 const { contactHref = cta.href } = Astro.props;
 const year = new Date().getFullYear();
 const path = Astro.url.pathname;
@@ -69,7 +69,10 @@ const current = (href: string) => (path === href ? 'page' : undefined);
 
   <div class="container legal">
     <p>© {year} {site.name}</p>
-    <p>{t.footer.legal} <a href={href('/privacy/')}>{t.footer.privacy}</a></p>
+    <p>
+      {t.footer.legal} <a href={href('/privacy/')}>{t.footer.privacy}</a>
+      {toggle && <a class="lang" href={toggle.href} lang={toggle.lang} hreflang={toggle.lang}>{toggle.label}</a>}
+    </p>
   </div>
 </footer>
 
@@ -175,6 +178,11 @@ const current = (href: string) => (path === href ? 'page' : undefined);
 
   .ext:hover :global(.ext-icon) {
     transform: translate(2px, -2px);
+  }
+
+  .lang {
+    margin-inline-start: var(--s-3);
+    letter-spacing: 0;
   }
 
   .legal {

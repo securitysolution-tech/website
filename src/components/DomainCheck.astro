@@ -331,7 +331,7 @@ const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
   }
 
   .tech {
-    margin-left: 0.25rem;
+    margin-inline-start: 0.25rem;
     color: var(--panel-ink-2);
     font-weight: 450;
     font-size: var(--step--1);
@@ -486,13 +486,13 @@ const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
     gap: var(--s-3);
     padding: var(--s-4);
     border: 1px solid var(--panel-line);
-    border-left: 3px solid var(--p-warn);
+    border-inline-start: 3px solid var(--p-warn);
     border-radius: var(--radius-control);
     background: rgb(255 255 255 / 0.03);
   }
 
   .fix:has(li[data-status='fail']) {
-    border-left-color: var(--p-fail);
+    border-inline-start-color: var(--p-fail);
   }
 
   .fix-title {
@@ -502,7 +502,7 @@ const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
   .fix-list {
     display: grid;
     gap: var(--s-2);
-    padding-left: 1.25rem;
+    padding-inline-start: 1.25rem;
     color: var(--panel-ink-2);
     font-size: var(--step--1);
     line-height: 1.5;

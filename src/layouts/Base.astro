@@ -2,10 +2,11 @@
 import '@fontsource-variable/archivo/standard.css';
 import '../styles/global.css';
 import archivoLatin from '@fontsource-variable/archivo/files/archivo-latin-standard-normal.woff2?url';
+import notoArabic from '@fontsource-variable/noto-sans-arabic/files/noto-sans-arabic-arabic-wght-normal.woff2?url';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { site } from '../data/site';
-import { useI18n } from '../i18n';
+import { arLive, useI18n } from '../i18n';
 
 interface Props {
   title?: string;
@@ -17,14 +18,14 @@ interface Props {
   jsonLd?: Record<string, unknown>[];
 }
 
-const { locale, t, cta, isHome, hidden, services, founders } = useI18n(Astro);
+const { locale, t, cta, isHome, hidden, services, founders, alternates } = useI18n(Astro);
 const { title, description = t.site.description, noindex = false, hasContact = false, jsonLd = [] } = Astro.props;
 const contactHref = hasContact ? '#contact' : cta.href;
 const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | ${t.site.titleTagline}`;
 // Pages that must not be indexed, and locales that are built but not yet live, have no canonical address.
 const unlisted = noindex || hidden;
 const canonical = new URL(Astro.url.pathname, site.url).href;
-const ogImage = new URL('/og.jpg', site.url).href;
+const ogImage = new URL(locale === 'ar' ? '/og-ar.jpg' : '/og.jpg', site.url).href;
 
 // Mirrors the header policy set at the edge; frame-ancestors can only be sent as a header.
 const csp = [
@@ -56,7 +57,13 @@ const graph = JSON.stringify({
       logo: new URL('/icon-512.png', site.url).href,
       areaServed: { '@type': 'Country', name: t.site.location },
       address: { '@type': 'PostalAddress', addressCountry: 'AE' },
-      contactPoint: { '@type': 'ContactPoint', email: site.email, contactType: 'sales', areaServed: 'AE', availableLanguage: 'en' },
+      contactPoint: {
+        '@type': 'ContactPoint',
+        email: site.email,
+        contactType: 'sales',
+        areaServed: 'AE',
+        availableLanguage: arLive ? ['en', 'ar'] : 'en',
+      },
       knowsAbout: services.map((s) => s.plainName),
       sameAs: ['https://github.com/securitysolution-tech', ...founders.flatMap((f) => f.links.map((l) => l.href))],
       founder: founders.map((f) => ({ '@type': 'Person', name: f.name, jobTitle: f.role, sameAs: f.links.map((l) => l.href) })),
@@ -86,8 +93,18 @@ const graph = JSON.stringify({
     <meta name="description" content={description} />
     {!unlisted && <link rel="canonical" href={canonical} />}
     {unlisted && <meta name="robots" content="noindex" />}
+    {
+      arLive && !noindex && (
+        <>
+          <link rel="alternate" hreflang="en" href={new URL(alternates.en, site.url).href} />
+          <link rel="alternate" hreflang="ar" href={new URL(alternates.ar, site.url).href} />
+          <link rel="alternate" hreflang="x-default" href={new URL(alternates.en, site.url).href} />
+        </>
+      )
+    }
 
     <link rel="preload" href={archivoLatin} as="font" type="font/woff2" crossorigin />
+    {locale === 'ar' && <link rel="preload" href={notoArabic} as="font" type="font/woff2" crossorigin />}
     {/* The domain check's first lookups go here as soon as the page loads. */}
     <link rel="preconnect" href="https://cloudflare-dns.com" crossorigin />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

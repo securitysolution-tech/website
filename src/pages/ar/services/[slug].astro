@@ -1,0 +1,15 @@
+---
+// The Arabic font and the right-to-left rules are imported here, by the /ar/ routes only.
+import '@fontsource-variable/noto-sans-arabic';
+import '../../../styles/arabic.css';
+import ServicePage from '../../../components/pages/ServicePage.astro';
+import { services } from '../../../data/services';
+
+export function getStaticPaths() {
+  return services.map((service) => ({ params: { slug: service.slug } }));
+}
+
+const { slug } = Astro.params;
+---
+
+<ServicePage slug={slug} />

@@ -8,7 +8,7 @@ interface Props {
   /** Where the call to action goes: the page's own form when it has one, else the home page's. */
   contactHref?: string;
 }
-const { t, href, cta } = useI18n(Astro);
+const { t, href, cta, toggle } = useI18n(Astro);
 const { contactHref = cta.href } = Astro.props;
 
 const links = [
@@ -30,6 +30,7 @@ const links = [
       <ul>
         {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
       </ul>
+      {toggle && <a class="lang" href={toggle.href} lang={toggle.lang} hreflang={toggle.lang}>{toggle.label}</a>}
       <a class="btn btn-primary" href={contactHref}>{cta.label}</a>
     </nav>
 
@@ -44,6 +45,7 @@ const links = [
           <ul>
             {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
           </ul>
+          {toggle && <a class="lang" href={toggle.href} lang={toggle.lang} hreflang={toggle.lang}>{toggle.label}</a>}
           <a class="btn btn-primary" href={contactHref}>{cta.label}</a>
         </div>
       </details>
@@ -186,7 +188,8 @@ const links = [
   }
 
   .nav-desktop ul a,
-  .menu-panel ul a {
+  .menu-panel ul a,
+  .lang {
     color: var(--ink-text-2);
     font-weight: 540;
     text-decoration: none;
@@ -194,8 +197,15 @@ const links = [
   }
 
   .nav-desktop ul a:hover,
-  .menu-panel ul a:hover {
+  .menu-panel ul a:hover,
+  .lang:hover {
     color: var(--ink-text);
+  }
+
+  /* The toggle is set in the language it leads to, in that language's face. */
+  .lang {
+    font-family: var(--font), 'Noto Sans Arabic Variable', 'Segoe UI', Tahoma, 'Geeza Pro', sans-serif;
+    letter-spacing: 0;
   }
 
   .nav-desktop .btn {
@@ -318,6 +328,12 @@ const links = [
       padding: var(--s-2) 0;
       font-size: var(--step-1);
       color: var(--ink-text);
+    }
+
+    .menu-panel .lang {
+      justify-self: start;
+      padding: var(--s-2) 0;
+      font-size: var(--step-1);
     }
   }
 

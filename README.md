@@ -29,7 +29,7 @@ npm test          # link, copy and HTML checks against dist/
 
 ## Content
 
-- Interface text, in English: `src/i18n/en.ts` (the dictionary every component reads; long-form content stays in `src/data`)
+- Interface text: `src/i18n/en.ts` and `src/i18n/ar.ts` (the dictionaries every component reads; long-form English content stays in `src/data`, see "Languages")
 - Services: `src/data/services.ts`
 - Company details, contact address and founders: `src/data/site.ts`
 - Set `autorunDomain` in `site.ts` to run the homepage check automatically on page load
@@ -38,6 +38,16 @@ npm test          # link, copy and HTML checks against dist/
 ## Deploy
 
 Pushing to `main` runs `.github/workflows/deploy.yml`: type checks, build, tests, then publish to GitHub Pages. Pull requests run the same checks in `.github/workflows/ci.yml`. Dependabot proposes npm and Actions updates once a release is a week old; security updates arrive immediately.
+
+## Languages
+
+English is served at the root and Arabic under `/ar/`, from the same components. The words live in `src/i18n/en.ts` and `src/i18n/ar.ts`; the Arabic file also overlays the text of each service, the questions and the founders' lines, and TypeScript refuses a build with a translation missing. The Arabic pages are built and reachable by address, but until they are switched on they carry `noindex`, have no canonical address, stay out of the sitemap, and no page links to them.
+
+To review the Arabic draft, open `/ar/`, `/ar/services/offensive-testing/`, `/ar/privacy/` and `/ar/security/` on the live site (or `npm run dev`). The glossary is at the top of `src/i18n/ar.ts`; the founders' names stay in Latin script until their Arabic spelling is confirmed. The site uses Western digits in both languages, and `npm test` enforces it.
+
+Going live: set `arLive` to `true` in `src/i18n/locales.mjs` and push. That one change adds the language toggle to the header, the menu and the footer, the `hreflang` links, the sitemap entries with language alternates, and indexing. The 404 page is shared and shows Arabic under `/ar/`.
+
+The Arabic face is Noto Sans Arabic (variable, Arabic ranges only), loaded by the `/ar/` routes alone; Latin names, records and numbers keep Archivo. `src/styles/arabic.css` holds the Arabic typography and the right-to-left rules.
 
 ## Contact backend
 

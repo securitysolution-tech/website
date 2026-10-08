@@ -8,7 +8,7 @@ import { useI18n } from '../i18n';
 import { toJsonBlock } from '../i18n/client';
 
 interface Props {
-  /** A need to tick in advance, on pages about one service. */
+  /** The slug of the service to tick in advance, on pages about one service. */
   need?: string;
 }
 const { need } = Astro.props;
@@ -16,7 +16,7 @@ const { t, href, cta, services } = useI18n(Astro);
 
 // The needs are the services, in the buyer's words, so the form and the pages agree. The
 // value is always the English name, which the inbox and the Worker expect; the label follows the page.
-const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plainName }));
+const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plainName, checked: s.slug === need }));
 ---
 
 <section id="contact" class="contact ink grain" aria-labelledby="contact-title">
@@ -89,7 +89,7 @@ const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plai
             {
               needs.map((n, i) => (
                 <label class="choice">
-                  <input type="checkbox" name={`need-${i}`} value={n.value} id={`cf-need-${i}`} checked={n.value === need} />
+                  <input type="checkbox" name={`need-${i}`} value={n.value} id={`cf-need-${i}`} checked={n.checked} />
                   <span>{n.label}</span>
                 </label>
               ))
@@ -186,7 +186,7 @@ const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plai
   .glow {
     position: absolute;
     z-index: -1;
-    left: -15%;
+    inset-inline-start: -15%;
     top: -40%;
     width: min(80vw, 1000px);
     aspect-ratio: 1;
@@ -338,7 +338,7 @@ const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plai
       0.35rem 0.35rem,
       0.35rem 0.35rem;
     background-repeat: no-repeat;
-    padding-right: 2.5rem;
+    padding-inline-end: 2.5rem;
   }
 
   input::placeholder,
@@ -352,7 +352,7 @@ const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plai
     select {
       appearance: auto;
       background-image: none;
-      padding-right: 0.875rem;
+      padding-inline-end: 0.875rem;
     }
   }
 

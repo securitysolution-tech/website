@@ -47,7 +47,7 @@ const reasons = order.map((slug) => ({
   }
 
   .reasons li + li {
-    border-left: 1px solid var(--line);
+    border-inline-start: 1px solid var(--line);
   }
 
   .reasons a {
@@ -60,7 +60,7 @@ const reasons = order.map((slug) => ({
   }
 
   .reasons li + li a {
-    padding-left: var(--s-5);
+    padding-inline-start: var(--s-5);
   }
 
   .reasons strong {
@@ -101,11 +101,11 @@ const reasons = order.map((slug) => ({
     }
 
     .reasons li:nth-child(3) {
-      border-left: 0;
+      border-inline-start: 0;
     }
 
     .reasons li:nth-child(3) a {
-      padding-left: 0;
+      padding-inline-start: 0;
     }
 
     .reasons li:nth-child(n + 3) {
@@ -119,12 +119,12 @@ const reasons = order.map((slug) => ({
     }
 
     .reasons li + li {
-      border-left: 0;
+      border-inline-start: 0;
       border-top: 1px solid var(--line);
     }
 
     .reasons li + li a {
-      padding-left: 0;
+      padding-inline-start: 0;
     }
   }
 </style>
