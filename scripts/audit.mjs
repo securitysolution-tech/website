@@ -117,7 +117,7 @@ await browser.close();
 
 // --- Lighthouse on three pages ----------------------------------------------------------------
 const chrome = await launch({ chromeFlags });
-for (const url of ['/', '/services/offensive-testing/', '/privacy/']) {
+for (const url of ['/', '/ar/', '/services/offensive-testing/', '/privacy/']) {
   const result = await lighthouse(base + url, {
     port: chrome.port,
     output: 'json',

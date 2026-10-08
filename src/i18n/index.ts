@@ -63,6 +63,8 @@ export function useI18n(astro: Pick<AstroGlobal, 'currentLocale' | 'url'>) {
   /** A site path in this locale: href('/privacy/') is /privacy/ in English and /ar/privacy/ in Arabic. */
   const href = (path: string) => (locale === 'en' ? path : `/ar${path}`);
   const otherLocale: Locale = locale === 'en' ? 'ar' : 'en';
+  // The 404 page is one bilingual page for every missing address; it has no counterpart.
+  const notFound = /^\/404(\.html|\/)?$/.test(path);
   /** The same page in the other language. */
   const switchHref = locale === 'en' ? `/ar${path}` : path.replace(/^\/ar(?=\/)/, '') || '/';
   return {
@@ -74,9 +76,10 @@ export function useI18n(astro: Pick<AstroGlobal, 'currentLocale' | 'url'>) {
     /** True while the locale is built but not yet linked or indexed. */
     hidden: locale !== 'en' && !arLive,
     /** The language toggle, shown once Arabic is live. Its label is in the language it leads to. */
-    toggle: arLive
-      ? { href: switchHref, lang: otherLocale, label: otherLocale === 'ar' ? 'العربية' : 'English' }
-      : null,
+    toggle:
+      arLive && !notFound
+        ? { href: switchHref, lang: otherLocale, label: otherLocale === 'ar' ? 'العربية' : 'English' }
+        : null,
     /** Addresses of this page in each language, for hreflang links. */
     alternates: { en: locale === 'en' ? path : switchHref, ar: locale === 'ar' ? path : switchHref },
     services: getServices(locale),
