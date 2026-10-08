@@ -25,6 +25,7 @@ npm run dev       # local dev server
 npm run check     # type checks
 npm run build     # static build into dist/
 npm test          # link, copy and HTML checks against dist/
+npm run audit     # accessibility, CSP and Lighthouse audit of dist/ in Chrome
 ```
 
 ## Content
@@ -83,6 +84,7 @@ Automated checks, all open source:
 | `security.yml` | Every push, pull request and weekly | [zizmor](https://docs.zizmor.sh) audits the workflows; [OSV-Scanner](https://google.github.io/osv-scanner/) checks dependencies against known vulnerabilities |
 | `scorecard.yml` | Pushes to `main` and weekly | [OpenSSF Scorecard](https://scorecard.dev) rates the repository's supply-chain practices |
 | `posture.yml` | Daily | `scripts/posture.sh` checks the live site from outside: security headers, redirects, edge, origin and MTA-STS certificates, TLS 1.1 refusal, DNSSEC, CAA, SPF, DKIM, DMARC, MTA-STS, TLS-RPT, the contact endpoint's refusals, security.txt expiry, HSTS preload status and the Mozilla Observatory grade. A failure opens an issue labelled `posture` |
+| `quality.yml` | Every push and pull request | `scripts/audit.mjs` builds the site and audits it in Chrome: axe-core accessibility on every page, the Content-Security-Policy and script errors, and Lighthouse on three pages against the resource budgets in `budget.json`. Accessibility, best practices, SEO, layout shift and the budgets must be clean; the results appear in the job summary |
 | `worker.yml` | Changes to `workers/contact` | Type-checks, tests and bundles the contact Worker; deploys it to Cloudflare once the owner has set the secrets (see "Contact backend") |
 | `zap.yml` | Weekly | [OWASP ZAP](https://www.zaproxy.org) baseline: a passive scan of the public pages. Findings go to the "ZAP baseline findings" issue |
 

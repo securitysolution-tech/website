@@ -3,10 +3,12 @@ import Base from '../layouts/Base.astro';
 import ServiceCard from '../components/ServiceCard.astro';
 import { useI18n } from '../i18n';
 import { ar } from '../i18n/ar';
+// GitHub Pages serves this one page for every missing address, under /ar/ as well, so it
+// speaks both languages. The Arabic face is loaded here for that block alone.
+import '@fontsource-variable/noto-sans-arabic';
 
-// GitHub Pages serves this one page for every missing address. Both languages are built in,
-// and a few lines of script show the Arabic block under /ar/.
 const { t, href, services } = useI18n(Astro);
+const n = ar.notFound;
 ---
 
 <Base title={t.notFound.title} noindex>
@@ -25,26 +27,28 @@ const { t, href, services } = useI18n(Astro);
         </svg>
         <span translate="no">404</span>
       </p>
-      <div data-lang="en">
-        <h1>{t.notFound.title}</h1>
-        <p class="lead">{t.notFound.lead}</p>
-        <div class="actions">
-          <a class="btn btn-primary" href={href('/')}>{t.notFound.home}</a>
-          <a class="btn btn-secondary" href={href('/#check')}>{t.notFound.check}</a>
+      <div class="pair">
+        <div class="side">
+          <h1>{t.notFound.title}</h1>
+          <p class="lead">{t.notFound.lead}</p>
+          <div class="actions">
+            <a class="btn btn-primary" href={href('/')}>{t.notFound.home}</a>
+            <a class="btn btn-secondary" href={href('/#check')}>{t.notFound.check}</a>
+          </div>
         </div>
-      </div>
-      <div data-lang="ar" lang="ar" dir="rtl" hidden>
-        <p class="h1">{ar.notFound.title}</p>
-        <p class="lead">{ar.notFound.lead}</p>
-        <div class="actions">
-          <a class="btn btn-primary" href="/ar/">{ar.notFound.home}</a>
-          <a class="btn btn-secondary" href="/ar/#check">{ar.notFound.check}</a>
+        <div class="side arabic" lang="ar" dir="rtl">
+          <p class="h1">{n.title}</p>
+          <p class="lead">{n.lead}</p>
+          <div class="actions">
+            <a class="btn btn-primary" href="/ar/">{n.home}</a>
+            <a class="btn btn-secondary" href="/ar/#check">{n.check}</a>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section grid-section" aria-labelledby="nf-services" data-lang="en">
+  <section class="section grid-section" aria-labelledby="nf-services">
     <div class="container">
       <h2 id="nf-services">{t.notFound.services}</h2>
       <ul class="grid" data-spotlight-root>
@@ -56,15 +60,6 @@ const { t, href, services } = useI18n(Astro);
 
 <script>
   import '../scripts/spotlight';
-
-  // Under /ar/ the page speaks Arabic: the Arabic block is shown, the English one hidden.
-  if (location.pathname.startsWith('/ar/')) {
-    document.documentElement.lang = 'ar';
-    document.documentElement.dir = 'rtl';
-    document.querySelectorAll<HTMLElement>('[data-lang]').forEach((el) => {
-      el.hidden = el.dataset.lang !== 'ar';
-    });
-  }
 </script>
 
 <style>
@@ -76,6 +71,40 @@ const { t, href, services } = useI18n(Astro);
     display: grid;
     gap: var(--s-5);
     justify-items: start;
+  }
+
+  /* English and Arabic side by side; each column reads in its own direction. */
+  .pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--s-6) clamp(2rem, 1rem + 4vw, 5rem);
+    justify-self: stretch;
+    align-items: start;
+  }
+
+  .side {
+    display: grid;
+    gap: var(--s-4);
+    justify-items: start;
+  }
+
+  .arabic {
+    font-family: 'Archivo Variable', 'Noto Sans Arabic Variable', var(--font);
+    letter-spacing: 0;
+  }
+
+  .arabic .h1 {
+    line-height: 1.25;
+  }
+
+  .arabic .lead {
+    line-height: 1.75;
+  }
+
+  @media (max-width: 54rem) {
+    .pair {
+      grid-template-columns: 1fr;
+    }
   }
 
   .code {
@@ -116,7 +145,6 @@ const { t, href, services } = useI18n(Astro);
     display: flex;
     flex-wrap: wrap;
     gap: var(--s-3);
-    margin-top: var(--s-2);
   }
 
   .grid-section {

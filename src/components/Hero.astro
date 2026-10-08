@@ -169,7 +169,9 @@ const records = [
   }
 
   /* The load sequence, about 1.2 s end to end: headline words, then the lead at once (it is the
-     largest text on screen), the actions, the instrument, and finally the records printing. */
+     largest text on screen), the actions, the instrument, and finally the records printing.
+     The headline and the lead start faint rather than invisible: the eye has an anchor from the
+     first frame, and the page counts as painted the moment it is (invisible text does not). */
   @media (prefers-reduced-motion: no-preference) {
     /* Each word rises and unsqueezes into its full width, without touching layout. */
     .w {
@@ -187,9 +189,13 @@ const records = [
     .w:nth-child(7) { animation-delay: 270ms; }
     .w:nth-child(8) { animation-delay: 315ms; }
     .w:nth-child(9) { animation-delay: 360ms; }
+    .w:nth-child(10) { animation-delay: 405ms; }
+    .w:nth-child(11) { animation-delay: 450ms; }
+    .w:nth-child(12) { animation-delay: 495ms; }
 
     .lead {
       --enter-y: 0.3em;
+      --enter-from: 0.14;
       animation: enter var(--dur-enter) var(--ease-out) both;
     }
 
@@ -228,7 +234,7 @@ const records = [
 
   @keyframes word-in {
     from {
-      opacity: 0;
+      opacity: 0.14;
       translate: 0 0.45em;
       scale: 0.88 1;
     }

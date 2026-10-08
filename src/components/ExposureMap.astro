@@ -11,14 +11,40 @@ const { gain = 1 } = Astro.props;
 
 <script>
   import { mountExposureMap } from '../scripts/exposure-map';
-  // A scene is built only when its canvas is near the viewport, so a page never compiles
-  // a shader for a band the visitor has not reached.
+  // A scene is built only when its canvas is near the viewport, so a page never compiles a
+  // shader for a band the visitor has not reached, and never before the page has painted:
+  // the mount waits for the first contentful paint, two frames more so that paint is on
+  // screen, and then an idle moment. The text and its entrance come first; the map develops
+  // behind them, which its own fade-in was designed for.
+  const idle = (fn: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 1000 }) : setTimeout(fn, 200));
+  const afterPaint = (fn: () => void) => {
+    const go = () => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => idle(fn), 450)));
+    if (performance.getEntriesByType('paint').some((e) => e.name === 'first-contentful-paint')) return go();
+    let done = false;
+    const once = () => {
+      if (done) return;
+      done = true;
+      go();
+    };
+    try {
+      new PerformanceObserver((list, observer) => {
+        if (list.getEntries().some((e) => e.name === 'first-contentful-paint')) {
+          observer.disconnect();
+          once();
+        }
+      }).observe({ type: 'paint', buffered: true });
+    } catch {
+      once();
+    }
+    // A page that never reports a paint (an old browser, a prerender) still gets its map.
+    setTimeout(once, 3000);
+  };
   const near = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         near.unobserve(entry.target);
-        mountExposureMap(entry.target as HTMLCanvasElement);
+        afterPaint(() => mountExposureMap(entry.target as HTMLCanvasElement));
       }
     },
     { rootMargin: '300px 0px' },

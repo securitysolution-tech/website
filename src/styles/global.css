@@ -532,7 +532,7 @@ kbd {
    the same elements keep working. --enter-y overrides the distance per element. */
 @keyframes enter {
   from {
-    opacity: 0;
+    opacity: var(--enter-from, 0);
     translate: 0 var(--enter-y, var(--rise));
   }
 }

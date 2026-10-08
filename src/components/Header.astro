@@ -53,27 +53,6 @@ const links = [
   </div>
 </header>
 
-<script>
-  // The mobile menu closes after a link is chosen, on Escape (focus returns to the button),
-  // and on a tap or click anywhere outside it.
-  const menu = document.querySelector<HTMLDetailsElement>('.nav-mobile');
-  if (menu) {
-    const button = menu.querySelector<HTMLElement>('summary');
-    menu.querySelectorAll<HTMLAnchorElement>('a').forEach((link) => {
-      link.addEventListener('click', () => menu.removeAttribute('open'));
-    });
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && menu.open) {
-        menu.removeAttribute('open');
-        button?.focus();
-      }
-    });
-    document.addEventListener('pointerdown', (event) => {
-      if (menu.open && !menu.contains(event.target as Node)) menu.removeAttribute('open');
-    });
-  }
-</script>
-
 <style>
   .site-header {
     position: sticky;

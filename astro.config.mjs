@@ -6,6 +6,9 @@ import { arLive } from './src/i18n/locales.mjs';
 export default defineConfig({
   site: 'https://securitysolution.tech',
   trailingSlash: 'always',
+  // Pages are fetched when a link is hovered, so the next page is already there on the click.
+  // Same-origin requests only, and never on data-saver connections.
+  prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
   // English at the root, Arabic under /ar/ (src/i18n). Astro sets Astro.currentLocale from the path.
   i18n: {
     defaultLocale: 'en',

@@ -1,7 +1,9 @@
 // The exposure map behind the hero: slowly drifting contour lines, read by a scan
 // sweep every few seconds. First-party WebGL2 in about 4 KB, no library. It draws one
 // still frame under reduced motion, runs only while in view, survives a lost context,
-// and leaves the CSS glow alone when WebGL is unavailable or software-rendered.
+// and leaves the CSS glow alone when WebGL is unavailable or software-rendered. The
+// shader compiles in the background where the driver allows it, and the first draw
+// waits for that, so the page's main thread is never held by the compile.
 
 const VERT = `#version 300 es
 in vec2 p;
@@ -85,6 +87,9 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
   const dprCap = coarse ? 1 : 1.25;
 
   let gl: WebGL2RenderingContext | null = null;
+  let program: WebGLProgram | null = null;
+  let shaders: WebGLShader[] = [];
+  let parallel: { COMPLETION_STATUS_KHR: number } | null = null;
   let uRes: WebGLUniformLocation | null = null;
   let uTime: WebGLUniformLocation | null = null;
   let uPointer: WebGLUniformLocation | null = null;
@@ -103,6 +108,10 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
     console.warn(`exposure map: ${why}`);
   };
 
+  // Creates the context and hands the shader to the driver. Nothing here waits for the
+  // compile: with KHR_parallel_shader_compile the driver works in the background, and
+  // linked() asks each frame whether it has finished. Without the extension the wait
+  // happens in linked(), on a later frame, never before the page has painted.
   function setup(): boolean {
     gl = canvas.getContext('webgl2', {
       alpha: true,
@@ -113,45 +122,72 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
     });
     if (!gl) return false;
     const ctx = gl;
+    parallel = ctx.getExtension('KHR_parallel_shader_compile');
     const compile = (type: number, src: string) => {
       const shader = ctx.createShader(type);
-      if (!shader) return null;
-      ctx.shaderSource(shader, src);
-      ctx.compileShader(shader);
-      if (!ctx.getShaderParameter(shader, ctx.COMPILE_STATUS)) {
-        console.warn(ctx.getShaderInfoLog(shader));
-        ctx.deleteShader(shader);
-        return null;
+      if (shader) {
+        ctx.shaderSource(shader, src);
+        ctx.compileShader(shader);
       }
       return shader;
     };
     const vs = compile(ctx.VERTEX_SHADER, VERT);
     const fs = compile(ctx.FRAGMENT_SHADER, FRAG);
-    const program = ctx.createProgram();
+    program = ctx.createProgram();
     if (!vs || !fs || !program) return false;
+    shaders = [vs, fs];
     ctx.attachShader(program, vs);
     ctx.attachShader(program, fs);
     ctx.linkProgram(program);
-    ctx.deleteShader(vs);
-    ctx.deleteShader(fs);
-    if (!ctx.getProgramParameter(program, ctx.LINK_STATUS)) {
-      console.warn(ctx.getProgramInfoLog(program));
-      return false;
-    }
-    ctx.useProgram(program);
+    return true;
+  }
 
-    // One triangle that covers the clip space; the fragment shader does the rest.
+  /** True once the program is usable, false while the driver is still on it, null if it failed. */
+  function linked(): boolean | null {
+    if (!gl || !program) return null;
+    if (parallel && !gl.getProgramParameter(program, parallel.COMPLETION_STATUS_KHR)) return false;
+    const ok = gl.getProgramParameter(program, gl.LINK_STATUS) as boolean;
+    if (!ok) {
+      for (const s of shaders) console.warn(gl.getShaderInfoLog(s));
+      console.warn(gl.getProgramInfoLog(program));
+    }
+    for (const s of shaders) gl.deleteShader(s);
+    shaders = [];
+    return ok ? true : null;
+  }
+
+  // Binds the one triangle that covers the clip space and finds the uniforms.
+  function finish() {
+    const ctx = gl!;
+    const p = program!;
+    ctx.useProgram(p);
     ctx.bindBuffer(ctx.ARRAY_BUFFER, ctx.createBuffer());
     ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), ctx.STATIC_DRAW);
-    const position = ctx.getAttribLocation(program, 'p');
+    const position = ctx.getAttribLocation(p, 'p');
     ctx.enableVertexAttribArray(position);
     ctx.vertexAttribPointer(position, 2, ctx.FLOAT, false, 0, 0);
+    uRes = ctx.getUniformLocation(p, 'u_res');
+    uTime = ctx.getUniformLocation(p, 'u_time');
+    uPointer = ctx.getUniformLocation(p, 'u_pointer');
+    ctx.uniform1f(ctx.getUniformLocation(p, 'u_gain'), gain);
+  }
 
-    uRes = ctx.getUniformLocation(program, 'u_res');
-    uTime = ctx.getUniformLocation(program, 'u_time');
-    uPointer = ctx.getUniformLocation(program, 'u_pointer');
-    ctx.uniform1f(ctx.getUniformLocation(program, 'u_gain'), gain);
-    return true;
+  // Polls the driver one frame at a time, then runs `then` with the program ready.
+  function whenLinked(then: () => void) {
+    const poll = () => {
+      const state = linked();
+      if (state === false) {
+        requestAnimationFrame(poll);
+        return;
+      }
+      if (state === null) {
+        giveUp('the shader failed to build');
+        return;
+      }
+      finish();
+      then();
+    };
+    requestAnimationFrame(poll);
   }
 
   function resize(): boolean {
@@ -206,7 +242,7 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
   };
 
   if (!setup()) {
-    giveUp('WebGL2 unavailable, software-rendered, or the shader failed to build');
+    giveUp('WebGL2 unavailable or software-rendered');
     return;
   }
 
@@ -221,40 +257,47 @@ export function mountExposureMap(canvas: HTMLCanvasElement) {
   canvas.addEventListener('webglcontextrestored', () => {
     lost = false;
     if (!setup()) return;
-    host.classList.remove('no-map');
+    whenLinked(() => {
+      host.classList.remove('no-map');
+      host.classList.add('map-live');
+      canvas.width = 0; // force the viewport and resolution uniform to be set again
+      if (reduce.matches) still();
+      else {
+        resize();
+        schedule();
+      }
+    });
+  });
+
+  whenLinked(() => {
+    resize();
     host.classList.add('map-live');
-    canvas.width = 0; // force the viewport and resolution uniform to be set again
-    if (reduce.matches) still();
-    else { resize(); schedule(); }
+
+    if (reduce.matches) {
+      still();
+      new ResizeObserver(() => { if (resize()) draw(STILL_FRAME_TIME); }).observe(canvas);
+      return;
+    }
+
+    new ResizeObserver(() => { if (resize()) draw(active); }).observe(canvas);
+    // The loop starts when the canvas comes into view and stops when it leaves.
+    new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible) schedule();
+      else lastTick = 0;
+    }).observe(canvas);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) schedule();
+    });
+    if (matchMedia('(pointer: fine)').matches) {
+      addEventListener(
+        'pointermove',
+        (e) => {
+          tx = (e.clientX / innerWidth) * 2 - 1;
+          ty = -((e.clientY / innerHeight) * 2 - 1);
+        },
+        { passive: true },
+      );
+    }
   });
-
-  resize();
-  host.classList.add('map-live');
-
-  if (reduce.matches) {
-    still();
-    new ResizeObserver(() => { if (resize()) draw(STILL_FRAME_TIME); }).observe(canvas);
-    return;
-  }
-
-  new ResizeObserver(() => { if (resize()) draw(active); }).observe(canvas);
-  // The loop starts when the canvas comes into view and stops when it leaves.
-  new IntersectionObserver(([entry]) => {
-    visible = entry.isIntersecting;
-    if (visible) schedule();
-    else lastTick = 0;
-  }).observe(canvas);
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) schedule();
-  });
-  if (matchMedia('(pointer: fine)').matches) {
-    addEventListener(
-      'pointermove',
-      (e) => {
-        tx = (e.clientX / innerWidth) * 2 - 1;
-        ty = -((e.clientY / innerHeight) * 2 - 1);
-      },
-      { passive: true },
-    );
-  }
 }

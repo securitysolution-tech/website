@@ -110,3 +110,22 @@ if (location.hash.length > 1 && !location.hash.startsWith('#check=')) {
   }
   if (target) requestAnimationFrame(() => scrollToElement(target, { immediate: true, focus: false }));
 }
+
+// The mobile menu (Header.astro) closes after a link is chosen, on Escape (focus returns
+// to the button), and on a tap or click anywhere outside it.
+const menu = document.querySelector<HTMLDetailsElement>('.nav-mobile');
+if (menu) {
+  const button = menu.querySelector<HTMLElement>('summary');
+  menu.querySelectorAll<HTMLAnchorElement>('a').forEach((link) => {
+    link.addEventListener('click', () => menu.removeAttribute('open'));
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && menu.open) {
+      menu.removeAttribute('open');
+      button?.focus();
+    }
+  });
+  document.addEventListener('pointerdown', (event) => {
+    if (menu.open && !menu.contains(event.target as Node)) menu.removeAttribute('open');
+  });
+}

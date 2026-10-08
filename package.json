@@ -13,7 +13,8 @@
     "preview": "astro preview",
     "check": "astro check",
     "test": "node scripts/check-links.mjs && node scripts/check-copy.mjs && node scripts/check-css.mjs && html-validate \"dist/**/*.html\"",
-    "astro": "astro"
+    "astro": "astro",
+    "audit": "node scripts/audit.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.4",
@@ -25,7 +26,11 @@
   "devDependencies": {
     "@astrojs/check": "0.9.10",
     "@phosphor-icons/core": "2.1.1",
+    "axe-core": "4.14.0",
+    "chrome-launcher": "1.2.2",
     "html-validate": "11.16.2",
+    "lighthouse": "13.5.0",
+    "playwright-core": "1.64.0",
     "typescript": "6.0.3"
   },
   "allowScripts": {
