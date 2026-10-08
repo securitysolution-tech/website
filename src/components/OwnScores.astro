@@ -27,10 +27,9 @@ const scores = t.scores.items.map((s, i) => ({ ...s, ...links[i] }));
     </div>
     <ul class="grid">
       {
-        scores.map((s, i) => (
+        scores.map((s) => (
           <li class="cell">
-            {/* The content rises, not the cell, so the grid's hairlines never show through. */}
-            <div class="cell-in" data-reveal data-reveal-step={i}>
+            <div class="cell-in">
               <p class="scanner">{s.scanner}</p>
               <p class:list={['grade', { long: s.grade.length > 6 }]} translate="no">
                 {s.grade}

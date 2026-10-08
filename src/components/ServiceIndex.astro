@@ -26,7 +26,6 @@ const { t, services } = useI18n(Astro);
             tinted={i === 3}
             items={i === 0 ? s.items.length : 4}
             columns={i === 0 || i === 3 ? 2 : 1}
-            step={i % 2}
           />
         ))
       }

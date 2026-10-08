@@ -1,8 +1,8 @@
 // Scroll choreography that does not depend on CSS scroll-driven animations, and the
-// navigation scroll-spy. Where the browser has scroll-driven animations, the CSS does the
-// reveals and this file only drives the scroll-spy (and the header's frosted state under
-// reduced motion). Elsewhere it marks elements as they enter the viewport so the same
-// reveals, the process line and the header lift play through transitions.
+// navigation scroll-spy. Where the browser has scroll-driven animations, the CSS drives the
+// process line and the finding's bar and this file only drives the scroll-spy (and the
+// header's frosted state under reduced motion). Elsewhere it marks those two as they enter
+// the viewport so the same motion plays through transitions.
 const root = document.documentElement;
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const scrollDriven = CSS.supports('animation-timeline: view()');
@@ -19,7 +19,7 @@ if (!scrollDriven && !reduce) {
     },
     { rootMargin: '0px 0px -12% 0px', threshold: 0 },
   );
-  document.querySelectorAll('[data-reveal], .steps').forEach((el) => reveal.observe(el));
+  document.querySelectorAll('.steps, .finding').forEach((el) => reveal.observe(el));
 }
 
 // A one-pixel sentinel at the top tells the header when the page has scrolled. The frosted

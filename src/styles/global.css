@@ -544,37 +544,6 @@ kbd {
   }
 }
 
-/* Anything marked data-reveal rises into place over a fixed length of scroll as it enters;
-   data-reveal-step trails neighbours in the same row by a beat, so a band reads left to right. */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    [data-reveal] {
-      animation: enter linear both;
-      animation-timeline: view();
-      animation-range: entry 0px entry 160px;
-    }
-
-    [data-reveal-step='1'] {
-      animation-range: entry 40px entry 200px;
-    }
-
-    [data-reveal-step='2'] {
-      animation-range: entry 80px entry 240px;
-    }
-
-    [data-reveal-step='3'] {
-      animation-range: entry 120px entry 280px;
-    }
-  }
-
-  /* In one-column layouts there is no row to read across. */
-  @media (prefers-reduced-motion: no-preference) and (max-width: 40rem) {
-    [data-reveal-step] {
-      animation-range: entry 0px entry 160px;
-    }
-  }
-}
-
 /* Lenis drives scrolling when it runs; the browser must not smooth it a second time. */
 html.lenis {
   scroll-behavior: auto;
@@ -605,42 +574,16 @@ html.leaving :is(main, .site-footer) {
   pointer-events: none;
 }
 
-/* Where scroll-driven animations are missing, reveal.ts marks elements and these transitions play. */
+/* Where scroll-driven animations are missing, reveal.ts marks the process band as it enters and
+   these transitions fill the line and light the numbers. */
 @supports not (animation-timeline: view()) {
-  html.io [data-reveal] {
-    opacity: 0;
-    translate: 0 var(--enter-y, var(--rise));
-    transition:
-      opacity var(--dur-enter) var(--ease-out),
-      translate var(--dur-enter) var(--ease-out);
-  }
-
-  html.io [data-reveal-step='1'] {
-    transition-delay: calc(var(--stagger) * 2);
-  }
-
-  html.io [data-reveal-step='2'] {
-    transition-delay: calc(var(--stagger) * 4);
-  }
-
-  html.io [data-reveal-step='3'] {
-    transition-delay: calc(var(--stagger) * 6);
-  }
-
-  html.io [data-reveal].in {
-    opacity: 1;
-    translate: none;
-  }
-
   html.io .steps::after {
     transform: scaleX(0);
     transition: transform 1.4s var(--ease-standard);
   }
-
   html.io .steps.in::after {
     transform: none;
   }
-
   html.io .num {
     border-color: var(--ink-line);
     color: var(--ink-text-2);
@@ -648,22 +591,17 @@ html.leaving :is(main, .site-footer) {
       border-color var(--dur-base) ease,
       color var(--dur-base) ease;
   }
-
   html.io .steps.in .num {
     border-color: var(--ink-accent);
     color: var(--ink-accent);
   }
-
   html.io .steps.in .step:nth-child(2) .num { transition-delay: 0.3s; }
   html.io .steps.in .step:nth-child(3) .num { transition-delay: 0.6s; }
   html.io .steps.in .step:nth-child(4) .num { transition-delay: 0.9s; }
   html.io .steps.in .step:nth-child(5) .num { transition-delay: 1.2s; }
-
-  @media (max-width: 60rem) {
-    html.io .steps::after {
+  html.io .steps::after {
       transform: scaleY(0);
     }
-  }
 }
 
 /* The scrolled header, driven by a sentinel observer where scroll-driven animations are
@@ -723,5 +661,125 @@ html.leaving :is(main, .site-footer) {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* On paper: the ink bands print as paper, the chrome, canvases, forms and ornaments stay off
+   the page, nothing waits for a scroll or a pointer, and the policies and the check's results
+   come out as a plain document. */
+@media print {
+  :root {
+    --paper: #fff;
+    --raised: #fff;
+    --ink-bg: #fff;
+    --ink-raised: #fff;
+    --ink-line: #999;
+    --ink-text: #000;
+    --ink-text-2: #333;
+    --ink-accent: #0a6b4c;
+    --ink-accent-rgb: 10 107 76;
+    --ink-accent-hover: #0a6b4c;
+    --on-ink-accent: #fff;
+    --ink-control: #666;
+    --panel: #fff;
+    --panel-2: #fff;
+    --panel-ink: #000;
+    --panel-ink-2: #333;
+    --panel-line: #999;
+    --pass: #0a6b4c;
+    --p-warn: #8a5a00;
+    --p-fail: #b42318;
+    --p-info: #334;
+    --line: #bbb;
+  }
+
+  *,
+  ::before,
+  ::after {
+    animation: none !important;
+    transition: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .site-header,
+  .site-footer,
+  .skip-link,
+  .exposure-map,
+  .glow,
+  .backdrop,
+  .art,
+  .grain::after,
+  .check-form,
+  .retry,
+  .request,
+  .verdict-cta,
+  .start,
+  .spotlight,
+  .top-sentinel {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .approach {
+    min-height: auto !important;
+  }
+
+  .approach .container {
+    position: static !important;
+  }
+
+  .section,
+  .page-head,
+  .contact,
+  .hero {
+    padding-block: 1.5rem;
+  }
+
+  .check-wrap {
+    margin-top: 0;
+  }
+
+  .tray {
+    border: 0;
+    padding: 0;
+    background: none;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  .card,
+  .row,
+  .qa,
+  .finding,
+  .fact,
+  .person,
+  .step,
+  .cell {
+    break-inside: avoid;
+  }
+
+  .qa[open] summary ~ *,
+  .qa:not([open]) .answer {
+    display: block;
+  }
+
+  .prose a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.85em;
+    color: #333;
+  }
+
+  a {
+    color: inherit;
   }
 }

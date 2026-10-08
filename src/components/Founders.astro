@@ -22,9 +22,9 @@ const initials = (name: string) => {
     <!-- One panel, divided like the signature block of a report: the names behind the findings. -->
     <ul class="people">
       {
-        founders.map((f, i) => (
+        founders.map((f) => (
           <li class="person">
-            <div class="person-in" data-reveal data-reveal-step={i}>
+            <div class="person-in">
             <span class="mono" aria-hidden="true">
               <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="square">
                 <path d="M3 11V3h8M21 3h8v8M29 21v8h-8M11 29H3v-8"></path>
