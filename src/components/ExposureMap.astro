@@ -1,0 +1,33 @@
+---
+// A canvas that fills its positioned parent and sits behind the parent's content.
+// The parent needs position: relative and isolation: isolate.
+interface Props {
+  gain?: number;
+}
+const { gain = 1 } = Astro.props;
+---
+
+<canvas class="exposure-map" data-exposure-map data-gain={gain} aria-hidden="true"></canvas>
+
+<script>
+  import { mountExposureMap } from '../scripts/exposure-map';
+  document.querySelectorAll<HTMLCanvasElement>('[data-exposure-map]').forEach(mountExposureMap);
+</script>
+
+<style>
+  .exposure-map {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  @media (forced-colors: active) {
+    .exposure-map {
+      display: none;
+    }
+  }
+</style>

@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Contact from '../../components/Contact.astro';
+import ExposureMap from '../../components/ExposureMap.astro';
 import { services, type Service } from '../../data/services';
 import { contactCta } from '../../data/site';
 
@@ -19,6 +20,7 @@ const others = services.filter((s) => s.slug !== service.slug);
 <Base title={service.seoTitle} description={service.seoDescription}>
   <article>
     <header class="page-head ink">
+      <ExposureMap gain={0.7} />
       <div class="container">
         <nav class="crumbs" aria-label="Breadcrumb">
           <a href="/#services">Services</a>
@@ -85,6 +87,7 @@ const others = services.filter((s) => s.slug !== service.slug);
   .page-head {
     position: relative;
     overflow: hidden;
+    isolation: isolate;
     border-bottom: 1px solid var(--ink-line);
     padding-block: clamp(3rem, 2rem + 5vw, 6rem) clamp(3rem, 2rem + 4vw, 5rem);
     background:

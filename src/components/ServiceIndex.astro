@@ -3,6 +3,10 @@ import Icon from './Icon.astro';
 import { services } from '../data/services';
 ---
 
+<script>
+  import '../scripts/spotlight';
+</script>
+
 <section id="services" class="section" aria-labelledby="services-title">
   <div class="container">
     <div class="section-head">
@@ -10,10 +14,10 @@ import { services } from '../data/services';
       <p>Start with the service you need now, and let the report tell you what to look at next.</p>
     </div>
 
-    <ul class="bento">
+    <ul class="bento" data-spotlight-root>
       {
         services.map((s, i) => (
-          <li class:list={['card', `card-${i + 1}`, { ink: i === 0 }]}>
+          <li class:list={['card', `card-${i + 1}`, { ink: i === 0 }]} data-spotlight>
             <span class="chip" aria-hidden="true">
               <Icon name={s.icon} />
             </span>
@@ -59,7 +63,10 @@ import { services } from '../data/services';
   }
 
   .card {
+    --highlight: rgb(255 255 255 / 0.7);
+    --spot: rgb(98 211 166 / 0.14);
     position: relative;
+    isolation: isolate;
     display: flex;
     flex-direction: column;
     gap: var(--s-3);
@@ -67,6 +74,8 @@ import { services } from '../data/services';
     border: 1px solid var(--line);
     border-radius: var(--radius-panel);
     background: var(--raised);
+    /* A hairline of light along the top edge: the plate catches the room. */
+    box-shadow: inset 0 1px 0 var(--highlight);
     transition:
       transform 240ms var(--ease-out),
       border-color 240ms ease,
@@ -76,7 +85,33 @@ import { services } from '../data/services';
   .card:hover {
     transform: translateY(-3px);
     border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
-    box-shadow: 0 28px 50px -30px rgb(19 33 27 / 0.4);
+    box-shadow:
+      inset 0 1px 0 var(--highlight),
+      0 28px 50px -30px rgb(19 33 27 / 0.4);
+  }
+
+  /* The spotlight: a soft pool of the accent that follows the pointer (set by spotlight.ts). */
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: radial-gradient(18rem circle at var(--mx, 50%) var(--my, 50%), var(--spot), transparent 65%);
+    opacity: 0;
+    transition: opacity 320ms var(--ease-out);
+    pointer-events: none;
+  }
+
+  .card:hover::before {
+    opacity: 1;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .card {
+      --highlight: rgb(255 255 255 / 0.05);
+      --spot: rgb(98 211 166 / 0.12);
+    }
   }
 
   /* The last card gets a soft accent tint, so the grid has a diagonal rhythm of dark, light, light, tinted. */
@@ -86,6 +121,8 @@ import { services } from '../data/services';
   }
 
   .card.ink {
+    --highlight: rgb(255 255 255 / 0.06);
+    --spot: rgb(98 211 166 / 0.2);
     border-color: var(--ink-line);
     background:
       radial-gradient(120% 70% at 100% 100%, rgb(98 211 166 / 0.14), transparent 60%),
@@ -94,7 +131,9 @@ import { services } from '../data/services';
 
   .card.ink:hover {
     border-color: rgb(98 211 166 / 0.45);
-    box-shadow: 0 30px 60px -30px rgb(6 16 12 / 0.8);
+    box-shadow:
+      inset 0 1px 0 var(--highlight),
+      0 30px 60px -30px rgb(6 16 12 / 0.8);
   }
 
   .chip {
@@ -241,6 +280,12 @@ import { services } from '../data/services';
     .card-1 .items,
     .card-4 .items {
       grid-template-columns: 1fr;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .card::before {
+      display: none;
     }
   }
 
