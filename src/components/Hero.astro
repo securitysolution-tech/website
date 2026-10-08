@@ -18,7 +18,7 @@ const records = [
 ];
 ---
 
-<section class="hero ink" aria-labelledby="hero-title">
+<section class="hero ink grain" aria-labelledby="hero-title">
   <ExposureMap />
   <div class="backdrop" aria-hidden="true" data-parallax>
     {records.map((r) => <p data-r={r} />)}
@@ -141,6 +141,7 @@ const records = [
     font-family: var(--font-display);
     font-stretch: 116%;
     font-weight: 700;
+    letter-spacing: -0.03em;
     color: var(--ink-text);
   }
 

@@ -7,7 +7,7 @@ import { contactCta, site } from '../data/site';
 const year = new Date().getFullYear();
 ---
 
-<footer class="site-footer ink">
+<footer class="site-footer ink grain">
   <div class="container grid">
     <div class="about">
       <a class="brand" href="/">
@@ -56,6 +56,8 @@ const year = new Date().getFullYear();
 
 <style>
   .site-footer {
+    position: relative;
+    isolation: isolate;
     border-top: 1px solid var(--ink-line);
     padding-block: var(--s-8) var(--s-6);
     color: var(--ink-text-2);

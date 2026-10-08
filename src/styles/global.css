@@ -54,7 +54,7 @@
   --step-1: 1.3125rem;
   --step-2: 1.625rem;
   --step-3: clamp(1.75rem, 1.35rem + 1.6vw, 2.375rem);
-  --step-4: clamp(2.35rem, 1.45rem + 3.6vw, 4rem);
+  --step-4: clamp(2.35rem, 1.45rem + 3.6vw, 4.5rem);
 
   --s-1: 0.25rem;
   --s-2: 0.5rem;
@@ -309,13 +309,13 @@ kbd {
 }
 
 .section {
-  padding-block: clamp(3.5rem, 2.25rem + 4vw, 5.5rem);
+  padding-block: clamp(3.5rem, 2rem + 5vw, 7rem);
 }
 
 .section-head {
   display: grid;
   gap: var(--s-4);
-  margin-bottom: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+  margin-bottom: clamp(2rem, 1.5rem + 2.5vw, 4rem);
 }
 
 .section-head p {
@@ -357,13 +357,43 @@ kbd {
   transform: translateY(1px);
 }
 
+/* A hairline of light along the top and a tinted drop, so the button reads as a key, not a flat fill. */
 .btn-primary {
   background: var(--accent);
   color: var(--on-accent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.28),
+    0 1px 2px rgb(6 16 12 / 0.18);
 }
 
 .btn-primary:hover {
   background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.28),
+    0 10px 24px -12px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+.btn-primary:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1);
+}
+
+.ink .btn-secondary {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* Film grain for the ink bands: a static tile, so it costs one cached bitmap. */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url('/noise.png');
+  background-size: 128px 128px;
+  opacity: 0.05;
+  pointer-events: none;
 }
 
 .btn-secondary {

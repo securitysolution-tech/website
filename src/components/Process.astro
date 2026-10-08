@@ -23,7 +23,7 @@ const steps = [
 ];
 ---
 
-<section id="approach" class="section approach ink" aria-labelledby="approach-title">
+<section id="approach" class="section approach ink grain" aria-labelledby="approach-title">
   <div class="container">
     <div class="section-head">
       <h2 id="approach-title">How an engagement works</h2>
@@ -49,6 +49,7 @@ const steps = [
 <style>
   .approach {
     position: relative;
+    isolation: isolate;
     overflow: hidden;
     /* clip, not a scroll container: the line fill's view() timeline must reach the viewport */
     overflow: clip;
