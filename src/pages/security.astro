@@ -1,32 +1,63 @@
 ---
 import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Icon from '../components/Icon.astro';
 import { site } from '../data/site';
+
+const steps = [
+  { title: 'Acknowledge', text: 'We confirm your report within 3 business days.' },
+  { title: 'Investigate', text: 'We reproduce the issue and keep you updated while we work on it.' },
+  { title: 'Fix', text: 'We resolve it and let you know when the fix is live.' },
+  { title: 'Credit', text: 'We thank you publicly on this page if you would like that.' },
+];
 ---
 
 <Base
   title="Report a vulnerability"
   description="How to report a security issue in SecuritySolution.tech websites and systems, and what you can expect from us."
 >
+  <PageHead
+    title="Report a vulnerability"
+    lead="If you find a security issue in one of our websites or systems, we want to hear about it. Here is how to reach us, what happens next, and what stays out of scope."
+    crumbs={[{ label: 'Home', href: '/' }, { label: 'Report a vulnerability' }]}
+    gain={0.5}
+  />
+
   <article class="section">
     <div class="container prose">
-      <h1>Report a vulnerability</h1>
-      <p class="lead">If you find a security issue in one of our websites or systems, we want to hear about it.</p>
-
       <h2>How to report</h2>
       <p>
-        Email <a href={`mailto:${site.securityEmail}`}>{site.securityEmail}</a> with a description of the issue, the steps
-        to reproduce it, and the impact you expect. Screenshots or a short proof of concept help us move faster.
+        Email us with a description of the issue, the steps to reproduce it, and the impact you expect. Screenshots or a
+        short proof of concept help us move faster.
+      </p>
+      <a class="address" href={`mailto:${site.securityEmail}?subject=${encodeURIComponent('Security report')}`}>
+        <Icon name="envelope-simple" class="icon mail" />
+        <span>{site.securityEmail.split('@')[0]}<wbr />@{site.securityEmail.split('@')[1]}</span>
+      </a>
+      <p>
+        Machine-readable contact details are published in our <a href="/.well-known/security.txt">security.txt</a> file.
       </p>
 
       <h2>What you can expect</h2>
-      <ul>
-        <li>We acknowledge your report within 3 business days.</li>
-        <li>We keep you updated while we investigate and fix the issue.</li>
-        <li>Once it is resolved, we credit you publicly if you would like that.</li>
-      </ul>
+      <ol class="steps">
+        {
+          steps.map((s, i) => (
+            <li>
+              <span class="num" aria-hidden="true">
+                {i + 1}
+              </span>
+              <div>
+                <strong>{s.title}</strong>
+                <p>{s.text}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
 
       <h2>Scope</h2>
-      <p>{site.name} and its subdomains.</p>
+      <p>{site.name} and its subdomains, including the domain check and the request form on this site.</p>
+      <p>Out of scope: the services our hosting and DNS providers run (GitHub Pages, Cloudflare), reports produced by an automated scanner without a working proof of concept, and issues in third-party sites we link to.</p>
 
       <h2>Please do not</h2>
       <ul>
@@ -42,10 +73,83 @@ import { site } from '../data/site';
         paid bug bounty at the moment.
       </p>
 
-      <p>
-        Machine-readable contact details are published in our
-        <a href="/.well-known/security.txt">security.txt</a> file.
-      </p>
+      <h2>Acknowledgements</h2>
+      <p>Researchers who report a resolved issue are credited here if they want to be. No reports have been received yet.</p>
+
+      <p class="updated">Last updated 8 October 2026.</p>
     </div>
   </article>
 </Base>
+
+<style>
+  .address {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-3);
+    width: fit-content;
+    font-size: clamp(1.2rem, 0.85rem + 1.8vw, 2.125rem);
+    font-family: var(--font-wide);
+    font-weight: 680;
+    font-stretch: 108%;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.18em;
+    transition: color 150ms ease;
+  }
+
+  .address :global(.mail) {
+    flex: none;
+    width: 1em;
+    height: 1em;
+  }
+
+  .address:hover {
+    color: var(--accent-hover);
+    text-decoration-thickness: 3px;
+  }
+
+  .steps {
+    list-style: none;
+    display: grid;
+    gap: var(--s-4);
+    max-width: var(--measure);
+  }
+
+  .steps li {
+    display: grid;
+    grid-template-columns: 2.25rem 1fr;
+    gap: var(--s-4);
+    align-items: start;
+  }
+
+  .num {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--font-wide);
+    font-weight: 700;
+    font-stretch: 112%;
+    font-size: var(--step--1);
+  }
+
+  .steps strong {
+    display: block;
+    font-weight: 650;
+    color: var(--ink);
+  }
+
+  .steps p {
+    color: var(--ink-2);
+  }
+
+  .updated {
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+</style>

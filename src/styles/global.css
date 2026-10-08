@@ -241,6 +241,14 @@ h1 {
   line-height: 1.02;
 }
 
+/* The display cut used by every page-opening heading. */
+.display {
+  font-family: var(--font-display);
+  font-stretch: 116%;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
 h2 {
   font-size: var(--step-3);
 }

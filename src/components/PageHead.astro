@@ -1,0 +1,136 @@
+---
+// The ink band that opens every page except the home page: breadcrumbs, a display
+// heading, a lead, an optional call to action, and whatever the page adds in the slot.
+import ExposureMap from './ExposureMap.astro';
+
+interface Crumb {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  title: string;
+  lead?: string;
+  crumbs?: Crumb[];
+  cta?: { label: string; href: string };
+  /** Strength of the exposure map behind the heading; 0 turns it off. */
+  gain?: number;
+}
+
+const { title, lead, crumbs = [], cta, gain = 0.6 } = Astro.props;
+---
+
+<header class="page-head ink grain">
+  {gain > 0 && <ExposureMap gain={gain} />}
+  <div class="container">
+    {
+      crumbs.length > 0 && (
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <ol>
+            {crumbs.map((c) => (
+              <li>{c.href ? <a href={c.href}>{c.label}</a> : <span aria-current="page">{c.label}</span>}</li>
+            ))}
+          </ol>
+        </nav>
+      )
+    }
+    <h1 class="display">{title}</h1>
+    {lead && <p class="lead">{lead}</p>}
+    {cta && <a class="btn btn-primary" href={cta.href}>{cta.label}</a>}
+    <slot />
+  </div>
+</header>
+
+<style>
+  .page-head {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    border-bottom: 1px solid var(--ink-line);
+    padding-block: clamp(3rem, 2rem + 5vw, 6rem) clamp(3rem, 2rem + 4vw, 5rem);
+    background:
+      radial-gradient(70% 90% at 100% 100%, rgb(98 211 166 / 0.14), transparent 65%),
+      var(--ink-bg);
+  }
+
+  .page-head .container {
+    display: grid;
+    gap: var(--s-5);
+    justify-items: start;
+  }
+
+  .crumbs ol {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    color: var(--ink-text-2);
+    font-size: var(--step--1);
+    font-weight: 560;
+  }
+
+  .crumbs li {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* The separators are drawn, not written, so screen readers hear a plain list. */
+  .crumbs li + li::before {
+    content: '/';
+    margin-inline: var(--s-2);
+    opacity: 0.6;
+  }
+
+  .crumbs a {
+    display: inline-block;
+    padding-block: 0.15rem;
+    color: var(--ink-text-2);
+    transition: color 150ms ease;
+  }
+
+  @media (pointer: coarse) {
+    .crumbs a {
+      padding-block: 0.65rem;
+    }
+  }
+
+  .crumbs a:hover {
+    color: var(--ink-text);
+  }
+
+  .crumbs [aria-current] {
+    color: var(--ink-text);
+  }
+
+  .lead {
+    max-width: 34.38em;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .crumbs,
+    h1,
+    .lead,
+    .btn {
+      animation: head-rise 700ms var(--ease-out) both;
+    }
+
+    h1 {
+      animation-delay: 60ms;
+    }
+
+    .lead {
+      animation-delay: 160ms;
+    }
+
+    .btn {
+      animation-delay: 240ms;
+    }
+  }
+
+  @keyframes head-rise {
+    from {
+      opacity: 0;
+      transform: translateY(0.4em);
+    }
+  }
+</style>

@@ -2,8 +2,16 @@
 import Icon from './Icon.astro';
 import ExposureMap from './ExposureMap.astro';
 import { contactCta, mailto, site } from '../data/site';
+import { services } from '../data/services';
 
-const needs = ['Penetration test', 'Security monitoring', 'Compliance readiness', 'AI and cloud review'];
+interface Props {
+  /** A need to tick in advance, on pages about one service. */
+  need?: string;
+}
+const { need } = Astro.props;
+
+// The needs are the services, in the buyer's words, so the form and the pages agree.
+const needs = services.map((s) => s.plainName);
 const timelines = ['As soon as possible', 'Within a month', 'Within three months', 'Just exploring'];
 ---
 
@@ -75,7 +83,7 @@ const timelines = ['As soon as possible', 'Within a month', 'Within three months
           {
             needs.map((n, i) => (
               <label class="choice">
-                <input type="checkbox" name={`need-${i}`} value={n} id={`cf-need-${i}`} />
+                <input type="checkbox" name={`need-${i}`} value={n} id={`cf-need-${i}`} checked={n === need} />
                 <span>{n}</span>
               </label>
             ))

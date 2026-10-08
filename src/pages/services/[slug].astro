@@ -1,8 +1,15 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHead from '../../components/PageHead.astro';
+import FactGrid from '../../components/FactGrid.astro';
+import Callout from '../../components/Callout.astro';
+import Process from '../../components/Process.astro';
+import ExampleFinding from '../../components/ExampleFinding.astro';
+import Faq from '../../components/Faq.astro';
+import ServiceCard from '../../components/ServiceCard.astro';
 import Contact from '../../components/Contact.astro';
-import ExposureMap from '../../components/ExposureMap.astro';
 import { services, type Service } from '../../data/services';
+import { faqsFor } from '../../data/faq';
 import { contactCta } from '../../data/site';
 
 export function getStaticPaths() {
@@ -15,27 +22,27 @@ interface Props {
 
 const { service } = Astro.props;
 const others = services.filter((s) => s.slug !== service.slug);
+const faqs = faqsFor(service.slug);
 ---
 
 <Base title={service.seoTitle} description={service.seoDescription} hasContact>
   <article>
-    <header class="page-head ink">
-      <ExposureMap gain={0.7} />
-      <div class="container">
-        <nav class="crumbs" aria-label="Breadcrumb">
-          <a href="/#services">Services</a>
-          <span class="sep" aria-hidden="true">/</span>
-          <span aria-current="page">{service.name}</span>
-        </nav>
-        <h1>{service.name}</h1>
-        <p class="lead">{service.intro}</p>
-        <a class="btn btn-primary" href="#contact">{contactCta.label}</a>
-      </div>
-    </header>
+    <PageHead
+      title={service.plainName}
+      lead={service.intro}
+      crumbs={[{ label: 'Home', href: '/' }, { label: 'Services', href: '/#services' }, { label: service.name }]}
+      cta={{ label: contactCta.label, href: '#contact' }}
+      gain={0.7}
+    >
+      <FactGrid ink facts={service.facts} label={`${service.name} at a glance`} />
+    </PageHead>
 
     <section class="section" aria-labelledby="scope-title">
       <div class="container">
-        <h2 id="scope-title" class="block-title">What we cover</h2>
+        <div class="section-head">
+          <h2 id="scope-title">What we cover</h2>
+          <p>{service.coverLead}</p>
+        </div>
         <dl class="items">
           {
             service.items.map((i) => (
@@ -46,7 +53,14 @@ const others = services.filter((s) => s.slug !== service.slug);
             ))
           }
         </dl>
-        {service.note && <p class="note">{service.note}</p>}
+        {
+          service.standards.length > 0 && (
+            <p class="standards">
+              <span>Measured against</span> {service.standards.join(', ')}.
+            </p>
+          )
+        }
+        {service.note && <Callout title="Good to know">{service.note}</Callout>}
       </div>
     </section>
 
@@ -63,83 +77,33 @@ const others = services.filter((s) => s.slug !== service.slug);
       </div>
     </section>
 
+    <Process />
+
+    {service.slug === 'offensive-testing' && <ExampleFinding />}
+
+    {faqs.length > 1 && <Faq faqs={faqs} title="Questions about this service" id="service-faq" />}
+
     <section class="section" aria-labelledby="more-title">
       <div class="container">
-        <h2 id="more-title" class="block-title">Other services</h2>
-        <ul class="others">
-          {
-            others.map((o) => (
-              <li>
-                <a href={`/services/${o.slug}/`}>{o.name}</a>
-                <p>{o.summary}</p>
-              </li>
-            ))
-          }
+        <div class="section-head">
+          <h2 id="more-title">Other services</h2>
+          <p>Each one stands on its own. Together they cover testing, monitoring and compliance.</p>
+        </div>
+        <ul class="others" data-spotlight-root>
+          {others.map((o) => <ServiceCard service={o} items={3} />)}
         </ul>
       </div>
     </section>
   </article>
 
-  <Contact />
+  <Contact need={service.plainName} />
 </Base>
 
+<script>
+  import '../../scripts/spotlight';
+</script>
+
 <style>
-  .page-head {
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
-    border-bottom: 1px solid var(--ink-line);
-    padding-block: clamp(3rem, 2rem + 5vw, 6rem) clamp(3rem, 2rem + 4vw, 5rem);
-    background:
-      radial-gradient(70% 90% at 100% 100%, rgb(98 211 166 / 0.14), transparent 65%),
-      var(--ink-bg);
-  }
-
-  .page-head .container {
-    display: grid;
-    gap: var(--s-5);
-    justify-items: start;
-  }
-
-  .crumbs {
-    display: flex;
-    align-items: center;
-    gap: var(--s-2);
-    color: var(--ink-text-2);
-    font-size: var(--step--1);
-    font-weight: 560;
-  }
-
-  .crumbs a {
-    color: var(--ink-text-2);
-  }
-
-  .crumbs a:hover {
-    color: var(--ink-text);
-  }
-
-  .crumbs .sep {
-    opacity: 0.6;
-  }
-
-  .crumbs [aria-current] {
-    color: var(--ink-text);
-  }
-
-  h1 {
-    font-family: var(--font-display);
-    font-stretch: 116%;
-  }
-
-  .lead {
-    max-width: 34.38em;
-  }
-
-  .block-title {
-    font-size: var(--step-2);
-    margin-bottom: var(--s-6);
-  }
-
   .items {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -167,10 +131,24 @@ const others = services.filter((s) => s.slug !== service.slug);
     color: var(--ink-2);
   }
 
-  .note {
+  .standards {
     margin-top: var(--s-6);
-    color: var(--ink-3);
+    color: var(--ink-2);
     font-size: var(--step--1);
+  }
+
+  .standards span {
+    font-weight: 650;
+    color: var(--ink);
+  }
+
+  .standards + :global(.callout) {
+    margin-top: var(--s-5);
+  }
+
+  .block-title {
+    font-size: var(--step-2);
+    margin-bottom: var(--s-6);
   }
 
   .split {
@@ -193,30 +171,23 @@ const others = services.filter((s) => s.slug !== service.slug);
     list-style: none;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--s-6);
+    gap: var(--s-4);
   }
 
-  .others li {
-    display: grid;
-    gap: var(--s-2);
-    align-content: start;
-  }
-
-  .others a {
-    font-family: var(--font-wide);
-    font-weight: 650;
-    font-stretch: 108%;
-    font-size: var(--step-1);
-  }
-
-  .others p {
-    color: var(--ink-2);
-    font-size: var(--step--1);
+  @media (max-width: 60rem) {
+    .others {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 
   @media (max-width: 48rem) {
     .items,
-    .two,
+    .two {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 40rem) {
     .others {
       grid-template-columns: 1fr;
     }

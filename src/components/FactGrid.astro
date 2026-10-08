@@ -1,0 +1,95 @@
+---
+// A row of plain facts, divided by 1px gaps like the scores grid: label above, value below.
+interface Fact {
+  label: string;
+  value: string;
+  href?: string;
+}
+
+interface Props {
+  facts: Fact[];
+  /** Renders on an ink band. */
+  ink?: boolean;
+  label?: string;
+}
+
+const { facts, ink = false, label = 'Key facts' } = Astro.props;
+---
+
+<div class:list={['facts', { ink }]} role="group" aria-label={label}>
+  <dl>
+    {
+      facts.map((f) => (
+        <div class="fact">
+          <dt>{f.label}</dt>
+          <dd>{f.href ? <a href={f.href}>{f.value}</a> : f.value}</dd>
+        </div>
+      ))
+    }
+  </dl>
+</div>
+
+<style>
+  .facts {
+    width: 100%;
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1px;
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    background: var(--line);
+    overflow: hidden;
+    /* clip, not a scroll container: view() timelines inside must reach the viewport */
+    overflow: clip;
+  }
+
+  .fact {
+    display: grid;
+    gap: var(--s-1);
+    align-content: start;
+    padding: var(--s-4) var(--s-5);
+    background: var(--raised);
+  }
+
+  dt {
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 0;
+    font-family: var(--font-wide);
+    font-stretch: 108%;
+    font-weight: 650;
+    font-size: var(--step-0);
+    line-height: 1.3;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  dd a {
+    color: inherit;
+  }
+
+  .ink dl {
+    border-color: rgb(98 211 166 / 0.16);
+    background: var(--ink-line);
+  }
+
+  .ink .fact {
+    background: color-mix(in srgb, var(--ink-raised) 88%, transparent);
+  }
+
+  .ink dt {
+    color: var(--ink-text-2);
+  }
+
+  .ink dd {
+    color: var(--ink-text);
+  }
+</style>

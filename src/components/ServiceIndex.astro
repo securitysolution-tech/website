@@ -1,6 +1,5 @@
 ---
-import Icon from './Icon.astro';
-import Ornament from './Ornament.astro';
+import ServiceCard from './ServiceCard.astro';
 import { services } from '../data/services';
 ---
 
@@ -18,24 +17,14 @@ import { services } from '../data/services';
     <ul class="bento" data-spotlight-root>
       {
         services.map((s, i) => (
-          <li class:list={['card', `card-${i + 1}`, { ink: i === 0 }]} data-spotlight>
-            <span class="chip" aria-hidden="true">
-              <Icon name={s.icon} />
-            </span>
-            <h3>
-              <a href={`/services/${s.slug}/`}>{s.name}</a>
-            </h3>
-            <p class="summary">{s.summary}</p>
-            <ul class="items bullets" aria-label={`${s.name} includes`}>
-              {(i === 0 ? s.items : s.items.slice(0, 4)).map((item) => (
-                <li>{item.name}</li>
-              ))}
-            </ul>
-            <span class="more" aria-hidden="true">
-              See how we do it
-            </span>
-            <Ornament kind={s.icon} />
-          </li>
+          <ServiceCard
+            service={s}
+            class={`card-${i + 1}`}
+            featured={i === 0}
+            tinted={i === 3}
+            items={i === 0 ? s.items.length : 4}
+            columns={i === 0 || i === 3 ? 2 : 1}
+          />
         ))
       }
     </ul>
@@ -51,191 +40,17 @@ import { services } from '../data/services';
     grid-template-columns: repeat(12, minmax(0, 1fr));
   }
 
-  .card-1 {
+  .bento :global(.card-1) {
     grid-column: 1 / span 7;
   }
-  .card-2 {
+  .bento :global(.card-2) {
     grid-column: 8 / span 5;
   }
-  .card-3 {
+  .bento :global(.card-3) {
     grid-column: 1 / span 5;
   }
-  .card-4 {
+  .bento :global(.card-4) {
     grid-column: 6 / span 7;
-  }
-
-  .card {
-    --highlight: rgb(255 255 255 / 0.7);
-    --spot: rgb(98 211 166 / 0.14);
-    position: relative;
-    isolation: isolate;
-    overflow: clip;
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-3);
-    padding: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-panel);
-    background: var(--raised);
-    /* A hairline of light along the top edge: the plate catches the room. */
-    box-shadow: inset 0 1px 0 var(--highlight);
-    transition:
-      transform 240ms var(--ease-out),
-      border-color 240ms ease,
-      box-shadow 240ms ease;
-  }
-
-  .card:hover {
-    transform: translateY(-3px);
-    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
-    box-shadow:
-      inset 0 1px 0 var(--highlight),
-      0 28px 50px -30px rgb(19 33 27 / 0.4);
-  }
-
-  /* The spotlight: a soft pool of the accent that follows the pointer (set by spotlight.ts). */
-  .card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    background: radial-gradient(18rem circle at var(--mx, 50%) var(--my, 50%), var(--spot), transparent 65%);
-    opacity: 0;
-    transition: opacity 320ms var(--ease-out);
-    pointer-events: none;
-  }
-
-  .card:hover::before {
-    opacity: 1;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .card {
-      --highlight: rgb(255 255 255 / 0.05);
-      --spot: rgb(98 211 166 / 0.12);
-    }
-  }
-
-  /* The last card gets a soft accent tint, so the grid has a diagonal rhythm of dark, light, light, tinted. */
-  .card-4 {
-    border-color: color-mix(in srgb, var(--accent) 22%, var(--line));
-    background: color-mix(in srgb, var(--accent-tint) 55%, var(--raised));
-  }
-
-  .card.ink {
-    --highlight: rgb(255 255 255 / 0.06);
-    --spot: rgb(98 211 166 / 0.2);
-    border-color: var(--ink-line);
-    background:
-      radial-gradient(120% 70% at 100% 100%, rgb(98 211 166 / 0.14), transparent 60%),
-      var(--ink-raised);
-  }
-
-  .card.ink:hover {
-    border-color: rgb(98 211 166 / 0.45);
-    box-shadow:
-      inset 0 1px 0 var(--highlight),
-      0 30px 60px -30px rgb(6 16 12 / 0.8);
-  }
-
-  .chip {
-    display: grid;
-    place-items: center;
-    width: 3rem;
-    height: 3rem;
-    margin-bottom: var(--s-2);
-    border-radius: var(--radius-control);
-    background: var(--accent-tint);
-    color: var(--accent);
-    transition: transform 240ms var(--ease-out);
-  }
-
-  .ink .chip {
-    background: rgb(98 211 166 / 0.13);
-    color: var(--ink-accent);
-  }
-
-  .chip :global(svg) {
-    width: 1.625rem;
-    height: 1.625rem;
-  }
-
-  .card:hover .chip {
-    transform: translateY(-2px);
-  }
-
-  h3 {
-    font-size: var(--step-2);
-    font-stretch: 114%;
-  }
-
-  h3 a {
-    text-decoration: none;
-  }
-
-  /* The heading link covers the whole card. */
-  h3 a::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-  }
-
-  h3 a:focus-visible {
-    outline: none;
-  }
-
-  .card:has(a:focus-visible) {
-    outline: 3px solid var(--focus);
-    outline-offset: 3px;
-  }
-
-  .summary {
-    color: var(--ink-2);
-    line-height: 1.5;
-  }
-
-  .ink .summary {
-    color: var(--ink-text-2);
-  }
-
-  .items {
-    list-style: none;
-    display: grid;
-    gap: var(--s-2);
-    margin-top: var(--s-2);
-    font-size: var(--step--1);
-    color: var(--ink-2);
-  }
-
-  .ink .items {
-    color: var(--ink-text-2);
-  }
-
-  .card-1 .items,
-  .card-4 .items {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: var(--s-6);
-  }
-
-  .more {
-    margin-top: auto;
-    padding-top: var(--s-4);
-    font-weight: 620;
-    font-size: var(--step--1);
-    color: var(--accent);
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.25em;
-  }
-
-  .ink .more {
-    color: var(--ink-accent);
-  }
-
-  .card:hover .more {
-    text-decoration-thickness: 2px;
   }
 
   @media (max-width: 60rem) {
@@ -243,13 +58,13 @@ import { services } from '../data/services';
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .card-1,
-    .card-4 {
+    .bento :global(.card-1),
+    .bento :global(.card-4) {
       grid-column: 1 / -1;
     }
 
-    .card-2,
-    .card-3 {
+    .bento :global(.card-2),
+    .bento :global(.card-3) {
       grid-column: auto;
     }
   }
@@ -257,28 +72,6 @@ import { services } from '../data/services';
   @media (max-width: 40rem) {
     .bento {
       grid-template-columns: 1fr;
-    }
-
-    .card-1 .items,
-    .card-4 .items {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (forced-colors: active) {
-    .card::before {
-      display: none;
-    }
-  }
-
-  /* In dark mode the featured card needs its own light, or it looks like the others. */
-  @media (prefers-color-scheme: dark) {
-    .card.ink {
-      border-color: rgb(98 211 166 / 0.32);
-      background:
-        radial-gradient(120% 80% at 100% 100%, rgb(98 211 166 / 0.2), transparent 62%),
-        linear-gradient(165deg, rgb(98 211 166 / 0.09), transparent 45%),
-        var(--ink-raised);
     }
   }
 </style>

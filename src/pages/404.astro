@@ -1,5 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
+import ServiceCard from '../components/ServiceCard.astro';
+import { services } from '../data/services';
 ---
 
 <Base title="Page not found" noindex>
@@ -19,18 +21,31 @@ import Base from '../layouts/Base.astro';
         <span translate="no">404</span>
       </p>
       <h1>Page not found</h1>
-      <p class="lead">The page you were looking for does not exist or has moved.</p>
+      <p class="lead">The page you were looking for does not exist or has moved. Start again from one of these.</p>
       <div class="actions">
         <a class="btn btn-primary" href="/">Go to the home page</a>
-        <a class="btn btn-secondary" href="/#services">See services</a>
+        <a class="btn btn-secondary" href="/#check">Check your domain</a>
       </div>
+    </div>
+  </section>
+
+  <section class="section grid-section" aria-labelledby="nf-services">
+    <div class="container">
+      <h2 id="nf-services">Our services</h2>
+      <ul class="grid" data-spotlight-root>
+        {services.map((s) => <ServiceCard service={s} items={3} />)}
+      </ul>
     </div>
   </section>
 </Base>
 
+<script>
+  import '../scripts/spotlight';
+</script>
+
 <style>
   .nf {
-    padding-block: clamp(4rem, 3rem + 5vw, 8rem);
+    padding-block: clamp(4rem, 3rem + 5vw, 7rem) clamp(2rem, 1rem + 3vw, 4rem);
   }
 
   .nf .container {
@@ -76,6 +91,28 @@ import Base from '../layouts/Base.astro';
     flex-wrap: wrap;
     gap: var(--s-3);
     margin-top: var(--s-2);
+  }
+
+  .grid-section {
+    padding-top: 0;
+  }
+
+  h2 {
+    font-size: var(--step-2);
+    margin-bottom: var(--s-5);
+  }
+
+  .grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-4);
+  }
+
+  @media (max-width: 40rem) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   @media (max-width: 30rem) {
