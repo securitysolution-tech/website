@@ -111,6 +111,18 @@ export const en = {
       watch: 'Ask us to watch this domain',
       watchMessage: 'Please watch {domain} and tell me when its email or DNS protection changes.',
     },
+    /** The free tier: an email when the protection changes. Rendered only when the monitor is live. */
+    alerts: {
+      title: 'Email me when this changes',
+      lead: 'Free. We re-check every day and email you only when the protection drops. You confirm by email first, and one click stops it.',
+      email: 'Work email',
+      submit: 'Watch this domain',
+      sending: 'Sending…',
+      sent: 'Check your inbox for a confirmation link. Nothing more is sent until you confirm.',
+      invalidEmail: 'Enter a valid email address.',
+      failed: 'That did not go through. Try again in a minute, or ask us to watch it for you.',
+      disclosure: 'We store this domain and your address only to send these emails. Unsubscribing deletes both.',
+    },
     /** The record lines behind the headline, when a domain has none. */
     noRecord: 'no {tech} record',
     signed: 'signed and validated',
@@ -463,6 +475,9 @@ export const en = {
     contactTitle: 'When you contact us',
     contact:
       'We use your message and contact details only to reply and to provide the services you ask about. We do not sell them or share them for marketing, and we keep correspondence only as long as that purpose requires.',
+    alertsTitle: 'Change alerts',
+    alerts:
+      "If you ask to be emailed when a domain's protection changes, we store that domain and your email address, and nothing else, in order to send those emails. We send them only after you confirm by clicking the link in the first message. Every email has an unsubscribe link, and unsubscribing deletes the record. The address is used for nothing else.",
     rightsTitle: 'Your rights',
     rights1: 'You can ask what personal data we hold about you, and ask us to correct or delete it. Email',
     rights2: 'and we will respond within 30 days.',

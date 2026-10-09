@@ -1,0 +1,37 @@
+// The posture monitor Worker. Deployed by .github/workflows/monitor.yml once the owner has
+// created the KV namespace and set the secrets; see README.md, "Posture monitor".
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "securitysolution-monitor",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-15",
+  "routes": [{ "pattern": "securitysolution.tech/api/watch*", "zone_name": "securitysolution.tech" }],
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
+  // Every verified domain is re-read once a day.
+  "triggers": { "crons": ["17 5 * * *"] },
+  "vars": {
+    // "true" to accept signups and run the schedule; anything else answers 503 and does nothing.
+    "MONITOR_ENABLED": "true",
+    "ALLOWED_ORIGIN": "https://securitysolution.tech",
+    "SITE_ORIGIN": "https://securitysolution.tech",
+    "MAIL_FROM": "hello@securitysolution.tech",
+  },
+  // TOKEN_SECRET signs the confirm and unsubscribe links: `wrangler secret put TOKEN_SECRET` (32+ random bytes).
+  "secrets": { "required": ["TOKEN_SECRET"] },
+  // Subscriptions. Create with `wrangler kv namespace create WATCH` and paste the id here.
+  "kv_namespaces": [{ "binding": "WATCH", "id": "REPLACE_WITH_NAMESPACE_ID" }],
+  "send_email": [
+    {
+      "name": "EMAIL",
+      "allowed_sender_addresses": ["hello@securitysolution.tech"],
+      "remote": true,
+    },
+  ],
+  // Signups per network and overall; the confirm step is the real brake on abuse.
+  "ratelimits": [
+    { "name": "PER_IP", "namespace_id": "7303", "simple": { "limit": 3, "period": 60 } },
+    { "name": "GLOBAL", "namespace_id": "7304", "simple": { "limit": 10, "period": 60 } },
+  ],
+}
