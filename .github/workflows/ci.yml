@@ -9,8 +9,13 @@ permissions:
 env:
   ASTRO_TELEMETRY_DISABLED: 1
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
+    name: Audit, check, build and test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -23,6 +28,7 @@ jobs:
           cache: npm
 
       - run: npm ci
+      - run: npm run format:check
       - run: npm audit --omit=dev --audit-level=high
       - run: npm run check
       - run: npm run build

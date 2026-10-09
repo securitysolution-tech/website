@@ -1,0 +1,5 @@
+{
+  "_note": "Runner-measured Lighthouse performance of the live home, both languages. Real hardware scores 86 to 95; the runner has no GPU. Refresh after a deliberate performance change: run the Live performance workflow and copy its numbers here.",
+  "/": 64,
+  "/ar/": 56
+}

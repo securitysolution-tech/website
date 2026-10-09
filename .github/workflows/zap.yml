@@ -1,0 +1,35 @@
+name: ZAP baseline
+
+on:
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  baseline:
+    name: OWASP ZAP baseline scan of the live site
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write # Open or update the "ZAP baseline findings" issue
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Passive scan only: spiders the public pages and inspects responses,
+      # it does not send attack payloads.
+      - uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
+        with:
+          target: https://securitysolution.tech
+          rules_file_name: .zap/rules.tsv
+          issue_title: ZAP baseline findings
+          fail_action: false
+          allow_issue_writing: true

@@ -1,0 +1,77 @@
+name: Visits worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - workers/visits/**
+      - src/data/services.ts
+      - .github/workflows/visits.yml
+  pull_request:
+    paths:
+      - workers/visits/**
+      - src/data/services.ts
+      - .github/workflows/visits.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  WRANGLER_SEND_METRICS: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Type-check, test and bundle
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workers/visits
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: workers/visits/package-lock.json
+
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      # Bundles exactly what a deploy would, without credentials
+      - run: npm run dry-run
+
+  deploy:
+    name: Deploy to Cloudflare
+    needs: check
+    # Runs once the owner has stored the Cloudflare secrets in the "cloudflare" environment
+    # and set the repository variable VISITS_WORKER_DEPLOY to true (README, "Visit counter")
+    if: github.event_name != 'pull_request' && vars.VISITS_WORKER_DEPLOY == 'true'
+    runs-on: ubuntu-latest
+    environment: cloudflare
+    defaults:
+      run:
+        working-directory: workers/visits
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: workers/visits/package-lock.json
+
+      - run: npm ci
+      - run: npm run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

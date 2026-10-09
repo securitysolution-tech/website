@@ -34,7 +34,9 @@ for (const [pagePath, { html }] of pages) {
     if (/^(https?:|data:|tel:)/.test(value)) continue;
     if (value.startsWith('mailto:')) {
       const address = value.slice(7).split('?')[0];
-      if (!address.endsWith(`@${SITE_EMAIL_DOMAIN}`)) problems.push(`${pagePath}: unexpected mail address ${address}`);
+      // No address opens a blank message for the visitor to address (the results email).
+      if (address && !address.endsWith(`@${SITE_EMAIL_DOMAIN}`))
+        problems.push(`${pagePath}: unexpected mail address ${address}`);
       continue;
     }
     const url = new URL(value, `https://example.invalid${pagePath}`);
@@ -48,7 +50,8 @@ for (const [pagePath, { html }] of pages) {
         continue;
       }
     }
-    if (url.hash && url.hash !== '#') {
+    // "#check=domain" is state for the domain check, not an element id.
+    if (url.hash && url.hash !== '#' && !url.hash.startsWith('#check=')) {
       targetPage ??= pages.get(target);
       const id = decodeURIComponent(url.hash.slice(1));
       if (!targetPage || !targetPage.ids.has(id)) problems.push(`${pagePath}: missing anchor ${value}`);

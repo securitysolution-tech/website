@@ -17,7 +17,10 @@ env:
 
 jobs:
   build:
+    name: Check, build and test
     runs-on: ubuntu-latest
+    outputs:
+      stylesheet: ${{ steps.build.outputs.stylesheet }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -29,9 +32,14 @@ jobs:
           cache: npm
 
       - run: npm ci
+      - run: npm run format:check
       - run: npm run check
       - run: npm run build
       - run: npm test
+
+      # The hashed stylesheet name identifies this build on the live site
+      - id: build
+        run: echo "stylesheet=$(basename dist/_astro/Base.*.css)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
@@ -40,14 +48,54 @@ jobs:
           include-hidden-files: true
 
   deploy:
+    name: Publish to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
     permissions:
-      pages: write
-      id-token: write
+      pages: write # Publish the build to GitHub Pages
+      id-token: write # Prove the deployment comes from this workflow (OIDC)
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  verify:
+    name: Verify the live site
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    env:
+      STYLESHEET: ${{ needs.build.outputs.stylesheet }}
+    steps:
+      # The new build must be what visitors get: the page, its policy header and this build's assets
+      - name: Wait for the new build to be served
+        shell: bash
+        run: |
+          for i in $(seq 1 18); do
+            html="$(curl -sS --max-time 20 https://securitysolution.tech/ || true)"
+            if grep -q "/_astro/$STYLESHEET" <<<"$html"; then
+              echo "live after $((i * 10)) seconds"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::the live home page does not reference $STYLESHEET after three minutes"
+          exit 1
+
+      - name: Check the headers and the pages
+        shell: bash
+        run: |
+          fail=0
+          check() { # description, condition
+            if "${@:2}"; then echo "PASS  $1"; else echo "FAIL  $1"; fail=1; fi
+          }
+          headers="$(curl -sS --max-time 20 -o /dev/null -D - https://securitysolution.tech/ | tr -d '\r')"
+          check "home page answers 200" grep -q "^HTTP/[0-9.]* 200" <<<"$headers"
+          check "Content-Security-Policy header present" grep -qi "^content-security-policy:" <<<"$headers"
+          check "Strict-Transport-Security header present" grep -qi "^strict-transport-security:" <<<"$headers"
+          for path in /services/offensive-testing/ /privacy/ /security/ /sitemap-0.xml /404.html /_astro/"$STYLESHEET"; do
+            code="$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' "https://securitysolution.tech$path")"
+            check "$path answers 200 (got $code)" [ "$code" = 200 ]
+          done
+          exit $fail

@@ -1,0 +1,52 @@
+name: Live performance
+
+# Weekly Lighthouse of the live home in both languages. Opens or updates a "performance"
+# issue when a page drops more than twelve points below its runner-measured baseline in
+# perf-baseline.json, which the build-time audit cannot see. Absolute scores on the runner
+# (no GPU) sit about thirty points under real hardware, so only the drop is judged.
+on:
+  schedule:
+    - cron: '37 6 * * 3'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    name: Lighthouse on the live site
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write # Open or update the "performance" issue
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Measure
+        shell: bash
+        run: node scripts/live-perf.mjs | tee perf.txt
+
+      - name: Open or update an issue when performance is low
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          body="$(printf 'The weekly Lighthouse of the live site dropped more than twelve points below its runner-measured baseline (perf-baseline.json). If the change is deliberate, refresh the baseline from these numbers.\n\n```\n%s\n```\n\nRun: %s' "$(cat perf.txt)" "$RUN_URL")"
+          gh label create performance --repo "$REPO" --color 8A5A00 --description "Live performance under the threshold" --force
+          existing="$(gh issue list --repo "$REPO" --label performance --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then gh issue comment "$existing" --repo "$REPO" --body "$body"; else gh issue create --repo "$REPO" --label performance --title "Live performance regression" --body "$body"; fi

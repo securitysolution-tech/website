@@ -1,10 +1,20 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+import { arLive, readinessLive } from './src/i18n/locales.mjs';
 
 export default defineConfig({
   site: 'https://securitysolution.tech',
   trailingSlash: 'always',
+  // Pages are fetched when a link is hovered, so the next page is already there on the click.
+  // Same-origin requests only, and never on data-saver connections.
+  prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
+  // English at the root, Arabic under /ar/ (src/i18n). Astro sets Astro.currentLocale from the path.
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'ar'],
+    routing: { prefixDefaultLocale: false },
+  },
   build: {
     format: 'directory',
     // Everything ships as external files so the Content-Security-Policy
@@ -14,8 +24,25 @@ export default defineConfig({
   vite: {
     build: {
       assetsInlineLimit: 0,
+      // lightningcss 1.33 folds animation-timeline into the animation shorthand,
+      // which browsers reject, so every scroll-driven animation dies in minified
+      // builds. esbuild keeps the longhands apart. Component <style> blocks still
+      // pass through lightningcss in the Astro compiler, so scroll-driven rules in
+      // components use animation longhands, and scripts/check-css.mjs guards the output.
+      cssMinify: 'esbuild',
+    },
+    server: {
+      // `npm run dev` in workers/contact answers /api locally; the browser keeps this origin,
+      // which the Worker's .dev.vars allows.
+      proxy: { '/api': 'http://127.0.0.1:8787' },
     },
   },
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      // Arabic pages join the sitemap, with language alternates, once they are live.
+      filter: (page) => (arLive || !page.includes('/ar/')) && (readinessLive || !page.includes('/readiness')),
+      ...(arLive ? { i18n: { defaultLocale: 'en', locales: { en: 'en-AE', ar: 'ar-AE' } } } : {}),
+    }),
+  ],
   devToolbar: { enabled: false },
 });

@@ -1,0 +1,7 @@
+# ZAP baseline rule overrides: rule id, action, reason. Tab-separated.
+# Only informational rules are ignored, each for a stated reason. Everything
+# else is reported to the "ZAP baseline findings" issue.
+10015	IGNORE	(Re-examine Cache-control Directives) Public marketing pages with no personal data; a short shared cache is intended
+10049	IGNORE	(Storable and Cacheable Content) Public pages, meant to be cached by the CDN
+10050	IGNORE	(Retrieved from Cache) Expected: Cloudflare serves cached copies
+10109	IGNORE	(Modern Web Application) Informational: the homepage domain check uses JavaScript

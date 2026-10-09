@@ -10,7 +10,11 @@ const rules = [
   { re: /–/, why: 'en dash (use a hyphen)' },
   { re: /lorem ipsum/i, why: 'placeholder text' },
   { re: /\b(TODO|FIXME|TBD)\b/, why: 'unfinished marker' },
-  { re: /\b(cutting[- ]edge|seamless(ly)?|elevate|unleash|revolutioni[sz]e|next[- ]gen|world[- ]class|best[- ]in[- ]class)\b/i, why: 'filler phrase' },
+  { re: /[\u0660-\u0669]/, why: 'Arabic-Indic digit (the site uses Western digits in both languages)' },
+  {
+    re: /\b(cutting[- ]edge|seamless(ly)?|elevate|unleash|revolutioni[sz]e|next[- ]gen|world[- ]class|best[- ]in[- ]class)\b/i,
+    why: 'filler phrase',
+  },
 ];
 
 const files = [];
@@ -24,10 +28,10 @@ const files = [];
 
 const problems = [];
 for (const file of files) {
-  // Scripts and styles are code, not copy; everything else (text and attributes) is checked.
-  const html = readFileSync(file, 'utf8')
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '');
+  // The whole page is checked: text, attributes and the JSON-LD blocks, whose
+  // descriptions and FAQ answers search engines show. Pages carry no inline
+  // code (styles and scripts are external files), so there is nothing to strip.
+  const html = readFileSync(file, 'utf8');
   for (const { re, why } of rules) {
     const match = html.match(re);
     if (match) {

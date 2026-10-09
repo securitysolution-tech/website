@@ -1,0 +1,38 @@
+name: Dependabot auto-merge
+
+# Merges Dependabot's patch and minor updates once the required checks pass; majors are left
+# for a person. Inert until the repository allows auto-merge and main requires the checks
+# (Settings, General, "Allow auto-merge"; branch protection on main). See the handbook roadmap.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  merge:
+    name: Enable auto-merge for patch and minor updates
+    # The pull request's author, not the actor: the actor can be anyone who re-runs the workflow.
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'securitysolution-tech/website'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Enable auto-merge on the pull request
+      pull-requests: write
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - if: steps.meta.outputs.update-type == 'version-update:semver-patch' || steps.meta.outputs.update-type == 'version-update:semver-minor'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          # Quiet, not red, until the owner enables auto-merge on the repository.
+          if [ "$(gh api "repos/$REPO" --jq .allow_auto_merge)" != "true" ]; then
+            echo "::notice::Auto-merge is not enabled on this repository; nothing to do (see the handbook roadmap)."
+            exit 0
+          fi
+          gh pr merge --auto --rebase "$PR_URL"

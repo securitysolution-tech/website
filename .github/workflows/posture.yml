@@ -1,0 +1,47 @@
+name: Posture check
+
+on:
+  schedule:
+    - cron: '7 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Headers, TLS, DNS and email posture
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write # Open or update the "posture" issue when a check fails
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run checks
+        # An explicit shell adds pipefail, so a failed check fails the step
+        shell: bash
+        run: bash scripts/posture.sh | tee posture.txt
+
+      - name: Open or update an issue on regression
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          failed="$(grep '^FAIL' posture.txt || echo 'The check script did not finish. See the run log.')"
+          body="$(printf 'The daily posture check failed.\n\n```\n%s\n```\n\nRun: %s' "$failed" "$RUN_URL")"
+          gh label create posture --repo "$REPO" --color B42318 --description "Live security posture regression" --force
+          existing="$(gh issue list --repo "$REPO" --label posture --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$REPO" --body "$body"
+          else
+            gh issue create --repo "$REPO" --label posture --title "Security posture regression" --body "$body"
+          fi
