@@ -11,7 +11,7 @@ import { authorised, REALM } from './auth.ts';
 import { clientKey } from './ip.ts';
 import { parseHit } from './payload.ts';
 import { renderDashboard, renderJson, STYLESHEET } from './render.ts';
-import { count, countFiltered, purge, report } from './store.ts';
+import { contact, count, countFiltered, purge, purgeContact, report, type Contact } from './store.ts';
 import { isAutomated, isHosting, parseAgent } from './traffic.ts';
 import { daysBefore, dubaiDay, visitorId } from './visitor.ts';
 
@@ -125,16 +125,22 @@ async function handleDashboard(request: Request<unknown, IncomingRequestCfProper
   try {
     const since = daysBefore(until, days - 1);
     // The same length of time before this period, for the change on the headline numbers.
-    const [totals, previous] = await Promise.all([
+    // The contact log is read on its own, so the counts still show when it cannot be.
+    const requests: Promise<Contact | null> = contact(env.DB, since, until).catch((error) => {
+      log('contact_failed', { message: reason(error) });
+      return null;
+    });
+    const [totals, previous, contactLog] = await Promise.all([
       report(env.DB, since, until),
       report(env.DB, daysBefore(since, days), daysBefore(since, 1)),
+      requests,
     ]);
     if (url.searchParams.get('format') === 'json') {
-      return new Response(renderJson(totals, now), {
+      return new Response(renderJson(totals, now, contactLog), {
         headers: { ...secure, 'content-type': 'application/json; charset=utf-8' },
       });
     }
-    return new Response(renderDashboard(totals, days, now, previous), {
+    return new Response(renderDashboard(totals, days, now, previous, contactLog), {
       headers: {
         ...secure,
         'content-type': 'text/html; charset=utf-8',
@@ -171,8 +177,11 @@ export default {
   },
 
   async scheduled(_event, env, ctx): Promise<void> {
+    const today = dubaiDay(new Date());
+    // Two clean-ups that cannot stop each other: the visitor hashes must go every night.
+    ctx.waitUntil(purge(env.DB, today).catch((error) => log('purge_failed', { message: reason(error) })));
     ctx.waitUntil(
-      purge(env.DB, dubaiDay(new Date())).catch((error) => log('purge_failed', { message: reason(error) })),
+      purgeContact(env.DB, today).catch((error) => log('purge_contact_failed', { message: reason(error) })),
     );
   },
 } satisfies ExportedHandler<Env>;

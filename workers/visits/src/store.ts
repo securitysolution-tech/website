@@ -64,9 +64,83 @@ export async function purge(db: D1Database, today: string): Promise<void> {
   ]);
 }
 
+/** How long contact requests are kept: long enough to follow up, short enough to hold little. */
+export const REQUEST_RETENTION_DAYS = 180;
+
+/** The contact log's clean-up, separate from the counts' so that neither can stop the other. */
+export async function purgeContact(db: D1Database, today: string): Promise<void> {
+  await db.batch([
+    db.prepare('DELETE FROM requests WHERE day < ?1').bind(daysBefore(today, REQUEST_RETENTION_DAYS)),
+    db.prepare('DELETE FROM attempts WHERE day < ?1').bind(daysBefore(today, RETENTION_DAYS)),
+  ]);
+}
+
 export interface Row {
   key: string;
   n: number;
+}
+
+/** A request sent through the site's form, as the contact Worker kept it. */
+export interface ContactRequest {
+  receivedAt: string;
+  name: string;
+  email: string;
+  company: string;
+  needs: string[];
+  timeline: string;
+  message: string;
+  page: string;
+  /** 'sent', 'failed', 'quota', or 'pending' when no result was recorded. */
+  delivery: string;
+  /** The message id when sent, the error code when not. */
+  detail: string;
+}
+
+export interface Contact {
+  requests: ContactRequest[];
+  /** Refused attempts by reason ('invalid', 'spam'): counts only. */
+  refused: Row[];
+}
+
+const needsOf = (raw: unknown): string[] => {
+  try {
+    const value: unknown = JSON.parse(String(raw));
+    return Array.isArray(value) ? value.map(String) : [];
+  } catch {
+    return [];
+  }
+};
+
+/** The requests in the range, newest first (at most `limit`), and the refused attempts by reason. */
+export async function contact(db: D1Database, since: string, until: string, limit = 200): Promise<Contact> {
+  const [requests, refused] = await db.batch<Record<string, unknown>>([
+    db
+      .prepare(
+        'SELECT received_at, name, email, company, needs, timeline, message, page, delivery, detail FROM requests ' +
+          'WHERE day BETWEEN ?1 AND ?2 ORDER BY received_at DESC LIMIT ?3',
+      )
+      .bind(since, until, limit),
+    db
+      .prepare(
+        'SELECT reason AS key, SUM(n) AS n FROM attempts WHERE day BETWEEN ?1 AND ?2 GROUP BY reason ORDER BY n DESC',
+      )
+      .bind(since, until),
+  ]);
+  return {
+    requests: (requests?.results ?? []).map((r) => ({
+      receivedAt: String(r.received_at),
+      name: String(r.name),
+      email: String(r.email),
+      company: String(r.company),
+      needs: needsOf(r.needs),
+      timeline: String(r.timeline),
+      message: String(r.message),
+      page: String(r.page),
+      delivery: String(r.delivery),
+      detail: String(r.detail),
+    })),
+    refused: (refused?.results ?? []).map((r) => ({ key: String(r.key), n: Number(r.n) })),
+  };
 }
 
 export interface Report {
