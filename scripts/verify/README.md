@@ -2,7 +2,9 @@
 
 `behaviour.mjs` tests what the build gates cannot: the Content-Security-Policy and script
 errors on every page, reduced motion rendering identically, no overflow on a phone, the
-domain check reaching a verdict, and the contact form composing its fallback message.
+domain check reaching a verdict, the contact form composing its fallback message, and the visit
+counter sending one cookie-free beacon from the real site and nothing from anywhere else, from
+automation, or from a browser that asked not to be tracked.
 
 ```sh
 npm run build

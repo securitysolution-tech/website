@@ -222,6 +222,27 @@ else
   verdict "contact endpoint: empty request rejected" "status $got" [ "$got" = 400 ]
 fi
 
+# --- Visit counter ----------------------------------------------------------
+# A Worker on /api/hit and /api/visits (workers/visits). Until it is deployed, the
+# paths are the GitHub Pages 404 page and the checks are skipped. Every request here
+# is refused before anything is counted, so the check never adds a visit.
+
+got=$("${CURL[@]}" -o /dev/null -D "$TMP/hit.h" -w '%{http_code}' "$SITE/api/hit")
+if [ "$got" = 404 ] && ! grep -qi '^content-type: *application/json' "$TMP/hit.h"; then
+  report SKIP "visit counter: not deployed"
+else
+  verdict "visit counter: GET refused" "status $got" [ "$got" = 405 ]
+  got=$("${CURL[@]}" -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' \
+    -H 'origin: https://evil.example' --data '{}' "$SITE/api/hit")
+  verdict "visit counter: cross-origin POST refused" "status $got" [ "$got" = 403 ]
+  got=$("${CURL[@]}" -o /dev/null -D "$TMP/visits.h" -w '%{http_code}' "$SITE/api/visits")
+  verdict "visit counter: dashboard asks for a password" "status $got" [ "$got" = 401 ]
+  scheme=$(tr -d '\r' <"$TMP/visits.h" | awk 'tolower($1) == "www-authenticate:" { print tolower($2) }')
+  verdict "visit counter: dashboard offers Basic sign-in only" "got '${scheme:-absent}'" [ "$scheme" = basic ]
+  cc=$(tr -d '\r' <"$TMP/visits.h" | awk 'tolower($1) == "cache-control:" { print tolower($0) }')
+  verdict "visit counter: dashboard not cached" "got '${cc:-absent}'" [ -n "$(grep no-store <<<"$cc")" ]
+fi
+
 # --- The home page against live DNS ----------------------------------------
 # The hero prints six real records. When one is changed in DNS and not in the
 # page, the page quietly lies; this catches it. Values are compared as

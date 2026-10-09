@@ -25,5 +25,6 @@ agreement is the company handbook: `securitysolution-tech/handbook` (start at it
 ## Where things live
 
 See the repository map in the handbook (`repos/website.md`) and this repo's `README.md`.
-The two owner-only switches are `CONTACT_BACKEND_LIVE` (`src/data/site.ts`) and `arLive`
-(`src/i18n/locales.mjs`).
+The owner-only switches are `CONTACT_BACKEND_LIVE`, `MONITOR_LIVE` and `VISITS_LIVE`
+(`src/data/site.ts`) and `arLive` (`src/i18n/locales.mjs`). `VISITS_LIVE` turns on the cookie-free
+visit counter; the privacy page describes it only while it is on.

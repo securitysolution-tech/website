@@ -454,10 +454,18 @@ export const en = {
     description:
       'What this website does and does not collect, including how the domain check and the request form handle what you type.',
     lead: 'This website does not use cookies, analytics or advertising trackers, and it loads no third-party scripts. Here is what happens with the little it does handle.',
+    leadVisits:
+      'This website does not use cookies or advertising trackers, and it loads no third-party scripts. It counts visits with a small counter of its own, described below. Here is what happens with the little it does handle.',
     glance: 'Privacy at a glance',
     summary: [
       { label: 'Cookies', value: 'None' },
       { label: 'Analytics and trackers', value: 'None' },
+      { label: 'Third-party scripts', value: 'None' },
+      { label: 'Domain check', value: 'Runs in your browser' },
+    ],
+    summaryVisits: [
+      { label: 'Cookies', value: 'None' },
+      { label: 'Analytics', value: 'Cookie-free visit counts' },
       { label: 'Third-party scripts', value: 'None' },
       { label: 'Domain check', value: 'Runs in your browser' },
     ],
@@ -472,6 +480,9 @@ export const en = {
     hostingTitle: 'Hosting',
     hosting:
       'The site is served by GitHub Pages through Cloudflare. Like any web server, they process your IP address and request details to deliver pages and protect the site from abuse.',
+    visitsTitle: 'Counting visits',
+    visits:
+      'When a page loads, a small script sends three things to a counter we run on Cloudflare: the page address, the website you came from, and the tag in the link you followed, if it has one. Like any request, it also carries your network address and browser details. The counter reads your country, browser, operating system and device type from them, makes a one-way code from your network address and browser mixed with a secret and the date, so that it can count you once a day, and keeps none of the originals. The code cannot be turned back into your address, and it is deleted shortly after the day ends. We never store your IP address or your browser’s full identification. The totals are kept for 13 months and shown only to the founders. Nothing is counted if your browser sends Do Not Track or Global Privacy Control, and you can switch counting off in any browser by opening a page of this site once with ?visits=off added to the address.',
     contactTitle: 'When you contact us',
     contact:
       'We use your message and contact details only to reply and to provide the services you ask about. We do not sell them or share them for marketing, and we keep correspondence only as long as that purpose requires.',
@@ -481,7 +492,7 @@ export const en = {
     rightsTitle: 'Your rights',
     rights1: 'You can ask what personal data we hold about you, and ask us to correct or delete it. Email',
     rights2: 'and we will respond within 30 days.',
-    updated: 'Last updated 8 October 2026.',
+    updated: 'Last updated 9 October 2026.',
   },
 
   security: {

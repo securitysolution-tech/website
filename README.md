@@ -103,6 +103,34 @@ Going live, in this order:
 
 `CONTACT_ENABLED` in `wrangler.jsonc` is the kill switch: anything but `true` makes the Worker answer 503, and the form falls back to email. For local work, `npm run dev` at the root proxies `/api` to `wrangler dev`.
 
+## Visit counter
+
+How many people visit, from where, on what, and which pages and links brought them. It is counted by the site's own cookie-free counter, `workers/visits`, a Cloudflare Worker with a D1 database, so the site still loads no third-party script (the Lighthouse budget in `budget.json` allows none) and sets no cookie.
+
+What a page sends: `src/scripts/visit.ts` posts the page path, the referring site's name (or "internal" when the visitor was already on the site) and the `?ref=` campaign tag to `/api/hit` in one `sendBeacon`, once the page is visible, in idle time. It sends nothing from any host but the real site, from automation (`navigator.webdriver`), when the browser sends Do Not Track or Global Privacy Control, or after `?visits=off` has been opened once in that browser (`?visits=on` undoes it). The Worker repeats the privacy checks on the headers it receives.
+
+What the Worker keeps: per day, page views by path; for each visitor's first view of the day, the landing page, the country (Cloudflare's), browser, system, device class and source; and a count of the requests it ignored (crawlers, scripts, hosting networks). A visitor is a 12-byte HMAC of the day, the network (the IPv4 address, or the IPv6 /64) and the User-Agent under `SALT_SECRET`, kept only until the daily run (00:23 Dubai time) deletes it. No address, User-Agent, cookie or timestamp finer than a day is stored, and the Worker's per-request logs are off, so Cloudflare keeps none for it either. Totals are kept for 400 days. The privacy page says all of this when `VISITS_LIVE` is true, in English and Arabic.
+
+Reading it: `https://securitysolution.tech/api/visits`, user `visits`, password `STATS_PASSWORD`. `?days=7`, `30` or `90` sets the range and `?format=json` returns the same figures for scripts. To tag a link from a post, add `?ref=li-oct9` to the address; the tag then appears under Sources. Open any page of the site once with `?visits=off` in your own browsers to keep your visits out of the numbers.
+
+```sh
+cd workers/visits
+npm ci
+npm run check     # generates the binding types, then type-checks
+npm test          # the SQL runs on SQLite with the real migration; the handler runs end to end
+npm run dry-run   # bundles what a deploy would upload, without credentials
+```
+
+Going live (owner), in this order:
+
+1. `npx wrangler d1 create securitysolution-visits` and paste the id into `wrangler.jsonc`, then `npx wrangler d1 migrations apply securitysolution-visits --remote`.
+2. Choose `SALT_SECRET` (32 or more random bytes) and `STATS_PASSWORD` (24 or more random characters). A new Worker cannot take `wrangler secret put` before its first deploy, so the first deploy is `npx wrangler deploy --secrets-file <file>` with both in a file that is deleted afterwards. After that, `npx wrangler secret put` rotates either.
+3. Check the live route from outside: `VISITS_PASSWORD=... npm run e2e -- https://securitysolution.tech`. No visit is added without `--count`.
+4. Set `VISITS_LIVE` to `true` in `src/data/site.ts` and push; the beacon and the privacy page switch in the same build. Open the live site once, then the dashboard: the visit should be there within seconds.
+5. Optional: the Cloudflare token and account id in the `cloudflare` environment (shared with the other Workers) and the repository variable `VISITS_WORKER_DEPLOY` set to true, and the Visits worker workflow deploys on every push to `main` that touches `workers/visits`.
+
+`VISITS_ENABLED` in `wrangler.jsonc` is the kill switch: anything but `true` makes `/api/hit` a silent no-op (the dashboard keeps working). `PUBLIC_VISITS=1 npm run build` builds the counting site from any host, to try it against `wrangler dev`; `npm run verify:browser` checks the beacon in a real browser against a normal build.
+
 ## Security
 
 See [SECURITY.md](SECURITY.md) to report a vulnerability.
@@ -116,6 +144,7 @@ Automated checks, all open source:
 | `posture.yml`   | Daily                               | `scripts/posture.sh` checks the live site from outside: security headers, redirects, edge, origin and MTA-STS certificates, TLS 1.1 refusal, DNSSEC, CAA, SPF, DKIM, DMARC, MTA-STS, TLS-RPT, the contact endpoint's refusals, the six DNS records printed in the hero against live DNS, every outbound link, security.txt expiry, HSTS preload status and the Mozilla Observatory grade. A failure opens an issue labelled `posture` |
 | `quality.yml`   | Every push and pull request         | `scripts/audit.mjs` builds the site and audits it in Chrome: axe-core accessibility on every page, the Content-Security-Policy and script errors, and Lighthouse on three pages against the resource budgets in `budget.json`. Accessibility, best practices, SEO, layout shift and the budgets must be clean; the results appear in the job summary                                                                                  |
 | `worker.yml`    | Changes to `workers/contact`        | Type-checks, tests and bundles the contact Worker; deploys it to Cloudflare once the owner has set the secrets (see "Contact backend")                                                                                                                                                                                                                                                                                                |
+| `visits.yml`    | Changes to `workers/visits`         | Type-checks, tests and bundles the visit counter Worker; deploys it to Cloudflare once the owner has set the secrets (see "Visit counter")                                                                                                                                                                                                                                                                                            |
 | `zap.yml`       | Weekly                              | [OWASP ZAP](https://www.zaproxy.org) baseline: a passive scan of the public pages. Findings go to the "ZAP baseline findings" issue                                                                                                                                                                                                                                                                                                   |
 
 Results from zizmor, OSV-Scanner and Scorecard appear under the repository's Security tab, next to CodeQL, Dependabot and secret scanning.

@@ -154,6 +154,168 @@ async function open(ctx, path, settle = 2000) {
   await ctx.close();
 }
 
+// 6. The visit counter, when this build has it on: one cookie-free beacon from the real site, and none
+// from anywhere else, from automation, from a browser that asked not to be tracked, or after ?visits=off.
+// The built site is served at its real origin through request interception, so the page runs exactly as
+// it does in production; the counter's endpoint is a stub that records what it is sent.
+{
+  const privacy = join(dist, 'privacy', 'index.html');
+  const counting = existsSync(privacy) && readFileSync(privacy, 'utf8').includes('Counting visits');
+  if (!counting) {
+    note('visit counter: off in this build (build with PUBLIC_VISITS=1 to check it)');
+  } else {
+    const ORIGIN = 'https://securitysolution.tech';
+    const human = () => Object.defineProperty(navigator, 'webdriver', { get: () => false });
+    const robot = () => Object.defineProperty(navigator, 'webdriver', { get: () => true });
+    const doNotTrack = () => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => false });
+      Object.defineProperty(navigator, 'doNotTrack', { get: () => '1' });
+    };
+    const privacyControl = () => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => false });
+      Object.defineProperty(navigator, 'globalPrivacyControl', { get: () => true });
+    };
+
+    const serve = (hits, status) => async (route) => {
+      const request = route.request();
+      const { pathname } = new URL(request.url());
+      if (pathname === '/api/hit') {
+        hits.push({ method: request.method(), headers: request.headers(), body: request.postData() });
+        return route.fulfill({ status, body: '' });
+      }
+      let path = decodeURIComponent(pathname);
+      if (path.endsWith('/')) path += 'index.html';
+      const file = join(dist, path);
+      const found = existsSync(file) && !statSync(file).isDirectory();
+      return route.fulfill({
+        status: found ? 200 : 404,
+        contentType: types[extname(file)] ?? 'application/octet-stream',
+        body: found ? readFileSync(file) : 'not found',
+      });
+    };
+
+    async function visit({ path = '/', referer, setup = human, status = 204, wait = 0 } = {}) {
+      const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+      const hits = [];
+      await ctx.route(`${ORIGIN}/**`, serve(hits, status));
+      await ctx.route(/cloudflare-dns\.com|dns\.google/, (route) => route.abort());
+      const page = await ctx.newPage();
+      const errors = [];
+      page.on('pageerror', (e) => errors.push(e.message));
+      await page.addInitScript(() => {
+        window.__cspv = [];
+        document.addEventListener('securitypolicyviolation', (e) =>
+          window.__cspv.push(`${e.violatedDirective} ${e.blockedURI}`),
+        );
+      });
+      await page.addInitScript(setup);
+      await page.goto(ORIGIN + path, { waitUntil: 'load', referer });
+      await waitFor(hits, wait);
+      return { ctx, page, hits, errors };
+    }
+
+    // Waits for `want` beacons; with none wanted, waits long enough that a late one would have arrived.
+    async function waitFor(hits, want) {
+      for (let i = 0; i < (want ? 60 : 50); i++) {
+        if (want && hits.length >= want) return;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+    }
+
+    const sent = (hit) => JSON.parse(hit.body);
+    const check = async (v, label) => {
+      const csp = await v.page.evaluate(() => window.__cspv);
+      if (csp.length) fail(`visit counter, ${label}: CSP violation ${csp.join(', ')}`);
+      if (v.errors.length) fail(`visit counter, ${label}: script error ${v.errors.join(' | ')}`);
+    };
+
+    // A real visit from LinkedIn, with a campaign tag: exactly one cookie-free beacon.
+    const tagged = await visit({ path: '/?ref=li-oct9', referer: 'https://www.linkedin.com/feed/', wait: 1 });
+    if (tagged.hits.length !== 1) fail(`visit counter: expected 1 beacon, got ${tagged.hits.length}`);
+    else {
+      const [hit] = tagged.hits;
+      const body = sent(hit);
+      if (hit.method !== 'POST' || !/^text\/plain/.test(hit.headers['content-type'] ?? ''))
+        fail(`visit counter: beacon was ${hit.method} ${hit.headers['content-type']}`);
+      if (JSON.stringify(body) !== JSON.stringify({ p: '/', r: 'linkedin.com', i: 0, c: 'li-oct9' }))
+        fail(`visit counter: beacon body was ${hit.body}`);
+      if (hit.headers.cookie) fail('visit counter: the beacon carried a cookie');
+      if ((await tagged.ctx.cookies()).length) fail('visit counter: the page set a cookie');
+      note('visit counter: one beacon with the page, referrer and campaign tag, no cookie');
+    }
+    await check(tagged, 'a counted visit');
+    await tagged.ctx.close();
+
+    // Moving within the site counts the next page as internal.
+    const inside = await visit({ wait: 1 });
+    await inside.page.locator('main a[href="/services/offensive-testing/"]').first().click();
+    await waitFor(inside.hits, 2);
+    if (inside.hits.length !== 2) fail(`visit counter: expected 2 beacons across two pages, got ${inside.hits.length}`);
+    else {
+      const second = sent(inside.hits[1]);
+      if (second.p !== '/services/offensive-testing/' || second.i !== 1)
+        fail(`visit counter: the second page was sent as ${inside.hits[1].body}`);
+      else note('visit counter: the second page is counted as internal');
+    }
+    await inside.ctx.close();
+
+    // Silence: automation, Do Not Track and Global Privacy Control.
+    for (const [label, setup] of [
+      ['automation', robot],
+      ['Do Not Track', doNotTrack],
+      ['Global Privacy Control', privacyControl],
+    ]) {
+      const quiet = await visit({ setup });
+      if (quiet.hits.length) fail(`visit counter: counted a visit under ${label}`);
+      else note(`visit counter: silent under ${label}`);
+      await quiet.ctx.close();
+    }
+
+    // ?visits=off switches it off in this browser, and the address is tidied; ?visits=on restores it.
+    const off = await visit({ path: '/?visits=off' });
+    const state = await off.page.evaluate(() => ({
+      stored: localStorage.getItem('ss-ignore-visits'),
+      search: location.search,
+    }));
+    if (off.hits.length || state.stored !== '1' || state.search !== '')
+      fail(
+        `visit counter: ?visits=off left ${off.hits.length} beacons, stored ${state.stored}, address "${state.search}"`,
+      );
+    await off.page.reload({ waitUntil: 'load' });
+    await waitFor(off.hits, 0);
+    if (off.hits.length) fail('visit counter: counted after ?visits=off and a reload');
+    await off.page.goto(`${ORIGIN}/?visits=on`, { waitUntil: 'load' });
+    await waitFor(off.hits, 1);
+    if (off.hits.length !== 1) fail(`visit counter: ?visits=on did not restore counting (${off.hits.length} beacons)`);
+    else note('visit counter: ?visits=off silences a browser and ?visits=on restores it');
+    await off.ctx.close();
+
+    // Anywhere but the real site sends nothing: a local build, a preview, the CI audit.
+    {
+      const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+      const hits = [];
+      const page = await ctx.newPage();
+      await page.route('**/api/hit', (route) => {
+        hits.push(route.request().postData());
+        return route.fulfill({ status: 204, body: '' });
+      });
+      await page.addInitScript(human);
+      await page.goto(`${base}/`, { waitUntil: 'load' });
+      await waitFor(hits, 0);
+      if (hits.length) fail('visit counter: a local build sent a beacon');
+      else note('visit counter: nothing is sent from a host that is not the real site');
+      await ctx.close();
+    }
+
+    // A failing counter is invisible to the visitor.
+    const broken = await visit({ status: 500, wait: 1 });
+    if (broken.hits.length !== 1) fail('visit counter: no beacon was attempted for the failure case');
+    await check(broken, 'a failing counter');
+    note('visit counter: a 500 from the counter breaks nothing on the page');
+    await broken.ctx.close();
+  }
+}
+
 await browser.close();
 server.close();
 

@@ -34,6 +34,18 @@ export const monitor = {
   endpoint: '/api/watch',
 };
 
+// The visit counter behind /api/hit (workers/visits): a cookie-free count of page views, kept on our
+// own Cloudflare account and readable by the founders only. Set to true once the Worker is deployed
+// and a real visit has shown up on its dashboard (README, "Visit counter"). While false, no page sends
+// anything and the privacy page keeps its "no analytics" wording.
+const VISITS_LIVE = true;
+
+export const visits = {
+  // PUBLIC_VISITS=1 or =0 at build time overrides the switch, to test either state locally.
+  live: import.meta.env.PUBLIC_VISITS === undefined ? VISITS_LIVE : import.meta.env.PUBLIC_VISITS === '1',
+  endpoint: '/api/hit',
+};
+
 export const mailto = (subject?: string) =>
   `mailto:${site.email}${subject ? `?subject=${encodeURIComponent(subject)}` : ''}`;
 

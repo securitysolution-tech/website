@@ -2,24 +2,27 @@
 import Base from '../../layouts/Base.astro';
 import PageHead from '../PageHead.astro';
 import FactGrid from '../FactGrid.astro';
-import { contactBackend, monitor, site } from '../../data/site';
+import { contactBackend, monitor, site, visits } from '../../data/site';
 import { useI18n } from '../../i18n';
 
 const { t, href } = useI18n(Astro);
 const p = t.privacy;
+// With the visit counter on, the page says what it counts; with it off, the page says it counts nothing.
+const lead = visits.live ? p.leadVisits : p.lead;
+const summary = visits.live ? p.summaryVisits : p.summary;
 ---
 
 <Base title={p.title} description={p.description}>
   <PageHead
     title={p.title}
-    lead={p.lead}
+    lead={lead}
     crumbs={[{ label: t.page.home, href: href('/') }, { label: p.title }]}
     gain={0.5}
   />
 
   <article class="section">
     <div class="container prose">
-      <FactGrid facts={p.summary} label={p.glance} />
+      <FactGrid facts={summary} label={p.glance} />
 
       <h2>{p.checkTitle}</h2>
       <p>{p.check}</p>
@@ -29,6 +32,13 @@ const p = t.privacy;
 
       <h2>{p.hostingTitle}</h2>
       <p>{p.hosting}</p>
+
+      {visits.live && (
+        <>
+          <h2>{p.visitsTitle}</h2>
+          <p>{p.visits}</p>
+        </>
+      )}
 
       <h2>{p.contactTitle}</h2>
       <p>{p.contact}</p>
