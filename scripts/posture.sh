@@ -113,6 +113,8 @@ verdict "Cross-Origin-Opener-Policy: same-origin" "got '$(header cross-origin-op
   has_header cross-origin-opener-policy same-origin
 verdict "Cross-Origin-Resource-Policy: same-origin" "got '$(header cross-origin-resource-policy)'" \
   has_header cross-origin-resource-policy same-origin
+verdict "Cross-Origin-Embedder-Policy: require-corp" "got '$(header cross-origin-embedder-policy)'" \
+  has_header cross-origin-embedder-policy require-corp
 
 leaked=""
 for name in access-control-allow-origin via x-github-request-id x-fastly-request-id x-served-by \
