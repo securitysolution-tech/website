@@ -12,7 +12,8 @@ permissions:
 jobs:
   merge:
     name: Enable auto-merge for patch and minor updates
-    if: github.actor == 'dependabot[bot]' && github.repository == 'securitysolution-tech/website'
+    # The pull request's author, not the actor: the actor can be anyone who re-runs the workflow.
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'securitysolution-tech/website'
     runs-on: ubuntu-latest
     permissions:
       contents: write # Enable auto-merge on the pull request
