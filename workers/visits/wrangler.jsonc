@@ -12,11 +12,12 @@
   ],
   "workers_dev": false,
   "preview_urls": false,
-  // The privacy page promises that no IP address is stored, so Cloudflare's own per-request
-  // logs (which carry request headers) stay off; only the Worker's own error lines are kept.
+  // The privacy page promises that no IP address is stored, so Cloudflare's own per-request logs
+  // and traces (which carry request details) stay off; only the Worker's own error lines are kept.
   "observability": {
     "enabled": true,
     "logs": { "enabled": true, "invocation_logs": false, "head_sampling_rate": 1 },
+    "traces": { "enabled": false, "persist": false },
   },
   // The daily clean-up: visitor hashes older than a day, counts older than the retention.
   "triggers": { "crons": ["23 20 * * *"] },
