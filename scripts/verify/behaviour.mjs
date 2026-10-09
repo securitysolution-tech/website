@@ -157,8 +157,12 @@ async function open(ctx, path, settle = 2000) {
     if (!/example\.com/.test(second.title) || second.target !== 'example.com')
       fail('domain check: the second check did not take over the headline');
     else note('domain check: a second check takes over the headline');
-    // With every resolver failing, the error shows and nothing of the previous check lingers.
-    await page.route('**/dns-query*', (route) => route.abort());
+    // With every resolver failing (the check falls back from one to the other, so both must be
+    // down), the error shows and nothing of the previous check lingers.
+    await page.route(
+      (url) => url.hostname === 'cloudflare-dns.com' || url.hostname === 'dns.google',
+      (route) => route.abort(),
+    );
     await page.fill('#domain-input', 'example.org');
     await page.click('.check-form .run');
     await page.waitForFunction(() => !document.querySelector('[data-error]').hidden, null, { timeout: 20000 });
