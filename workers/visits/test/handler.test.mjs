@@ -345,3 +345,18 @@ test('the scheduled run deletes yesterday’s hashes and keeps today’s', async
   );
   assert.deepEqual(rows(db, 'views'), []);
 });
+
+test('the stylesheet is served from the Worker, and the dashboard policy allows only same-origin styles', async () => {
+  const { env } = makeEnv();
+  const css = await send(new Request(`${SITE}/api/visits/style.css`), env);
+  assert.equal(css.status, 200);
+  assert.match(css.headers.get('content-type'), /^text\/css/);
+  assert.equal(css.headers.get('cache-control'), 'public, max-age=86400');
+  assert.match(await css.text(), /\.kpi/);
+  assert.equal((await send(new Request(`${SITE}/api/visits/style.css`, { method: 'POST' }), env)).status, 405);
+  await send(beacon({ p: '/' }), env);
+  const page = await send(dashboard('', { authorization: basic('visits', PASSWORD) }), env);
+  assert.match(page.headers.get('content-security-policy'), /style-src 'self'/);
+  assert.doesNotMatch(page.headers.get('content-security-policy'), /unsafe-inline/);
+  assert.match(await page.text(), /vs the previous 30 days|counted once a day/);
+});

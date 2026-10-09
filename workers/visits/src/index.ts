@@ -10,7 +10,7 @@
 import { authorised, REALM } from './auth.ts';
 import { clientKey } from './ip.ts';
 import { parseHit } from './payload.ts';
-import { renderDashboard, renderJson } from './render.ts';
+import { renderDashboard, renderJson, STYLESHEET } from './render.ts';
 import { count, countFiltered, purge, report } from './store.ts';
 import { isAutomated, isHosting, parseAgent } from './traffic.ts';
 import { daysBefore, dubaiDay, visitorId } from './visitor.ts';
@@ -123,18 +123,25 @@ async function handleDashboard(request: Request<unknown, IncomingRequestCfProper
   const now = new Date();
   const until = dubaiDay(now);
   try {
-    const totals = await report(env.DB, daysBefore(until, days - 1), until);
+    const since = daysBefore(until, days - 1);
+    // The same length of time before this period, for the change on the headline numbers.
+    const [totals, previous] = await Promise.all([
+      report(env.DB, since, until),
+      report(env.DB, daysBefore(since, days), daysBefore(since, 1)),
+    ]);
     if (url.searchParams.get('format') === 'json') {
       return new Response(renderJson(totals, now), {
         headers: { ...secure, 'content-type': 'application/json; charset=utf-8' },
       });
     }
-    return new Response(renderDashboard(totals, days, now), {
+    return new Response(renderDashboard(totals, days, now, previous), {
       headers: {
         ...secure,
         'content-type': 'text/html; charset=utf-8',
         'content-security-policy':
-          "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+          // The zone adds the site's own policy header to every response, and a browser enforces
+          // both, so the stylesheet is a same-origin file rather than inline.
+          "default-src 'none'; style-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
         'x-frame-options': 'DENY',
       },
     });
@@ -153,6 +160,13 @@ export default {
     const path = pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
     if (path === '/api/hit') return handleHit(request, env, ctx);
     if (path === '/api/visits') return handleDashboard(request, env);
+    // The dashboard's stylesheet. Plain CSS, no data, cached for a day.
+    if (path === '/api/visits/style.css') {
+      if (request.method !== 'GET') return json(405, { error: 'method_not_allowed' }, { allow: 'GET' });
+      return new Response(STYLESHEET, {
+        headers: { ...secure, 'content-type': 'text/css; charset=utf-8', 'cache-control': 'public, max-age=86400' },
+      });
+    }
     return json(404, { error: 'not_found' });
   },
 

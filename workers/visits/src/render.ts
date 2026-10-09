@@ -182,11 +182,32 @@ tbody th{font-weight:500;overflow-wrap:anywhere}
 footer.notes{margin-top:1.5rem;color:var(--muted);font-size:.875rem}
 footer.notes p{margin:.375rem 0;max-width:60rem}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+.delta{display:inline-block;padding:0 .4rem;border-radius:.5rem;font-weight:600;font-size:.7rem;line-height:1.4;vertical-align:middle}
+.delta.up{background:rgba(98,211,166,.18);color:var(--accent)}
+.delta.down{background:rgba(255,143,128,.18);color:#ff8f80}
+.delta.flat{background:var(--line);color:var(--muted)}
 `;
 
 /** The dashboard page for a report covering the last `days` days. */
-export function renderDashboard(report: Report, days: number, now: Date): string {
+/** The stylesheet, served by the Worker at /api/visits/style.css: the zone's policy allows only
+ * same-origin styles, so it cannot be inline. */
+export const STYLESHEET = STYLE;
+
+/** The change against the previous period of the same length, for a headline number. */
+export function delta(current: number, previous: number | undefined, days: number): string {
+  if (previous === undefined) return '';
+  if (previous === 0) return current === 0 ? '' : `<span class="delta up">new</span> vs the previous ${days} days`;
+  const pct = Math.round(((current - previous) / previous) * 100);
+  const dir = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat';
+  const sign = pct > 0 ? '+' : '';
+  return `<span class="delta ${dir}">${sign}${pct}%</span> vs the previous ${days} days`;
+}
+
+export function renderDashboard(report: Report, days: number, now: Date, previous?: Report): string {
   const { totals } = report;
+  const visitorsDelta = delta(totals.visitors, previous?.totals.visitors, days);
+  const viewsDelta = delta(totals.views, previous?.totals.views, days);
   const mobile = report.devices.find((r) => r.key === 'mobile')?.n ?? 0;
   const automated = report.filtered.reduce((sum, r) => sum + r.n, 0);
   const perVisitor = totals.visitors > 0 ? (totals.views / totals.visitors).toFixed(1) : '0';
@@ -199,15 +220,15 @@ export function renderDashboard(report: Report, days: number, now: Date): string
       : '';
 
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow"><meta name="color-scheme" content="dark light"><title>Visits | SecuritySolution.tech</title><style>${STYLE}</style></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow"><meta name="color-scheme" content="dark light"><title>Visits | SecuritySolution.tech</title><link rel="stylesheet" href="/api/visits/style.css"></head>
 <body><div class="page">
 <header class="top"><div><p class="eyebrow">SecuritySolution.tech</p><h1>Visits</h1></div><nav class="range" aria-label="Time range">${ranges}</nav></header>
 <p class="span">${esc(dayLabel(report.since, true))} to ${esc(dayLabel(report.until, true))}, Dubai time. Generated ${esc(now.toISOString().slice(0, 16).replace('T', ' '))} UTC.</p>
 <main>
 <h2 class="sr">Totals</h2>
 <dl class="kpis">
-<div class="kpi"><dt>Visitors</dt><dd>${number(totals.visitors)}</dd><small>counted once a day</small></div>
-<div class="kpi"><dt>Page views</dt><dd>${number(totals.views)}</dd><small>every page loaded</small></div>
+<div class="kpi"><dt>Visitors</dt><dd>${number(totals.visitors)}</dd><small>${visitorsDelta || 'counted once a day'}</small></div>
+<div class="kpi"><dt>Page views</dt><dd>${number(totals.views)}</dd><small>${viewsDelta || 'every page loaded'}</small></div>
 <div class="kpi"><dt>Pages per visitor</dt><dd>${perVisitor}</dd><small>views divided by visitors</small></div>
 <div class="kpi"><dt>On a phone</dt><dd>${percent(mobile, totals.visitors)}%</dd><small>of visitors</small></div>
 </dl>
