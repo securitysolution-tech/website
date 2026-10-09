@@ -4,7 +4,7 @@ import { reduceMotion, scrollToElement } from './navigate';
 import { fmt, readStrings, type CheckStrings } from '../i18n/client';
 
 // The page renders the strings in its own language (DomainCheck.astro).
-const t = readStrings<CheckStrings>('check');
+const t = readStrings<CheckStrings & { watchNeed?: string }>('check');
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 // A Latin domain inside a sentence in either direction keeps its own order.
 const isolate = (text: string) => `⁦${text}⁩`;
@@ -33,6 +33,8 @@ function init(root: HTMLElement) {
   const canvas = root.querySelector<HTMLCanvasElement>('[data-exposure-map]');
   const copyLink = root.querySelector<HTMLButtonElement>('[data-copy-link]');
   const mailResults = root.querySelector<HTMLAnchorElement>('[data-mail-results]');
+  // Orders the managed watch: prefills the request form, then the link's own jump to it happens.
+  const watchLink = root.querySelector<HTMLAnchorElement>('[data-watch-link]');
   const copyLabel = copyLink?.textContent ?? '';
   let copyTimer = 0;
 
@@ -210,10 +212,32 @@ function init(root: HTMLElement) {
     }
   }
 
+  watchLink?.addEventListener('click', () => {
+    const domain = watchLink.dataset.domain;
+    const request = document.querySelector<HTMLFormElement>('[data-contact-form]');
+    if (!domain || !request) return;
+    const company = request.querySelector<HTMLInputElement>('[name="company"]');
+    if (company && !company.value) company.value = domain;
+    for (const box of request.querySelectorAll<HTMLInputElement>('input[name^="need-"]')) {
+      if (t.watchNeed && box.value === t.watchNeed) box.checked = true;
+    }
+    const message = request.querySelector<HTMLTextAreaElement>('[name="message"]');
+    if (message && !message.value) {
+      message.value = fmt(t.share.watchMessage, { domain });
+      // The form treats edits as new input, so any earlier prepared message is set aside.
+      message.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+
   function showVerdict(domain: string, v: Verdict, results: Result[], autorun: boolean) {
     const level = v.incomplete ? 'incomplete' : v.spoofing;
     verdict.querySelector('[data-spoofing]')!.textContent = t.levels[level];
     verdict.dataset.level = level;
+    if (watchLink) {
+      // Not for our own domain, and not for a reading that did not complete.
+      watchLink.hidden = v.incomplete || domain === ownDomain;
+      watchLink.dataset.domain = domain;
+    }
     verdict.querySelector('[data-score]')!.textContent = v.incomplete
       ? t.incompleteScore
       : fmt(t.score, { passed: v.passed, scored: v.scored });

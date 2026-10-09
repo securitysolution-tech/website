@@ -107,6 +107,9 @@ export const en = {
       fixFirst: 'Fix first:',
       results: 'All results:',
       again: 'Run it again: {url}',
+      /** Orders the managed watch: the request lands in the inbox and the domain joins posture-watch. */
+      watch: 'Ask us to watch this domain',
+      watchMessage: 'Please watch {domain} and tell me when its email or DNS protection changes.',
     },
     /** The record lines behind the headline, when a domain has none. */
     noRecord: 'no {tech} record',

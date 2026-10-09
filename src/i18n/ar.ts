@@ -107,6 +107,8 @@ export const ar: Dictionary = {
       fixFirst: 'أصلح أولًا:',
       results: 'كل النتائج:',
       again: 'أعد الفحص: {url}',
+      watch: 'اطلب منا مراقبة هذا النطاق',
+      watchMessage: 'يرجى مراقبة {domain} وإبلاغي عند تغيّر حماية البريد أو DNS فيه.',
     },
     noRecord: 'لا يوجد سجل {tech}',
     signed: 'موقَّع ومتحقَّق منه',

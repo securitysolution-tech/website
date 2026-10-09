@@ -3,6 +3,7 @@
 // two share one root, which domain-check.ts drives.
 import Icon from './Icon.astro';
 import { site } from '../data/site';
+import { services } from '../data/services';
 import { useI18n } from '../i18n';
 import { checkStrings, toJsonBlock } from '../i18n/client';
 
@@ -11,6 +12,8 @@ const { t, cta } = useI18n(Astro);
 const ids = ['dmarc', 'spf', 'mx', 'dnssec', 'caa', 'mtasts'] as const;
 const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
 const own = site.autorunDomain ?? '';
+// The need the watch request ticks on the contact form: the protocol value, English in both languages.
+const watchNeed = services.find((s) => s.slug === 'defensive-operations')?.plainName ?? '';
 ---
 
 <section id="check" class="instrument" aria-labelledby="check-title" data-results-panel>
@@ -68,6 +71,9 @@ const own = site.autorunDomain ?? '';
           </button>
           <a data-mail-results href={`mailto:?subject=${encodeURIComponent('Domain check')}`}>
             {t.check.share.email}
+          </a>
+          <a data-watch-link href="#contact">
+            {t.check.share.watch}
           </a>
         </p>
       </div>
@@ -129,7 +135,11 @@ const own = site.autorunDomain ?? '';
   <template data-icon="info">
     <Icon name="info" />
   </template>
-  <script type="application/json" data-i18n="check" set:html={toJsonBlock(checkStrings(t.check, t.hero.result))} />
+  <script
+    type="application/json"
+    data-i18n="check"
+    set:html={toJsonBlock({ ...checkStrings(t.check, t.hero.result), watchNeed })}
+  />
 </section>
 
 <script>
