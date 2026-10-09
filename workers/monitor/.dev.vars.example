@@ -1,0 +1,4 @@
+# Copy to .dev.vars for `wrangler dev`. The Astro dev server proxies /api to the Worker.
+ALLOWED_ORIGIN=http://localhost:4321
+SITE_ORIGIN=http://localhost:4321
+TOKEN_SECRET=replace-with-32-random-bytes

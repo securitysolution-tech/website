@@ -7,3 +7,7 @@ workers/contact/package-lock.json
 workers/contact/worker-configuration.d.ts
 workers/contact/node_modules/
 workers/contact/dist/
+workers/monitor/package-lock.json
+workers/monitor/worker-configuration.d.ts
+workers/monitor/node_modules/
+workers/monitor/dist/

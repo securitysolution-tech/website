@@ -2,7 +2,7 @@
 // The results panel of the domain check. The field lives in the hero (CheckForm.astro); the
 // two share one root, which domain-check.ts drives.
 import Icon from './Icon.astro';
-import { site } from '../data/site';
+import { monitor, site } from '../data/site';
 import { services } from '../data/services';
 import { useI18n } from '../i18n';
 import { checkStrings, toJsonBlock } from '../i18n/client';
@@ -76,6 +76,33 @@ const watchNeed = services.find((s) => s.slug === 'defensive-operations')?.plain
             {t.check.share.watch}
           </a>
         </p>
+        {monitor.live && (
+          <form class="alerts" data-watch-form data-endpoint={monitor.endpoint} novalidate hidden>
+            <p class="alerts-title">{t.check.alerts.title}</p>
+            <p class="alerts-lead">{t.check.alerts.lead}</p>
+            <div class="alerts-row">
+              <label class="visually-hidden" for="watch-email">
+                {t.check.alerts.email}
+              </label>
+              <input
+                id="watch-email"
+                name="email"
+                type="email"
+                inputmode="email"
+                autocomplete="email"
+                placeholder={t.check.alerts.email}
+                required
+                aria-describedby="watch-status"
+              />
+              <button type="submit">{t.check.alerts.submit}</button>
+            </div>
+            <div class="trap" aria-hidden="true" inert>
+              <input name="website" type="text" tabindex="-1" autocomplete="off" />
+            </div>
+            <p id="watch-status" class="alerts-status" data-watch-status aria-live="polite"></p>
+            <p class="alerts-note">{t.check.alerts.disclosure}</p>
+          </form>
+        )}
       </div>
       <a class="btn verdict-cta" href={cta.href}>
         {cta.label}
@@ -514,6 +541,91 @@ const watchNeed = services.find((s) => s.slug === 'defensive-operations')?.plain
   }
 
   /* Passing the results on: two quiet actions under the score. */
+  .alerts {
+    display: grid;
+    gap: var(--s-2);
+    margin-top: var(--s-3);
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--panel-line);
+  }
+
+  .alerts-title {
+    font-weight: 650;
+    color: var(--panel-ink);
+  }
+
+  .alerts-lead,
+  .alerts-note,
+  .alerts-status {
+    font-size: var(--step--1);
+    color: var(--panel-ink-2);
+  }
+
+  .alerts-status:empty {
+    display: none;
+  }
+
+  .alerts-status[data-state='sent'] {
+    color: var(--pass);
+  }
+
+  .alerts-status[data-state='error'] {
+    color: var(--p-fail);
+  }
+
+  .alerts-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+
+  .alerts-row input {
+    flex: 1 1 14rem;
+    min-height: 2.75rem;
+    padding: 0 var(--s-3);
+    border: 1px solid var(--panel-control);
+    border-radius: var(--radius-control);
+    background: var(--panel-2);
+    color: var(--panel-ink);
+    font: inherit;
+  }
+
+  .alerts-row input:focus-visible {
+    outline: 2px solid var(--pass);
+    outline-offset: 2px;
+  }
+
+  .alerts-row button {
+    min-height: 2.75rem;
+    padding: 0 var(--s-4);
+    border: 1px solid var(--pass);
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--pass);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--dur-quick) ease;
+  }
+
+  .alerts-row button:hover,
+  .alerts-row button:focus-visible {
+    background: rgb(var(--ink-accent-rgb) / 0.12);
+  }
+
+  .alerts-row button[aria-disabled='true'] {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .trap {
+    position: absolute;
+    inset-inline-start: -200vw;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
   .share {
     display: flex;
     flex-wrap: wrap;

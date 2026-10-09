@@ -51,6 +51,35 @@ The switch is `arLive` in `src/i18n/locales.mjs`. Setting it to `false` removes 
 
 The Arabic face is Noto Sans Arabic (variable, Arabic ranges only), loaded by the `/ar/` routes alone; Latin names, records and numbers keep Archivo. `src/styles/arabic.css` holds the Arabic typography and the right-to-left rules.
 
+## Posture monitor
+
+The self-serve tier of domain monitoring: a visitor runs the check and asks to be emailed when
+the domain's protection drops. The Worker in `workers/monitor` (route `/api/watch`) takes the
+signup, sends a confirmation link (double opt-in: nothing else is sent until it is clicked),
+re-reads every confirmed domain once a day with the website's own check (`src/scripts/checks.ts`),
+and emails only on a degradation. Every email carries a one-click unsubscribe that deletes the
+record. The rules for "worse" are the same as `posture-watch`'s, the managed tier.
+
+What is stored: the domain and the address, in a KV namespace, keyed by a hash. Nothing else.
+An unconfirmed signup is deleted after two days.
+
+The signup and the privacy page's "Change alerts" section render only when `MONITOR_LIVE` in
+`src/data/site.ts` is true (`PUBLIC_MONITOR=1 npm run build` builds that state without flipping
+the source). From `workers/monitor`: `npm run check`, `npm test` (the token, diff, validation
+and email logic), `npm run dry-run`.
+
+Going live (owner):
+
+1. Workers Paid with Email Service, and a verified sending domain (the contact backend's gate).
+2. `wrangler kv namespace create WATCH`, paste the id into `wrangler.jsonc`.
+3. `wrangler secret put TOKEN_SECRET` with 32 or more random bytes.
+4. The Cloudflare token and account id in the `cloudflare` environment (shared with the contact
+   Worker), then the repository variable `MONITOR_WORKER_DEPLOY` set to true; the Monitor
+   worker workflow deploys on the next push to `main` that touches `workers/monitor`.
+5. Send a test signup with `wrangler dev` and confirm the link; check the baseline email arrives.
+6. Set `MONITOR_LIVE` to true and push. The privacy page gains its section in the same build.
+7. A WAF rate rule on `/api/watch` and a cache bypass for `/api/*`, as for the contact endpoint.
+
 ## Contact backend
 
 `workers/contact` is a Cloudflare Worker on the route `securitysolution.tech/api/contact`. The form posts the request to it as JSON; the Worker checks every field, allows three requests a minute per network and six in total, and emails the request to the inbox through Cloudflare Email Service with the visitor's address as Reply-To. Sends to a verified destination address are free on every plan. Until the Worker is live, and whenever it answers anything but 202, the form composes the same message for the visitor's own email app.

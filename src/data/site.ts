@@ -23,6 +23,17 @@ export const contactBackend = {
   endpoint: '/api/contact',
 };
 
+// The self-serve posture monitor behind /api/watch (workers/monitor). Set to true once the Worker
+// is deployed with its KV namespace, email binding and secret (README, "Posture monitor"). While
+// false, the signup is not rendered and the privacy page does not mention it.
+const MONITOR_LIVE = false;
+
+export const monitor = {
+  // PUBLIC_MONITOR=1 or =0 at build time overrides the switch, to test either state locally.
+  live: import.meta.env.PUBLIC_MONITOR === undefined ? MONITOR_LIVE : import.meta.env.PUBLIC_MONITOR === '1',
+  endpoint: '/api/watch',
+};
+
 export const mailto = (subject?: string) =>
   `mailto:${site.email}${subject ? `?subject=${encodeURIComponent(subject)}` : ''}`;
 

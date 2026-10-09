@@ -35,6 +35,10 @@ function init(root: HTMLElement) {
   const mailResults = root.querySelector<HTMLAnchorElement>('[data-mail-results]');
   // Orders the managed watch: prefills the request form, then the link's own jump to it happens.
   const watchLink = root.querySelector<HTMLAnchorElement>('[data-watch-link]');
+  // The free alerts signup (rendered only when the monitor is live). Posts to the Worker.
+  const watchForm = root.querySelector<HTMLFormElement>('[data-watch-form]');
+  const watchStatus = watchForm?.querySelector<HTMLElement>('[data-watch-status]') ?? null;
+  let watchOpened = 0;
   const copyLabel = copyLink?.textContent ?? '';
   let copyTimer = 0;
 
@@ -212,6 +216,54 @@ function init(root: HTMLElement) {
     }
   }
 
+  watchForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const domain = watchForm.dataset.domain;
+    const email = watchForm.querySelector<HTMLInputElement>('input[name="email"]');
+    const trap = watchForm.querySelector<HTMLInputElement>('input[name="website"]');
+    const button = watchForm.querySelector<HTMLButtonElement>('button[type="submit"]');
+    if (!domain || !email || !button || !watchStatus) return;
+    const say = (state: 'sent' | 'error' | 'busy', text: string) => {
+      watchStatus.textContent = text;
+      watchStatus.dataset.state = state;
+    };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
+      say('error', t.alerts.invalidEmail);
+      email.focus();
+      return;
+    }
+    button.setAttribute('aria-disabled', 'true');
+    say('busy', t.alerts.sending);
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 10_000);
+    try {
+      const response = await fetch(watchForm.dataset.endpoint ?? '/api/watch', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          domain,
+          email: email.value.trim(),
+          website: trap?.value ?? '',
+          elapsed: Math.round(performance.now() - watchOpened),
+        }),
+        signal: controller.signal,
+      });
+      if (response.status === 202) {
+        say('sent', t.alerts.sent);
+        email.value = '';
+      } else if (response.status === 400) {
+        say('error', t.alerts.invalidEmail);
+      } else {
+        say('error', t.alerts.failed);
+      }
+    } catch {
+      say('error', t.alerts.failed);
+    } finally {
+      window.clearTimeout(timer);
+      button.removeAttribute('aria-disabled');
+    }
+  });
+
   watchLink?.addEventListener('click', () => {
     const domain = watchLink.dataset.domain;
     const request = document.querySelector<HTMLFormElement>('[data-contact-form]');
@@ -237,6 +289,15 @@ function init(root: HTMLElement) {
       // Not for our own domain, and not for a reading that did not complete.
       watchLink.hidden = v.incomplete || domain === ownDomain;
       watchLink.dataset.domain = domain;
+    }
+    if (watchForm) {
+      watchForm.hidden = v.incomplete || domain === ownDomain;
+      watchForm.dataset.domain = domain;
+      watchOpened = performance.now();
+      if (watchStatus) {
+        watchStatus.textContent = '';
+        delete watchStatus.dataset.state;
+      }
     }
     verdict.querySelector('[data-score]')!.textContent = v.incomplete
       ? t.incompleteScore
