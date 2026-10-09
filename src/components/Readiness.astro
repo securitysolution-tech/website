@@ -14,7 +14,7 @@ const answers: ('yes' | 'partly' | 'no')[] = ['yes', 'partly', 'no'];
 const strings = { result: r.result, of: r.of, progress: r.progress, bands: r.bands, bandNote: r.bandNote };
 ---
 
-<section id="readiness" class="readiness" aria-labelledby="readiness-title" data-readiness>
+<section id="readiness" class="readiness" aria-label={r.title} data-readiness>
   <div class="container grid">
     <div class="quizwrap">
       <p id="readiness-legend" class="legend">
@@ -58,7 +58,7 @@ const strings = { result: r.result, of: r.of, progress: r.progress, bands: r.ban
           <ol class="start-list" data-start-list></ol>
         </div>
 
-        <a class="btn btn-primary cta" href={href('/#contact')}>
+        <a class="btn btn-primary cta" href="#contact">
           {t.site.cta}
         </a>
       </div>

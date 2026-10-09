@@ -5,15 +5,19 @@ on:
     branches: [main]
     paths:
       - workers/monitor/**
-      - src/data/contact.ts
-      - src/data/services.ts
-      - .github/workflows/worker.yml
+      - src/scripts/checks.ts
+      - src/scripts/dns.ts
+      - src/i18n/en.ts
+      - src/i18n/client.ts
+      - .github/workflows/monitor.yml
   pull_request:
     paths:
       - workers/monitor/**
-      - src/data/contact.ts
-      - src/data/services.ts
-      - .github/workflows/worker.yml
+      - src/scripts/checks.ts
+      - src/scripts/dns.ts
+      - src/i18n/en.ts
+      - src/i18n/client.ts
+      - .github/workflows/monitor.yml
   workflow_dispatch:
 
 permissions:

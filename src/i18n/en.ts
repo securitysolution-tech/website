@@ -123,6 +123,8 @@ export const en = {
       failed: 'That did not go through. Try again in a minute, or ask us to watch it for you.',
       disclosure: 'We store this domain and your address only to send these emails. Unsubscribing deletes both.',
     },
+    /** The record line when a lookup did not answer: never shown as a missing record. */
+    lookupFailed: 'lookup did not answer',
     /** The record lines behind the headline, when a domain has none. */
     noRecord: 'no {tech} record',
     signed: 'signed and validated',

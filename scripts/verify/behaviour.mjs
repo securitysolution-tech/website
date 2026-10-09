@@ -39,8 +39,12 @@ const server = createServer((req, res) => {
   let path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
   if (path.endsWith('/')) path += 'index.html';
   let file = join(dist, path);
-  if (!existsSync(file) || statSync(file).isDirectory()) file = join(dist, '404.html');
-  res.writeHead(existsSync(file) ? 200 : 404, {
+  let status = 200;
+  if (!existsSync(file) || statSync(file).isDirectory()) {
+    file = join(dist, '404.html');
+    status = 404;
+  }
+  res.writeHead(existsSync(file) ? status : 404, {
     'content-type': types[extname(file)] ?? 'application/octet-stream',
     'cache-control': 'no-store',
   });

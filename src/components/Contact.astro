@@ -16,6 +16,9 @@ const { t, href, cta, services } = useI18n(Astro);
 
 // The needs are the services, in the buyer's words, so the form and the pages agree. The
 // value is always the English name, which the inbox and the Worker expect; the label follows the page.
+if (spine.length !== services.length || spine.some((s, i) => s.slug !== services[i].slug)) {
+  throw new Error('Contact: the needs and the services are out of step');
+}
 const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plainName, checked: s.slug === need }));
 ---
 

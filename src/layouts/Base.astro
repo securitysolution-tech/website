@@ -38,6 +38,9 @@ const ogImage = new URL(own?.src ?? (locale === 'ar' ? '/og-ar.jpg' : '/og.jpg')
 const ogAlt = own?.alt ?? `${t.hero.headline} ${site.name}`;
 
 // Mirrors the header policy set at the edge; frame-ancestors can only be sent as a header.
+// The commit this build came from (the deploy checks the live page carries it), or 'local'.
+const buildId = (process.env.GITHUB_SHA ?? 'local').slice(0, 12);
+
 const csp = [
   "default-src 'none'",
   "script-src 'self'",
@@ -106,6 +109,7 @@ const graph = JSON.stringify({
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <meta name="build" content={buildId} />
     {!unlisted && <link rel="canonical" href={canonical} />}
     {unlisted && <meta name="robots" content="noindex" />}
     {arLive && !noindex && (

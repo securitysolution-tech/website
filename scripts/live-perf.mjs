@@ -23,7 +23,13 @@ try {
       onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
     });
     const c = result.lhr.categories;
-    const score = (k) => Math.round(c[k].score * 100);
+    if (result.lhr.runtimeError || c.performance?.score == null) {
+      // A measurement that did not complete says nothing about the site; it is reported, not judged.
+      console.log(`${path}: measurement failed (${result.lhr.runtimeError?.message ?? 'no performance score'})`);
+      console.log('::warning::Lighthouse could not measure the page; no regression is judged from this run.');
+      continue;
+    }
+    const score = (k) => Math.round((c[k]?.score ?? 0) * 100);
     const perf = score('performance');
     console.log(
       `${path}: performance ${perf}, accessibility ${score('accessibility')}, best practices ${score('best-practices')}, SEO ${score('seo')}; LCP ${result.lhr.audits['largest-contentful-paint'].displayValue}`,

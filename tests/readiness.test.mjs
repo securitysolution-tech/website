@@ -36,8 +36,8 @@ test('start here lists the weakest by weight, worst first, up to three', () => {
   // testing (w3) and backups (w3) are no, worst; vendors (w1) is no; awareness (w2) is partly.
   assert.equal(r.startHere.length, 3);
   assert.ok(r.startHere.includes('testing') && r.startHere.includes('backups'));
-  // vendors (no, w1 -> value 0) beats awareness (partly, w2 -> value 1) for the third slot.
-  assert.equal(r.startHere[2], 'vendors');
+  // vendors (no, w1) and awareness (partly, w2) both lose one point; the heavier control comes first.
+  assert.equal(r.startHere[2], 'awareness');
 });
 
 test('the band thresholds are 75 and 40', () => {

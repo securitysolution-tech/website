@@ -33,11 +33,13 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
-          if git diff --name-only "$BASE" "$HEAD" | grep -qx 'src/i18n/ar.ts'; then
+          # Compare from the merge base, so commits on main after the branch point do not count.
+          MB="$(git merge-base "$BASE" "$HEAD")"
+          if git diff --name-only "$MB" "$HEAD" | grep -qx 'src/i18n/ar.ts'; then
             echo "arabic=changed" >> "$GITHUB_OUTPUT"
           else
             echo "arabic=untouched" >> "$GITHUB_OUTPUT"
-            echo "keys=$(node scripts/i18n-diff.mjs "$BASE" "$HEAD")" >> "$GITHUB_OUTPUT"
+            echo "keys=$(node scripts/i18n-diff.mjs "$MB" "$HEAD")" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Point it out on the pull request
@@ -46,6 +48,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR: ${{ github.event.pull_request.number }}
           KEYS: ${{ steps.diff.outputs.keys }}
+          REPO: ${{ github.repository }}
         run: |
           list="$(printf '%s' "$KEYS" | node -e "const d=JSON.parse(require('fs').readFileSync(0,'utf8')); console.log([...d.changed.map(k=>'- '+k), ...d.removed.map(k=>'- '+k+' (removed)')].join('\n') || '- (none)')")"
-          gh pr comment "$PR" --body "$(printf 'The English dictionary changed and the Arabic one did not. Keys to review in `src/i18n/ar.ts`:\n\n%s' "$list")"
+          body="$(printf '<!-- i18n-drift -->\nThe English dictionary changed and the Arabic one did not. Keys to review in `src/i18n/ar.ts`:\n\n%s' "$list")"
+          # One comment per pull request, edited on later pushes rather than repeated.
+          existing="$(gh api "repos/$REPO/issues/$PR/comments" --jq '.[] | select(.body | startswith("<!-- i18n-drift -->")) | .id' | head -1)"
+          if [ -n "$existing" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$existing" -f body="$body" >/dev/null
+          else
+            gh pr comment "$PR" --body "$body"
+          fi

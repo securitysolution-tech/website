@@ -14,6 +14,8 @@ const slugs = [
   'ai-cloud-security',
   'governance-compliance',
 ];
+if (slugs.length !== t.bridge.surfaces.length)
+  throw new Error('Bridge: the surfaces and their service slugs are out of step');
 const surfaces = t.bridge.surfaces.map((label, i) => ({ label, href: href(`/services/${slugs[i]}/`) }));
 ---
 
