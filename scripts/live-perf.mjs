@@ -5,7 +5,9 @@ import { launch } from 'chrome-launcher';
 import lighthouse from 'lighthouse';
 
 const SITE = process.env.SITE ?? 'https://securitysolution.tech';
-const THRESHOLD = Number(process.env.THRESHOLD ?? 85);
+// Calibrated to the GitHub runner, which has no GPU: it scores the live home about ten to fifteen
+// points under real hardware (which measures 86 to 95). Under 70 here is a real regression.
+const THRESHOLD = Number(process.env.THRESHOLD ?? 70);
 const chrome = await launch({ chromeFlags: ['--headless=new', '--no-sandbox'] });
 let low = false;
 try {
