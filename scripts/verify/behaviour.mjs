@@ -126,7 +126,7 @@ async function open(ctx, path, settle = 2000) {
 // 4. The domain check reaches a verdict for a weak domain, with the fix-first list.
 {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-  const { page } = await open(ctx, '/', 2500);
+  const { page, errors } = await open(ctx, '/', 2500);
   await page.fill('#domain-input', 'neverssl.com');
   await page.click('.check-form .run');
   try {
