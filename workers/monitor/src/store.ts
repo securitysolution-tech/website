@@ -7,6 +7,8 @@ export interface Subscription {
   email: string;
   verified: boolean;
   createdAt: string;
+  /** When the last confirmation email went out; a repeat within the cooldown sends nothing. */
+  confirmSentAt?: string;
   last?: Snapshot;
   lastNotifiedAt?: string;
 }

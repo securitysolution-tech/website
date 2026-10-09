@@ -38,7 +38,9 @@ function init(root: HTMLElement) {
   // The free alerts signup (rendered only when the monitor is live). Posts to the Worker.
   const watchForm = root.querySelector<HTMLFormElement>('[data-watch-form]');
   const watchStatus = watchForm?.querySelector<HTMLElement>('[data-watch-status]') ?? null;
-  let watchOpened = 0;
+  // Timed from page load (as the contact form does), so a browser autofill after a verdict never
+  // looks like a script to the Worker's two-second check.
+  const watchOpened = performance.now();
   const copyLabel = copyLink?.textContent ?? '';
   let copyTimer = 0;
 
@@ -293,7 +295,6 @@ function init(root: HTMLElement) {
     if (watchForm) {
       watchForm.hidden = v.incomplete || domain === ownDomain;
       watchForm.dataset.domain = domain;
-      watchOpened = performance.now();
       if (watchStatus) {
         watchStatus.textContent = '';
         delete watchStatus.dataset.state;

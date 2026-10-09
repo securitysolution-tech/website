@@ -14,6 +14,10 @@ const DAY = 86_400_000;
 const CONFIRM_TTL = 2 * DAY;
 const UNSUBSCRIBE_TTL = 400 * DAY;
 const MAX_BODY = 4096;
+// A repeat signup for the same pair within this window answers 202 and sends nothing, so the
+// endpoint cannot be used to flood an address with confirmation emails; after it, the link is
+// resent, so a typo never strands anyone.
+const CONFIRM_COOLDOWN = 10 * 60_000;
 
 const json = (status: number, body: Record<string, unknown>, extra: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {
