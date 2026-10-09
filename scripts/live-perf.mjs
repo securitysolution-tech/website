@@ -35,7 +35,7 @@ try {
     }
   }
 } finally {
-  await chrome.kill();
+  chrome.kill();
 }
 if (low) {
   console.log(`FAIL  live performance dropped by more than ${TOLERANCE} points below its baseline`);
