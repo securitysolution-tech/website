@@ -26,5 +26,12 @@ jobs:
       - if: steps.meta.outputs.update-type == 'version-update:semver-patch' || steps.meta.outputs.update-type == 'version-update:semver-minor'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --auto --rebase "$PR_URL"
+        run: |
+          # Quiet, not red, until the owner enables auto-merge on the repository.
+          if [ "$(gh api "repos/$REPO" --jq .allow_auto_merge)" != "true" ]; then
+            echo "::notice::Auto-merge is not enabled on this repository; nothing to do (see the handbook roadmap)."
+            exit 0
+          fi
+          gh pr merge --auto --rebase "$PR_URL"
