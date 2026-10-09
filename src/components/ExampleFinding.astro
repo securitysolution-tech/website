@@ -1,58 +1,63 @@
 ---
 import Icon from './Icon.astro';
+import { useI18n } from '../i18n';
+
+const { t, href } = useI18n(Astro);
+const f = t.finding;
 ---
 
 <section id="reports" class="section" aria-labelledby="reports-title">
   <div class="container">
     <div class="section-head">
-      <h2 id="reports-title">Reports your team can act on</h2>
-      <p>
-        Every finding says what we found, why it matters to the business, and exactly how to fix it. This is what one
-        looks like.
-      </p>
+      <h2 id="reports-title">{f.title}</h2>
+      <p>{f.lead}</p>
     </div>
 
     <figure class="finding">
       <div class="finding-head">
-        <span class="severity">High</span>
-        <h3>Anyone can send email that appears to come from your company</h3>
+        <span class="severity">{f.severity}</span>
+        <h3>{f.heading}</h3>
         <dl class="meta">
           <div>
-            <dt>Affected</dt>
-            <dd>example.com mail domain</dd>
+            <dt>{f.affected}</dt>
+            <dd>{f.affectedValue}</dd>
           </div>
           <div>
-            <dt>Category</dt>
-            <dd>Email security</dd>
+            <dt>{f.category}</dt>
+            <dd>{f.categoryValue}</dd>
+          </div>
+          <div>
+            <dt>{f.status}</dt>
+            <dd>{f.statusValue}</dd>
           </div>
         </dl>
       </div>
 
       <div class="finding-body">
         <div class="col">
-          <h4>Evidence</h4>
-          <pre translate="no"><code>_dmarc.example.com  TXT  "v=DMARC1; p=none"</code></pre>
-          <h4>Business impact</h4>
-          <p>
-            Attackers can send invoices or payment requests that look like they come from your finance team. Because the
-            policy is <code translate="no">p=none</code>, receiving mail servers are told to deliver them anyway.
-          </p>
+          <h4>{f.evidence}</h4>
+          <pre translate="no"><code>{f.evidence1}{'\n'}{f.evidence2}</code></pre>
+          <h4>{f.impact}</h4>
+          <p>{f.impactText}</p>
         </div>
         <div class="col">
-          <h4>How to fix</h4>
+          <h4>{f.fix}</h4>
           <ol class="fix">
-            <li>Confirm SPF and DKIM pass for every service that sends your email.</li>
-            <li>Change the policy to <code translate="no">p=quarantine</code> and review the DMARC reports for two weeks.</li>
-            <li>Move to <code translate="no">p=reject</code> once legitimate mail passes.</li>
+            <li>{f.fix1}</li>
+            <li>{f.fix2}</li>
+            <li>{f.fix3}</li>
           </ol>
-          <h4>Retest</h4>
+          <h4>{f.retest}</h4>
           <p class="retest">
             <Icon name="check-circle" />
-            <span>Fixed and verified. The policy is now <code translate="no">p=reject</code>.</span>
+            <span>{f.retestText}</span>
           </p>
         </div>
       </div>
-      <figcaption>Example finding. The company and domain are illustrative.</figcaption>
+      <figcaption>
+        {f.caption}
+        <a href={href('/services/offensive-testing/')}>{f.captionLink}</a>
+      </figcaption>
     </figure>
   </div>
 </section>
@@ -64,14 +69,77 @@ import Icon from './Icon.astro';
     border: 1px solid var(--line);
     border-radius: var(--radius-panel);
     overflow: hidden;
+    /* clip, not a scroll container: the view() timelines inside must reach the viewport */
+    overflow: clip;
+    /* One timeline for the severity bar and the retest line: finding, fix, verified, in order. */
+    view-timeline: --finding;
   }
 
   .finding-head {
+    position: relative;
     display: grid;
     gap: var(--s-3);
     padding: clamp(1.25rem, 1rem + 1.5vw, 2rem);
     border-bottom: 1px solid var(--line);
-    border-left: 4px solid var(--crit);
+  }
+
+  /* The severity bar draws down as the finding arrives, then the retest line lands last:
+     finding, fix, verified. */
+  .finding-head::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--crit);
+    transform-origin: top;
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .finding-head::before {
+        animation: draw-y linear both;
+        animation-timeline: --finding;
+        animation-range: entry 10% cover 30%;
+      }
+
+      .retest {
+        animation: enter linear both;
+        animation-timeline: --finding;
+        animation-range: cover 30% cover 45%;
+      }
+    }
+  }
+
+  @supports not (animation-timeline: view()) {
+    :global(html.io) .finding-head::before {
+      transform: scaleY(0);
+      transition: transform var(--dur-enter) var(--ease-out) 200ms;
+    }
+
+    :global(html.io) .finding.in .finding-head::before {
+      transform: none;
+    }
+
+    :global(html.io) .retest {
+      opacity: 0;
+      translate: 0 var(--rise);
+      transition:
+        opacity var(--dur-enter) var(--ease-out) 500ms,
+        translate var(--dur-enter) var(--ease-out) 500ms;
+    }
+
+    :global(html.io) .finding.in .retest {
+      opacity: 1;
+      translate: none;
+    }
+  }
+
+  @keyframes draw-y {
+    from {
+      transform: scaleY(0);
+    }
   }
 
   .severity {
@@ -87,7 +155,7 @@ import Icon from './Icon.astro';
   h3 {
     font-size: var(--step-2);
     font-stretch: 112%;
-    max-width: 30ch;
+    max-width: 20.25em;
   }
 
   .meta {
@@ -125,11 +193,12 @@ import Icon from './Icon.astro';
   }
 
   .col + .col {
-    border-left: 1px solid var(--line);
+    border-inline-start: 1px solid var(--line);
   }
 
   h4 {
     font-size: var(--step-0);
+    font-family: var(--font);
     font-stretch: 104%;
     font-weight: 650;
     letter-spacing: 0;
@@ -166,7 +235,7 @@ import Icon from './Icon.astro';
   .fix {
     display: grid;
     gap: var(--s-2);
-    padding-left: 1.25rem;
+    padding-inline-start: 1.25rem;
     color: var(--ink-2);
   }
 
@@ -194,6 +263,12 @@ import Icon from './Icon.astro';
     border-top: 1px solid var(--line);
     color: var(--ink-3);
     font-size: var(--step--1);
+    max-width: none;
+  }
+
+  figcaption a {
+    color: var(--ink);
+    font-weight: 600;
   }
 
   @media (max-width: 48rem) {
@@ -202,7 +277,7 @@ import Icon from './Icon.astro';
     }
 
     .col + .col {
-      border-left: 0;
+      border-inline-start: 0;
       border-top: 1px solid var(--line);
     }
   }

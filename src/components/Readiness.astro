@@ -1,0 +1,296 @@
+---
+// The security readiness self-check: twelve weighted questions, scored in the browser. The
+// questions and weights are data (src/data/readiness.ts); the wording is in the dictionary;
+// the score is computed by src/scripts/readiness.ts, which reuses the same scoring the tests
+// cover. Nothing the visitor answers is sent or stored.
+import { questions } from '../data/readiness';
+import { useI18n } from '../i18n';
+import { toJsonBlock } from '../i18n/client';
+
+const { t, href } = useI18n(Astro);
+const r = t.readiness;
+const answers: ('yes' | 'partly' | 'no')[] = ['yes', 'partly', 'no'];
+// The strings the client script needs (band labels and notes, the result words).
+const strings = { result: r.result, of: r.of, progress: r.progress, bands: r.bands, bandNote: r.bandNote };
+---
+
+<section id="readiness" class="readiness" aria-labelledby="readiness-title" data-readiness>
+  <div class="container grid">
+    <div class="quizwrap">
+      <p id="readiness-legend" class="legend">
+        {r.legend}
+      </p>
+      <div class="quiz" data-quiz role="group" aria-describedby="readiness-legend">
+        {questions.map((q, i) => (
+          <fieldset class="q" data-q={q.id} data-weight={q.weight} data-href={href(`/services/${q.service}/`)}>
+            <legend>
+              <span class="n" aria-hidden="true">
+                {i + 1}
+              </span>
+              {r.questions[q.id as keyof typeof r.questions]}
+            </legend>
+            <div class="opts">
+              {answers.map((a) => (
+                <label class="opt">
+                  <input type="radio" name={`q-${q.id}`} value={a} />
+                  <span>{r.answers[a]}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ))}
+      </div>
+    </div>
+
+    <aside class="panel" aria-live="polite">
+      <div class="result" data-result hidden>
+        <p class="score-line">
+          <span class="score-label" data-result-label></span>
+          <strong class="score" data-score></strong> <span class="of" data-of></span>
+        </p>
+        <p class="band" data-band></p>
+        <p class="band-note" data-band-note></p>
+        <p class="progress" data-progress></p>
+
+        <div class="start" data-start hidden>
+          <p class="start-title">{r.startHere}</p>
+          <p class="start-lead">{r.startHereLead}</p>
+          <ol class="start-list" data-start-list></ol>
+        </div>
+
+        <a class="btn btn-primary cta" href={href('/#contact')}>
+          {t.site.cta}
+        </a>
+      </div>
+      <p class="hint" data-hint>
+        {r.privacyNote}
+      </p>
+      <p class="hint">
+        <a href={href('/#check')}>{r.emailCheckLink}</a>
+      </p>
+    </aside>
+  </div>
+
+  <script type="application/json" data-i18n="readiness" set:html={toJsonBlock(strings)} />
+</section>
+
+<script>
+  import '../scripts/readiness';
+</script>
+
+<style>
+  .readiness {
+    padding-block: var(--s-7);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: clamp(1.5rem, 1rem + 3vw, 3.5rem);
+    align-items: start;
+  }
+
+  @media (max-width: 60rem) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .legend {
+    color: var(--ink-2);
+    margin-bottom: var(--s-4);
+  }
+
+  .quiz {
+    display: grid;
+    gap: var(--s-3);
+  }
+
+  .q {
+    margin: 0;
+    padding: var(--s-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    background: var(--raised);
+  }
+
+  .q legend {
+    display: flex;
+    gap: var(--s-3);
+    align-items: baseline;
+    font-weight: 560;
+    padding: 0;
+  }
+
+  .n {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    border: 1.5px solid var(--line-strong);
+    color: var(--ink-2);
+    font-family: var(--font-wide);
+    font-size: var(--step--2);
+    font-weight: 700;
+  }
+
+  .q:has(input:checked) .n {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .opts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-3);
+    margin-top: var(--s-3);
+    padding-inline-start: calc(1.6rem + var(--s-3));
+  }
+
+  .opt {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 2.75rem;
+    padding: 0 var(--s-3);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition:
+      border-color var(--dur-quick) ease,
+      background-color var(--dur-quick) ease;
+  }
+
+  .opt:hover {
+    border-color: var(--line-strong);
+  }
+
+  .opt:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--accent-tint);
+    color: var(--ink);
+    font-weight: 560;
+  }
+
+  .opt input {
+    accent-color: var(--accent);
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  /* The result sticks beside the questions on wide screens, so the score follows the answers. */
+  .panel {
+    position: sticky;
+    top: calc(var(--header-h) + var(--s-4));
+    display: grid;
+    gap: var(--s-3);
+  }
+
+  @media (max-width: 60rem) {
+    .panel {
+      position: static;
+    }
+  }
+
+  .result {
+    display: grid;
+    gap: var(--s-3);
+    padding: var(--s-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    background: var(--raised);
+  }
+
+  .score-line {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+
+  .score {
+    font-family: var(--font-display);
+    font-stretch: 116%;
+    font-size: var(--step-4);
+    line-height: 1;
+  }
+
+  .of {
+    color: var(--ink-3);
+  }
+
+  .band {
+    font-weight: 650;
+    font-size: var(--step-1);
+  }
+
+  .result[data-level='strong'] .band,
+  .result[data-level='strong'] .score {
+    color: var(--accent);
+  }
+  .result[data-level='developing'] .band,
+  .result[data-level='developing'] .score {
+    color: var(--warn);
+  }
+  .result[data-level='at-risk'] .band,
+  .result[data-level='at-risk'] .score {
+    color: var(--crit);
+  }
+
+  .band-note,
+  .progress {
+    color: var(--ink-2);
+    font-size: var(--step--1);
+  }
+
+  .start {
+    display: grid;
+    gap: var(--s-2);
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--line);
+  }
+
+  .start-title {
+    font-weight: 650;
+  }
+
+  .start-lead {
+    color: var(--ink-2);
+    font-size: var(--step--1);
+  }
+
+  .start-list {
+    display: grid;
+    gap: var(--s-2);
+    padding-inline-start: 1.25rem;
+    font-size: var(--step--1);
+  }
+
+  .start-list a {
+    color: var(--ink);
+    text-decoration-color: var(--accent);
+  }
+
+  .cta {
+    justify-self: start;
+    margin-top: var(--s-2);
+  }
+
+  .hint {
+    color: var(--ink-3);
+    font-size: var(--step--2);
+    line-height: 1.5;
+  }
+
+  .hint a {
+    color: var(--ink-2);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .result:not([hidden]) {
+      animation: enter var(--dur-base) var(--ease-out);
+    }
+  }
+</style>

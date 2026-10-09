@@ -1,13 +1,234 @@
 ---
 import Base from '../layouts/Base.astro';
+import ServiceCard from '../components/ServiceCard.astro';
+import { useI18n } from '../i18n';
+import { ar } from '../i18n/ar';
+// GitHub Pages serves this one page for every missing address, under /ar/ as well, so it
+// speaks both languages. The Arabic face is loaded here for that block alone.
+import '@fontsource-variable/noto-sans-arabic';
+
+const { t, href, services } = useI18n(Astro);
+const n = ar.notFound;
 ---
 
-<Base title="Page not found" noindex>
-  <section class="section">
-    <div class="container prose">
-      <h1>Page not found</h1>
-      <p class="lead">The page you were looking for does not exist or has moved.</p>
-      <p><a href="/">Go to the home page</a> or <a href="/#services">see our services</a>.</p>
+<Base title={t.notFound.title} noindex>
+  <section class="section nf">
+    <div class="container">
+      <!-- The brand mark's scope brackets with nothing inside them: nothing found at this address. -->
+      <p class="code" aria-hidden="true">
+        <svg class="scope" viewBox="0 0 32 32" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <path
+            d="M4 11V4h7M21 4h7v7M28 21v7h-7M11 28H4v-7"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="square"
+            vector-effect="non-scaling-stroke"
+          ></path>
+        </svg>
+        <span translate="no">404</span>
+      </p>
+      <div class="pair">
+        <div class="side">
+          <h1>{t.notFound.title}</h1>
+          <p class="lead">{t.notFound.lead}</p>
+          <div class="actions">
+            <a class="btn btn-primary" href={href('/')}>
+              {t.notFound.home}
+            </a>
+            <a class="btn btn-secondary" href={href('/#check')}>
+              {t.notFound.check}
+            </a>
+          </div>
+        </div>
+        <div class="side arabic" lang="ar" dir="rtl">
+          <p class="h1">{n.title}</p>
+          <p class="lead">{n.lead}</p>
+          <div class="actions">
+            <a class="btn btn-primary" href="/ar/">
+              {n.home}
+            </a>
+            <a class="btn btn-secondary" href="/ar/#check">
+              {n.check}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section grid-section" aria-labelledby="nf-services">
+    <div class="container">
+      <h2 id="nf-services">{t.notFound.services}</h2>
+      <ul class="grid" data-spotlight-root>
+        {services.map((s) => (
+          <ServiceCard service={s} items={3} />
+        ))}
+      </ul>
     </div>
   </section>
 </Base>
+
+<script>
+  import '../scripts/spotlight';
+</script>
+
+<style>
+  .nf {
+    padding-block: clamp(4rem, 3rem + 5vw, 7rem) clamp(2rem, 1rem + 3vw, 4rem);
+  }
+
+  .nf .container {
+    display: grid;
+    gap: var(--s-5);
+    justify-items: start;
+  }
+
+  /* English and Arabic side by side; each column reads in its own direction. */
+  .pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--s-6) clamp(2rem, 1rem + 4vw, 5rem);
+    justify-self: stretch;
+    align-items: start;
+  }
+
+  .side {
+    display: grid;
+    gap: var(--s-4);
+    justify-items: start;
+  }
+
+  .arabic {
+    font-family: 'Archivo Variable', 'Noto Sans Arabic Variable', var(--font);
+    letter-spacing: 0;
+  }
+
+  .arabic .h1 {
+    line-height: 1.25;
+  }
+
+  .arabic .lead {
+    line-height: 1.75;
+  }
+
+  @media (max-width: 54rem) {
+    .pair {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .code {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    margin: 0;
+    padding: 0.35em 0.5em;
+    font-family: var(--font-display);
+    font-size: clamp(4rem, 2.5rem + 7vw, 7.5rem);
+    font-weight: 750;
+    font-stretch: 118%;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .scope {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    color: var(--accent);
+    opacity: 0.55;
+  }
+
+  h1,
+  .h1 {
+    font-size: var(--step-3);
+  }
+
+  .lead {
+    max-width: 30.942em;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+  }
+
+  .grid-section {
+    padding-top: 0;
+  }
+
+  h2 {
+    font-size: var(--step-2);
+    margin-bottom: var(--s-5);
+  }
+
+  .grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-4);
+  }
+
+  @media (max-width: 40rem) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 30rem) {
+    .actions {
+      flex-direction: column;
+      justify-self: stretch;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .code span {
+      display: inline-block;
+      animation: nf-rise 700ms var(--ease-out) 60ms both;
+    }
+
+    .scope {
+      animation: nf-frame 900ms var(--ease-out) both;
+    }
+
+    h1,
+    .h1 {
+      animation: nf-rise 700ms var(--ease-out) 200ms both;
+    }
+
+    .lead {
+      animation: nf-rise 700ms var(--ease-out) 300ms both;
+    }
+
+    .actions {
+      animation: nf-rise 700ms var(--ease-out) 380ms both;
+    }
+  }
+
+  @keyframes nf-rise {
+    from {
+      opacity: 0;
+      transform: translateY(0.4em);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes nf-frame {
+    from {
+      opacity: 0;
+      transform: scale(1.06);
+    }
+    to {
+      opacity: 0.55;
+      transform: none;
+    }
+  }
+</style>

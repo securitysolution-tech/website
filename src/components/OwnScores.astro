@@ -1,0 +1,172 @@
+---
+import Icon from './Icon.astro';
+import { site } from '../data/site';
+import { useI18n } from '../i18n';
+import { fmt } from '../i18n/client';
+
+const { t, href } = useI18n(Astro);
+const host = new URL(site.url).hostname;
+
+// Where each grade can be verified, in the order of the dictionary's items.
+const links = [
+  { href: `https://developer.mozilla.org/en-US/observatory/analyze?host=${host}`, external: true },
+  { href: `https://www.ssllabs.com/ssltest/analyze.html?d=${host}&hideResults=on`, external: true },
+  { href: href(`/#check=${host}`), external: false },
+  { href: `https://dnsviz.net/d/${host}/dnssec/`, external: true },
+];
+const scores = t.scores.items.map((s, i) => ({ ...s, ...links[i] }));
+---
+
+<section class="scores" aria-labelledby="scores-title">
+  <div class="container">
+    <div class="intro">
+      <h2 id="scores-title">{t.scores.title}</h2>
+      <p>
+        {t.scores.lead1}
+        <a
+          class="runs"
+          href="https://github.com/securitysolution-tech/website/actions/workflows/posture.yml"
+          rel="noopener"
+        >
+          {t.scores.runs}
+          <Icon name="arrow-up-right" class="icon ext" />
+        </a>
+        {t.scores.lead2}
+      </p>
+    </div>
+    <ul class="grid">
+      {scores.map((s) => (
+        <li class="cell">
+          <div class="cell-in">
+            <p class="scanner">{s.scanner}</p>
+            <p class:list={['grade', { long: s.grade.length > 6 }]} translate="no">
+              {s.grade}
+            </p>
+            <p class="what">{s.what}</p>
+            <a href={s.href} class="report" rel={s.external ? 'noopener' : undefined}>
+              {s.link}
+              {s.external && <span class="visually-hidden">{fmt(t.scores.from, { scanner: s.scanner })}</span>}
+              {s.external && <Icon name="arrow-up-right" class="icon ext" />}
+            </a>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .scores {
+    padding-block: clamp(3rem, 2rem + 3.5vw, 5rem) clamp(2.5rem, 1.5rem + 3vw, 4rem);
+  }
+
+  .intro {
+    display: grid;
+    gap: var(--s-3);
+    margin-bottom: var(--s-6);
+  }
+
+  h2 {
+    font-size: var(--step-2);
+  }
+
+  .intro p {
+    color: var(--ink-2);
+    max-width: 34.38em;
+  }
+
+  /* 1px gaps over a line-coloured background draw the dividers at any column count. */
+  .grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    background: var(--line);
+    overflow: hidden;
+    /* clip, not a scroll container: view() timelines inside must reach the viewport */
+    overflow: clip;
+  }
+
+  .cell {
+    padding: clamp(1.25rem, 1rem + 1.2vw, 1.75rem);
+    background: var(--raised);
+  }
+
+  .cell-in {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: var(--s-2);
+    height: 100%;
+  }
+
+  .scanner {
+    color: var(--ink-2);
+    font-weight: 600;
+    font-size: var(--step--1);
+  }
+
+  .grade {
+    font-size: clamp(2.25rem, 1.75rem + 2vw, 3.25rem);
+    font-family: var(--font-display);
+    font-weight: 750;
+    font-stretch: 118%;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  /* Longer words keep the same presence at a size that fits the cell. */
+  .grade.long {
+    font-size: clamp(1.9rem, 1.4rem + 1.7vw, 2.75rem);
+    letter-spacing: -0.03em;
+  }
+
+  .what {
+    color: var(--ink-2);
+    font-size: var(--step--1);
+  }
+
+  .report {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
+    width: fit-content;
+    min-height: 2rem;
+    margin-top: var(--s-1);
+    font-weight: 600;
+    font-size: var(--step--1);
+  }
+
+  @media (pointer: coarse) {
+    .report {
+      min-height: 2.75rem;
+    }
+  }
+
+  .report :global(.ext),
+  .runs :global(.ext) {
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.1em;
+    transition: transform 180ms var(--ease-out);
+  }
+
+  .report:hover :global(.ext),
+  .runs:hover :global(.ext) {
+    transform: translate(2px, -2px);
+  }
+
+  @media (max-width: 64rem) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 36rem) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

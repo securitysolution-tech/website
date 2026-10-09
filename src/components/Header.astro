@@ -1,61 +1,134 @@
 ---
 import Mark from './Mark.astro';
+import Wordmark from './Wordmark.astro';
 import Icon from './Icon.astro';
-import { contactCta, site } from '../data/site';
+import { useI18n } from '../i18n';
+
+interface Props {
+  /** Where the call to action goes: the page's own form when it has one, else the home page's. */
+  contactHref?: string;
+}
+const { t, href, cta, toggle } = useI18n(Astro);
+const { contactHref = cta.href } = Astro.props;
 
 const links = [
-  { label: 'Services', href: '/#services' },
-  { label: 'Approach', href: '/#approach' },
-  { label: 'Team', href: '/#team' },
+  { label: t.nav.services, href: href('/#services') },
+  { label: t.nav.approach, href: href('/#approach') },
+  { label: t.nav.team, href: href('/#team') },
+  { label: t.nav.faq, href: href('/#faq') },
 ];
 ---
 
-<header class="site-header">
+<header class="site-header ink">
   <div class="container bar">
-    <a class="brand" href="/">
-      <Mark />
-      <span class="wordmark" translate="no">{site.name}</span>
+    <a class="brand" href={href('/')}>
+      <Mark size={30} />
+      <Wordmark />
     </a>
 
-    <nav class="nav-desktop" aria-label="Primary">
+    <nav class="nav-desktop" aria-label={t.nav.primary}>
       <ul>
-        {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+        {links.map((l) => (
+          <li>
+            <a href={l.href}>{l.label}</a>
+          </li>
+        ))}
       </ul>
-      <a class="btn btn-primary" href={contactCta.href}>{contactCta.label}</a>
+      {toggle && (
+        <a class="lang" href={toggle.href} lang={toggle.lang} hreflang={toggle.lang}>
+          {toggle.label}
+        </a>
+      )}
+      <a class="btn btn-primary" href={contactHref}>
+        {cta.label}
+      </a>
     </nav>
 
-    <details class="nav-mobile">
-      <summary class="menu-btn">
-        <Icon name="list" class="icon icon-open" />
-        <Icon name="x" class="icon icon-close" />
-        <span>Menu</span>
-      </summary>
-      <nav class="menu-panel" aria-label="Main menu">
-        <ul>
-          {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
-        </ul>
-        <a class="btn btn-primary" href={contactCta.href}>{contactCta.label}</a>
-      </nav>
-    </details>
+    <a class="btn btn-primary bar-cta" href={contactHref}>
+      {t.site.ctaShort}
+    </a>
+
+    <nav class="nav-mobile-wrap" aria-label={t.nav.menu}>
+      <details class="nav-mobile">
+        <summary class="menu-btn">
+          <Icon name="list" class="icon icon-open" />
+          <Icon name="x" class="icon icon-close" />
+          <span>{t.nav.menu}</span>
+        </summary>
+        <div class="menu-panel ink">
+          <ul>
+            {links.map((l) => (
+              <li>
+                <a href={l.href}>{l.label}</a>
+              </li>
+            ))}
+          </ul>
+          {toggle && (
+            <a class="lang" href={toggle.href} lang={toggle.lang} hreflang={toggle.lang}>
+              {toggle.label}
+            </a>
+          )}
+          <a class="btn btn-primary" href={contactHref}>
+            {cta.label}
+          </a>
+        </div>
+      </details>
+    </nav>
   </div>
 </header>
-
-<script>
-  // Close the mobile menu after a link is chosen.
-  document.querySelectorAll<HTMLAnchorElement>('.nav-mobile a').forEach((link) => {
-    link.addEventListener('click', () => {
-      link.closest('details')?.removeAttribute('open');
-    });
-  });
-</script>
 
 <style>
   .site-header {
     position: sticky;
     top: 0;
     z-index: 50;
-    background: var(--paper);
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--ink-line);
+  }
+
+  /* Once the page scrolls, the bar turns to frosted ink and lifts off the page with a shadow. */
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .site-header {
+        animation: header-lift linear both;
+        animation-timeline: scroll();
+        animation-range: 0 140px;
+      }
+    }
+  }
+
+  @keyframes header-lift {
+    to {
+      background: color-mix(in srgb, var(--ink-bg) 82%, transparent);
+      box-shadow: 0 14px 34px -22px rgb(2 8 6 / 0.85);
+      -webkit-backdrop-filter: blur(14px) saturate(1.3);
+      backdrop-filter: blur(14px) saturate(1.3);
+    }
+  }
+
+  .brand :global(.mark-core) {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 240ms var(--ease-out);
+  }
+
+  .brand:hover :global(.mark-core),
+  .brand:focus-visible :global(.mark-core) {
+    transform: scale(1.15);
+  }
+
+  /* On the home page the core travels from the centre of the scope to the edge where it was
+     found, once. On other pages, and on every return, the mark holds still. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html.home) .brand :global(.mark-core) {
+      animation: lock-in 900ms var(--ease-out) 150ms both;
+    }
+  }
+
+  @keyframes lock-in {
+    from {
+      transform: translate(-7px, -7px);
+      opacity: 0.5;
+    }
   }
 
   .bar {
@@ -71,14 +144,7 @@ const links = [
     align-items: center;
     gap: 0.625rem;
     text-decoration: none;
-    color: var(--ink);
-  }
-
-  .wordmark {
-    font-weight: 700;
-    font-stretch: 112%;
-    font-size: 1.0625rem;
-    letter-spacing: -0.01em;
+    color: var(--ink-text);
   }
 
   .nav-desktop {
@@ -94,21 +160,75 @@ const links = [
     gap: var(--s-5);
   }
 
+  .nav-desktop ul {
+    position: relative;
+  }
+
+  /* The underline slides to whichever section is in view (reveal.ts sets --ul-x and --ul-w). */
+  .nav-desktop ul::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -0.45rem;
+    width: 1px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--ink-accent);
+    transform: translateX(var(--ul-x, 0px)) scaleX(var(--ul-w, 0));
+    transform-origin: left center;
+    opacity: 0;
+    transition:
+      transform 460ms var(--ease-out),
+      opacity 200ms ease;
+  }
+
+  .nav-desktop ul.has-active::after {
+    opacity: 1;
+  }
+
+  .nav-desktop ul a[aria-current] {
+    color: var(--ink-text);
+  }
+
   .nav-desktop ul a,
-  .menu-panel ul a {
-    color: var(--ink-2);
+  .menu-panel ul a,
+  .lang {
+    color: var(--ink-text-2);
     font-weight: 540;
     text-decoration: none;
+    transition: color 150ms ease;
   }
 
   .nav-desktop ul a:hover,
-  .menu-panel ul a:hover {
-    color: var(--ink);
-    text-decoration: underline;
+  .menu-panel ul a:hover,
+  .lang:hover {
+    color: var(--ink-text);
   }
 
-  .nav-mobile {
+  /* The toggle is set in the language it leads to, in that language's face. */
+  .lang {
+    font-family: var(--font), 'Noto Sans Arabic Variable', 'Segoe UI', Tahoma, 'Geeza Pro', sans-serif;
+    letter-spacing: 0;
+  }
+
+  .nav-desktop .btn {
+    min-height: 2.625rem;
+    padding-inline: 1.1rem;
+  }
+
+  .nav-mobile-wrap,
+  .bar-cta {
     display: none;
+  }
+
+  /* Between the phone and the desktop bar there is room for the call itself, shortened. */
+  @media (min-width: 30rem) and (max-width: 54rem) {
+    .bar-cta {
+      display: inline-flex;
+      margin-inline-start: auto;
+      min-height: 2.625rem;
+      padding-inline: 1rem;
+    }
   }
 
   @media (max-width: 54rem) {
@@ -116,8 +236,17 @@ const links = [
       display: none;
     }
 
-    .nav-mobile {
+    .nav-mobile-wrap {
       display: block;
+    }
+
+    .bar {
+      gap: var(--s-3);
+    }
+
+    .brand {
+      min-width: 0;
+      gap: var(--s-2);
     }
 
     .menu-btn {
@@ -126,12 +255,22 @@ const links = [
       gap: var(--s-2);
       min-height: 2.75rem;
       padding: 0 0.875rem;
-      border: 1px solid var(--line-strong);
+      border: 1px solid var(--ink-control);
       border-radius: var(--radius-control);
+      color: var(--ink-text);
       font-weight: 600;
       cursor: pointer;
       list-style: none;
       user-select: none;
+      transition: border-color 160ms ease;
+    }
+
+    .menu-btn:hover {
+      border-color: var(--ink-text-2);
+    }
+
+    .nav-mobile[open] .menu-btn {
+      border-color: var(--ink-accent);
     }
 
     .menu-btn::-webkit-details-marker {
@@ -148,20 +287,6 @@ const links = [
       display: block;
     }
 
-    .bar {
-      gap: var(--s-3);
-    }
-
-    .brand {
-      min-width: 0;
-      gap: var(--s-2);
-    }
-
-    .wordmark {
-      font-size: 0.9375rem;
-      font-stretch: 106%;
-    }
-
     .menu-panel {
       position: absolute;
       left: 0;
@@ -169,9 +294,42 @@ const links = [
       top: 100%;
       display: grid;
       gap: var(--s-5);
+      max-height: calc(100dvh - var(--header-h));
+      overflow-y: auto;
       padding: var(--s-5) var(--gutter) var(--s-6);
-      background: var(--paper);
-      border-bottom: 1px solid var(--line);
+      border-bottom: 1px solid var(--ink-line);
+      /* Frosted like the scrolled bar, so the menu and the bar read as one surface. */
+      background: color-mix(in srgb, var(--ink-bg) 96%, transparent);
+      -webkit-backdrop-filter: blur(14px) saturate(1.3);
+      backdrop-filter: blur(14px) saturate(1.3);
+    }
+
+    /* The panel unfolds on open (@starting-style gives the first frame something to transition
+       from) and fades on close, where the browser can keep details content around for it. */
+    @media (prefers-reduced-motion: no-preference) {
+      .menu-panel {
+        transition:
+          opacity var(--dur-base) var(--ease-out),
+          transform var(--dur-slow) var(--ease-out);
+      }
+
+      @starting-style {
+        .nav-mobile[open] .menu-panel {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+      }
+
+      .nav-mobile::details-content {
+        opacity: 0;
+        transition:
+          opacity var(--dur-base) var(--ease-out),
+          content-visibility var(--dur-base) allow-discrete;
+      }
+
+      .nav-mobile[open]::details-content {
+        opacity: 1;
+      }
     }
 
     .menu-panel ul {
@@ -183,7 +341,13 @@ const links = [
       display: block;
       padding: var(--s-2) 0;
       font-size: var(--step-1);
-      color: var(--ink);
+      color: var(--ink-text);
+    }
+
+    .menu-panel .lang {
+      justify-self: start;
+      padding: var(--s-2) 0;
+      font-size: var(--step-1);
     }
   }
 

@@ -1,0 +1,33 @@
+---
+// A note that sets expectations, framed so it reads as part of the offer rather than fine print.
+interface Props {
+  title?: string;
+}
+const { title } = Astro.props;
+---
+
+<aside class="callout">
+  {title && <p class="callout-title">{title}</p>}
+  <p>
+    <slot />
+  </p>
+</aside>
+
+<style>
+  .callout {
+    display: grid;
+    gap: var(--s-2);
+    max-width: var(--measure);
+    padding: var(--s-4) var(--s-5);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+    border-inline-start: 4px solid var(--accent);
+    border-radius: var(--radius-control);
+    background: color-mix(in srgb, var(--accent-tint) 45%, var(--raised));
+    color: var(--ink-2);
+  }
+
+  .callout-title {
+    font-weight: 650;
+    color: var(--ink);
+  }
+</style>

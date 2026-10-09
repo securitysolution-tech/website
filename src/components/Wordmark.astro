@@ -1,0 +1,44 @@
+---
+// The name set tight, with the domain ending in the verified colour.
+import { site } from '../data/site';
+
+interface Props {
+  small?: boolean;
+}
+const { small = false } = Astro.props;
+const tld = '.tech';
+const name = site.name.endsWith(tld) ? site.name.slice(0, -tld.length) : site.name;
+---
+
+<span class:list={['wordmark', { small }]} translate="no">
+  {name}
+  <span class="tld">{tld}</span>
+</span>
+
+<style>
+  .wordmark {
+    font-family: var(--font);
+    font-weight: 700;
+    font-stretch: 100%;
+    font-size: 1.125rem;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .tld {
+    color: var(--mark-core, var(--accent));
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  .small {
+    font-size: 1rem;
+  }
+
+  @media (max-width: 54rem) {
+    .wordmark:not(.small) {
+      font-size: 1rem;
+    }
+  }
+</style>

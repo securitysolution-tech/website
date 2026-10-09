@@ -1,0 +1,239 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHead from '../PageHead.astro';
+import FactGrid from '../FactGrid.astro';
+import Callout from '../Callout.astro';
+import Process from '../Process.astro';
+import ExampleFinding from '../ExampleFinding.astro';
+import Faq from '../Faq.astro';
+import ServiceCard from '../ServiceCard.astro';
+import Contact from '../Contact.astro';
+import { site } from '../../data/site';
+import { useI18n } from '../../i18n';
+import { fmt } from '../../i18n/client';
+
+interface Props {
+  slug: string;
+}
+
+const { slug } = Astro.props;
+const { t, href, cta, services, faqsFor, locale } = useI18n(Astro);
+const service = services.find((s) => s.slug === slug)!;
+// Rendered from this page's own head, in its language (public/og).
+const ogImage = {
+  src: `/og/${locale === 'ar' ? 'ar/' : ''}${service.slug}.jpg`,
+  alt: `${service.plainName}. ${service.intro}`,
+};
+const others = services.filter((s) => s.slug !== service.slug);
+const faqs = faqsFor(service.slug);
+const pageUrl = new URL(href(`/services/${service.slug}/`), site.url).href;
+
+const jsonLd = [
+  {
+    '@type': 'Service',
+    '@id': `${pageUrl}#service`,
+    name: service.plainName,
+    alternateName: service.name,
+    serviceType: service.plainName,
+    description: service.seoDescription,
+    url: pageUrl,
+    provider: { '@id': `${site.url}/#organization` },
+    areaServed: { '@type': 'Country', name: t.site.location },
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: t.service.cover,
+      itemListElement: service.items.map((i) => ({
+        '@type': 'Offer',
+        itemOffered: { '@type': 'Service', name: i.name, description: i.text },
+      })),
+    },
+  },
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: t.page.home, item: new URL(href('/'), site.url).href },
+      { '@type': 'ListItem', position: 2, name: t.nav.services, item: new URL(href('/#services'), site.url).href },
+      { '@type': 'ListItem', position: 3, name: service.name, item: pageUrl },
+    ],
+  },
+];
+---
+
+<Base title={service.seoTitle} description={service.seoDescription} hasContact jsonLd={jsonLd} ogImage={ogImage}>
+  <article>
+    <PageHead
+      title={service.plainName}
+      lead={service.intro}
+      crumbs={[
+        { label: t.page.home, href: href('/') },
+        { label: t.nav.services, href: href('/#services') },
+        { label: service.name },
+      ]}
+      cta={{ label: cta.label, href: '#contact' }}
+      gain={0.7}
+    >
+      <FactGrid ink facts={service.facts} label={fmt(t.service.glance, { name: service.name })} />
+    </PageHead>
+
+    <section class="section" aria-labelledby="scope-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="scope-title">{t.service.cover}</h2>
+          <p>{service.coverLead}</p>
+        </div>
+        <dl class="items">
+          {service.items.map((i) => (
+            <div class="item">
+              <dt>{i.name}</dt>
+              <dd>{i.text}</dd>
+            </div>
+          ))}
+        </dl>
+        {service.standards.length > 0 && (
+          <p class="standards">
+            <span>{t.service.measured}</span> {service.standards.join(', ')}.
+          </p>
+        )}
+        {service.note && <Callout title={t.service.goodToKnow}>{service.note}</Callout>}
+      </div>
+    </section>
+
+    <section class="section split" aria-label={t.service.fitLabel}>
+      <div class="container two">
+        <div>
+          <h2 class="block-title">{t.service.receive}</h2>
+          <ul class="ticks bullets">
+            {service.deliverables.map((d) => (
+              <li>{d}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h2 class="block-title">{t.service.fit}</h2>
+          <ul class="ticks bullets">
+            {service.goodFit.map((g) => (
+              <li>{g}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <Process />
+
+    {service.slug === 'offensive-testing' && <ExampleFinding />}
+
+    {faqs.length > 1 && <Faq faqs={faqs} title={t.faq.serviceTitle} id="service-faq" />}
+
+    <section class="section" aria-labelledby="more-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="more-title">{t.service.others}</h2>
+          <p>{t.service.othersLead}</p>
+        </div>
+        <ul class="others" data-spotlight-root>
+          {others.map((o) => (
+            <ServiceCard service={o} items={3} />
+          ))}
+        </ul>
+      </div>
+    </section>
+  </article>
+
+  <Contact need={service.slug} />
+</Base>
+
+<script>
+  import '../../scripts/spotlight';
+</script>
+
+<style>
+  .items {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-6) clamp(2rem, 1rem + 4vw, 5rem);
+    margin: 0;
+  }
+
+  .item {
+    display: grid;
+    gap: var(--s-2);
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--line);
+  }
+
+  dt {
+    font-family: var(--font-wide);
+    font-weight: 650;
+    font-stretch: 108%;
+    font-size: var(--step-1);
+    line-height: 1.3;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--ink-2);
+  }
+
+  .standards {
+    margin-top: var(--s-6);
+    color: var(--ink-2);
+    font-size: var(--step--1);
+  }
+
+  .standards span {
+    font-weight: 650;
+    color: var(--ink);
+  }
+
+  .standards + :global(.callout) {
+    margin-top: var(--s-5);
+  }
+
+  .block-title {
+    font-size: var(--step-2);
+    margin-bottom: var(--s-6);
+  }
+
+  .split {
+    background: var(--raised);
+    border-block: 1px solid var(--line);
+  }
+
+  .two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(2rem, 1rem + 4vw, 5rem);
+  }
+
+  .ticks {
+    display: grid;
+    gap: var(--s-3);
+  }
+
+  .others {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-4);
+  }
+
+  @media (max-width: 60rem) {
+    .others {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 48rem) {
+    .items,
+    .two {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .others {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

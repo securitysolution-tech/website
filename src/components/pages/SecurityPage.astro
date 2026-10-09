@@ -1,0 +1,149 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHead from '../PageHead.astro';
+import Icon from '../Icon.astro';
+import { site } from '../../data/site';
+import { useI18n } from '../../i18n';
+
+const { t, href } = useI18n(Astro);
+const p = t.security;
+const steps = p.steps;
+---
+
+<Base title={p.title} description={p.description}>
+  <PageHead
+    title={p.title}
+    lead={p.lead}
+    crumbs={[{ label: t.page.home, href: href('/') }, { label: p.title }]}
+    gain={0.5}
+  />
+
+  <article class="section">
+    <div class="container prose">
+      <h2>{p.howTitle}</h2>
+      <p>{p.how}</p>
+      <a class="address" href={`mailto:${site.securityEmail}?subject=${encodeURIComponent(p.subject)}`}>
+        <Icon name="envelope-simple" class="icon mail" />
+        <span>
+          {site.securityEmail.split('@')[0]}
+          <wbr />@{site.securityEmail.split('@')[1]}
+        </span>
+      </a>
+      <p>
+        {p.machine1}
+        <a href="/.well-known/security.txt">{p.machineLink}</a>
+        {p.machine2}
+      </p>
+
+      <h2>{p.expectTitle}</h2>
+      <ol class="steps">
+        {steps.map((s, i) => (
+          <li>
+            <span class="num" aria-hidden="true">
+              {i + 1}
+            </span>
+            <div>
+              <strong>{s.title}</strong>
+              <p>{s.text}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <h2>{p.scopeTitle}</h2>
+      <p>
+        {site.name}
+        {p.scope}
+      </p>
+      <p>{p.outOfScope}</p>
+
+      <h2>{p.dontTitle}</h2>
+      <ul>
+        {p.dont.map((d) => (
+          <li>{d}</li>
+        ))}
+      </ul>
+
+      <h2>{p.harbourTitle}</h2>
+      <p>{p.harbour}</p>
+
+      <h2>{p.thanksTitle}</h2>
+      <p>{p.thanks}</p>
+
+      <p class="updated">{p.updated}</p>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .address {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-3);
+    width: fit-content;
+    font-size: clamp(1.2rem, 0.85rem + 1.8vw, 2.125rem);
+    font-family: var(--font-wide);
+    font-weight: 680;
+    font-stretch: 108%;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.18em;
+    transition: color 150ms ease;
+  }
+
+  .address :global(.mail) {
+    flex: none;
+    width: 1em;
+    height: 1em;
+  }
+
+  .address:hover {
+    color: var(--accent-hover);
+    text-decoration-thickness: 3px;
+  }
+
+  .steps {
+    list-style: none;
+    display: grid;
+    gap: var(--s-4);
+    max-width: var(--measure);
+  }
+
+  .steps li {
+    display: grid;
+    grid-template-columns: 2.25rem 1fr;
+    gap: var(--s-4);
+    align-items: start;
+  }
+
+  .num {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--font-wide);
+    font-weight: 700;
+    font-stretch: 112%;
+    font-size: var(--step--1);
+  }
+
+  .steps strong {
+    display: block;
+    font-weight: 650;
+    color: var(--ink);
+  }
+
+  .steps p {
+    color: var(--ink-2);
+  }
+
+  .updated {
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+</style>

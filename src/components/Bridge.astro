@@ -1,0 +1,130 @@
+---
+// The handoff from the five-second check to the practice: what the check reads, what a
+// penetration test covers, and where each surface is described.
+import { useI18n } from '../i18n';
+
+const { t, href } = useI18n(Astro);
+// Where each surface is tested, in the order of the dictionary's list.
+const slugs = [
+  'offensive-testing',
+  'offensive-testing',
+  'offensive-testing',
+  'offensive-testing',
+  'ai-cloud-security',
+  'ai-cloud-security',
+  'governance-compliance',
+];
+const surfaces = t.bridge.surfaces.map((label, i) => ({ label, href: href(`/services/${slugs[i]}/`) }));
+---
+
+<section class="bridge" aria-labelledby="bridge-title">
+  <div class="container">
+    <div class="words">
+      <h2 id="bridge-title">{t.bridge.title}</h2>
+      <p>{t.bridge.lead}</p>
+    </div>
+    <ul class="surfaces">
+      {surfaces.map((s) => (
+        <li>
+          <a href={s.href}>{s.label}</a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .bridge {
+    padding-block: clamp(2.5rem, 1.5rem + 3vw, 4rem) 0;
+  }
+
+  .container {
+    display: grid;
+    gap: var(--s-5);
+  }
+
+  .words {
+    display: grid;
+    gap: var(--s-2);
+    max-width: 38em;
+  }
+
+  h2 {
+    font-size: var(--step-2);
+  }
+
+  .words p {
+    color: var(--ink-2);
+  }
+
+  /* The surfaces as one strip, divided by hairlines: a list, not a row of cards. */
+  .surfaces {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .surfaces li {
+    flex: 1 1 auto;
+    display: flex;
+  }
+
+  .surfaces li + li {
+    border-inline-start: 1px solid var(--line);
+  }
+
+  .surfaces a {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    width: 100%;
+    padding: var(--s-3) var(--s-4);
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color var(--dur-quick) ease;
+  }
+
+  .surfaces a::before {
+    content: '';
+    flex: none;
+    width: 0.4em;
+    height: 0.4em;
+    background: var(--accent);
+    transition: scale var(--dur-quick) var(--ease-out);
+  }
+
+  .surfaces a:hover {
+    color: var(--accent);
+  }
+
+  .surfaces a:hover::before {
+    scale: 1.4;
+  }
+
+  @media (forced-colors: active) {
+    .surfaces a::before {
+      background: CanvasText;
+    }
+  }
+
+  @media (max-width: 54rem) {
+    .surfaces li {
+      flex-basis: 50%;
+    }
+
+    .surfaces li + li {
+      border-inline-start: 0;
+    }
+
+    .surfaces li:nth-child(2n) {
+      border-inline-start: 1px solid var(--line);
+    }
+
+    .surfaces li:nth-child(n + 3) {
+      border-top: 1px solid var(--line);
+    }
+  }
+</style>

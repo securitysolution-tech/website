@@ -1,55 +1,61 @@
 ---
-const steps = [
-  {
-    title: 'Scope',
-    text: 'A 30-minute call to agree what we test, when, and what is off-limits. You get a written scope and a fixed quote.',
-  },
-  {
-    title: 'Test',
-    text: 'We work inside the agreed window and contact you straight away if we find something critical.',
-  },
-  {
-    title: 'Report',
-    text: 'Findings ranked by business risk, each with evidence, impact and step-by-step fixes.',
-  },
-  {
-    title: 'Fix',
-    text: 'Your team makes the changes. We answer questions along the way.',
-  },
-  {
-    title: 'Retest',
-    text: 'We verify every fix and update the report, so you can share it with customers and auditors.',
-  },
-];
+import ExposureMap from './ExposureMap.astro';
+import { useI18n } from '../i18n';
+
+const { t } = useI18n(Astro);
+const steps = t.process.steps;
 ---
 
-<section id="approach" class="section approach" aria-labelledby="approach-title">
+<section id="approach" class="section approach ink grain" aria-labelledby="approach-title">
+  <ExposureMap gain={0.35} />
   <div class="container">
     <div class="section-head">
-      <h2 id="approach-title">How an engagement works</h2>
-      <p>The same 5 steps whether we are testing one web app or your whole network.</p>
+      <h2 id="approach-title">{t.process.title}</h2>
+      <p>{t.process.lead}</p>
     </div>
 
     <ol class="steps">
-      {
-        steps.map((s, i) => (
-          <li class="step">
-            <span class="num" aria-hidden="true">
-              {i + 1}
-            </span>
-            <h3>{s.title}</h3>
-            <p>{s.text}</p>
-          </li>
-        ))
-      }
+      {steps.map((s, i) => (
+        <li class="step">
+          <span class="num" aria-hidden="true">
+            {i + 1}
+          </span>
+          <h3>{s.title}</h3>
+          <p>{s.text}</p>
+        </li>
+      ))}
     </ol>
+
+    <p class="start">
+      <a href="#contact">{t.process.start}</a>
+    </p>
   </div>
 </section>
 
 <style>
   .approach {
-    background: var(--raised);
-    border-block: 1px solid var(--line);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    /* clip, not a scroll container: the line fill's view() timeline must reach the viewport */
+    overflow: clip;
+    /* Keeps the band edges visible in dark mode, where paper and ink come close. */
+    border-block: 1px solid var(--ink-line);
+    background: radial-gradient(60% 80% at 0% 0%, rgb(var(--ink-accent-rgb) / 0.1), transparent 70%), var(--ink-bg);
+    /* The band as a whole drives the pinned story on wide screens. */
+    view-timeline: --approach;
+  }
+
+  /* An accent hairline draws along the top edge as the band arrives. */
+  .approach::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: var(--ink-accent);
+    transform-origin: left center;
+    opacity: 0.9;
+    z-index: 1;
   }
 
   .steps {
@@ -58,6 +64,8 @@ const steps = [
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: var(--s-5);
     position: relative;
+    /* One timeline for the line and the numbers, so they are physically linked in every layout. */
+    view-timeline: --steps;
   }
 
   /* The line that connects the steps: a grey track with an accent fill on top. */
@@ -69,12 +77,12 @@ const steps = [
     left: 1.125rem;
     right: 1.125rem;
     height: 2px;
-    background: var(--line);
+    background: var(--ink-line);
     z-index: 0;
   }
 
   .steps::after {
-    background: var(--accent);
+    background: var(--ink-accent);
     transform-origin: left center;
   }
 
@@ -92,9 +100,10 @@ const steps = [
     width: 2.25rem;
     height: 2.25rem;
     border-radius: 50%;
-    background: var(--paper);
-    border: 2px solid var(--accent);
-    color: var(--accent);
+    background: var(--ink-bg);
+    border: 2px solid var(--ink-accent);
+    color: var(--ink-accent);
+    font-family: var(--font-wide);
     font-weight: 700;
     font-stretch: 112%;
     font-size: var(--step--1);
@@ -107,8 +116,24 @@ const steps = [
   }
 
   .step p {
-    color: var(--ink-2);
+    color: var(--ink-text-2);
     font-size: var(--step--1);
+  }
+
+  .start {
+    margin-top: var(--s-7);
+    font-weight: 620;
+  }
+
+  .start a {
+    color: var(--ink-accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+    transition: color 150ms ease;
+  }
+
+  .start a:hover {
+    color: var(--ink-accent-hover);
   }
 
   /* Where supported, the line fills as the section scrolls into view. */
@@ -116,8 +141,33 @@ const steps = [
     @media (prefers-reduced-motion: no-preference) {
       .steps::after {
         animation: fill-x linear both;
-        animation-timeline: view();
+        animation-timeline: --steps;
         animation-range: entry 40% cover 55%;
+      }
+
+      /* Each number starts muted and ignites as the fill passes it. Longhands on purpose:
+         the compiler's CSS pass rewrites a nameless animation shorthand to animation: none. */
+      .num {
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: --steps;
+        animation-range: entry 40% cover 55%;
+      }
+
+      .step:nth-child(1) .num {
+        animation-name: num-on-1;
+      }
+      .step:nth-child(2) .num {
+        animation-name: num-on-2;
+      }
+      .step:nth-child(3) .num {
+        animation-name: num-on-3;
+      }
+      .step:nth-child(4) .num {
+        animation-name: num-on-4;
+      }
+      .step:nth-child(5) .num {
+        animation-name: num-on-5;
       }
     }
 
@@ -125,6 +175,125 @@ const steps = [
       .steps::after {
         animation-name: fill-y;
       }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .approach::before {
+        animation: draw-x linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 35%;
+      }
+    }
+
+    /* On wide screens the band becomes a short story: it is taller than the viewport, the
+       content pins while it passes, and the line, the numbers and each step's text arrive
+       in order as the visitor scrolls through. Phones and reduced motion keep the plain band. */
+    @media (prefers-reduced-motion: no-preference) and (min-width: 60rem) and (min-height: 40rem) {
+      .approach {
+        min-height: 160vh;
+      }
+
+      .approach .container {
+        position: sticky;
+        top: calc(var(--header-h) + 3rem);
+      }
+
+      .steps::after,
+      .num {
+        animation-timeline: --approach;
+        animation-range: cover 36% cover 66%;
+      }
+
+      .step h3,
+      .step p {
+        animation: enter linear both;
+        animation-timeline: --approach;
+      }
+
+      .step:nth-child(1) :is(h3, p) {
+        animation-range: cover 34% cover 41%;
+      }
+      .step:nth-child(2) :is(h3, p) {
+        animation-range: cover 41% cover 48%;
+      }
+      .step:nth-child(3) :is(h3, p) {
+        animation-range: cover 48% cover 55%;
+      }
+      .step:nth-child(4) :is(h3, p) {
+        animation-range: cover 55% cover 62%;
+      }
+      .step:nth-child(5) :is(h3, p) {
+        animation-range: cover 61% cover 68%;
+      }
+
+      .start {
+        animation: enter linear both;
+        animation-timeline: --approach;
+        animation-range: cover 66% cover 72%;
+      }
+    }
+  }
+
+  @keyframes num-on-1 {
+    0% {
+      border-color: var(--ink-line);
+      color: var(--ink-text-2);
+    }
+    10%,
+    100% {
+      border-color: var(--ink-accent);
+      color: var(--ink-accent);
+    }
+  }
+
+  @keyframes num-on-2 {
+    0%,
+    18% {
+      border-color: var(--ink-line);
+      color: var(--ink-text-2);
+    }
+    32%,
+    100% {
+      border-color: var(--ink-accent);
+      color: var(--ink-accent);
+    }
+  }
+
+  @keyframes num-on-3 {
+    0%,
+    43% {
+      border-color: var(--ink-line);
+      color: var(--ink-text-2);
+    }
+    57%,
+    100% {
+      border-color: var(--ink-accent);
+      color: var(--ink-accent);
+    }
+  }
+
+  @keyframes num-on-4 {
+    0%,
+    68% {
+      border-color: var(--ink-line);
+      color: var(--ink-text-2);
+    }
+    82%,
+    100% {
+      border-color: var(--ink-accent);
+      color: var(--ink-accent);
+    }
+  }
+
+  @keyframes num-on-5 {
+    0%,
+    90% {
+      border-color: var(--ink-line);
+      color: var(--ink-text-2);
+    }
+    100% {
+      border-color: var(--ink-accent);
+      color: var(--ink-accent);
     }
   }
 

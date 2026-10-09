@@ -1,68 +1,132 @@
 ---
+// The results panel of the domain check. The field lives in the hero (CheckForm.astro); the
+// two share one root, which domain-check.ts drives.
 import Icon from './Icon.astro';
-import { contactCta, site } from '../data/site';
+import { monitor, site } from '../data/site';
+import { services } from '../data/services';
+import { useI18n } from '../i18n';
+import { checkStrings, toJsonBlock } from '../i18n/client';
 
-const checks = [
-  {
-    id: 'dmarc',
-    title: 'Spoofing protection',
-    tech: 'DMARC',
-    about: 'Tells receiving mail servers what to do with email that fakes your domain.',
-  },
-  { id: 'spf', title: 'Approved senders', tech: 'SPF', about: 'Lists the servers allowed to send email for your domain.' },
-  { id: 'mx', title: 'Mail servers', tech: 'MX', about: 'Shows who handles the email sent to your domain.' },
-  { id: 'dnssec', title: 'Signed DNS', tech: 'DNSSEC', about: 'Protects the answers your DNS gives out from being forged.' },
-  { id: 'caa', title: 'Certificate lock', tech: 'CAA', about: 'Limits which companies may issue HTTPS certificates for your domain.' },
-  {
-    id: 'mtasts',
-    title: 'Encrypted mail delivery',
-    tech: 'MTA-STS',
-    about: 'Makes sending servers encrypt email on its way to you.',
-  },
-];
+const { t, cta } = useI18n(Astro);
+// The rows, in the order the checks run.
+const ids = ['dmarc', 'spf', 'mx', 'dnssec', 'caa', 'mtasts'] as const;
+const checks = ids.map((id) => ({ id, ...t.check.checks[id] }));
+const own = site.autorunDomain ?? '';
+// The need the watch request ticks on the contact form: the protocol value, English in both languages.
+const watchNeed = services.find((s) => s.slug === 'defensive-operations')?.plainName ?? '';
 ---
 
-<section class="instrument" aria-labelledby="check-title" data-domain-check data-autorun={site.autorunDomain ?? undefined}>
-  <div class="panel-intro">
-  <div class="head">
-    <h2 id="check-title">Check your domain</h2>
-    <p>See how well your company’s email and DNS are protected against spoofing and tampering. It takes about 5 seconds.</p>
-  </div>
+<section id="check" class="instrument" aria-labelledby="check-title" data-results-panel>
+  <h2 id="check-title" class="visually-hidden">
+    {t.check.title}
+  </h2>
 
-  <form class="check-form" novalidate>
-    <label for="domain-input">Company domain</label>
-    <div class="field">
-      <input
-        id="domain-input"
-        name="domain"
-        type="text"
-        inputmode="url"
-        autocomplete="off"
-        autocapitalize="none"
-        spellcheck="false"
-        maxlength="253"
-        placeholder="yourcompany.ae"
-        aria-describedby="check-privacy"
-        aria-errormessage="domain-error"
-      />
-      <button type="submit" class="run">Run check</button>
+  <div class="panel-side">
+    {/* Rendered for our own domain at build time, so the autorun shifts nothing when it starts. */}
+    <p class="target" data-target hidden={!own}>
+      {t.check.resultsFor}{' '}
+      <strong data-target-name translate="no">
+        {own}
+      </strong>
+      <span data-target-own hidden={!own}>
+        {t.check.ownDomain}
+      </span>
+    </p>
+
+    <!-- What an attacker could send: a preview built in the browser, never sent. -->
+    <figure class="spoof" data-spoof hidden>
+      <figcaption class="spoof-title">{t.check.spoof.title}</figcaption>
+      <div class="mail" translate="no">
+        <p class="mail-line">
+          <span class="k">{t.check.spoof.from}</span>
+          <span class="v">
+            {t.check.spoof.fromName}{' '}
+            <span class="addr" dir="ltr">
+              &lt;finance@<span data-spoof-domain>{own}</span>&gt;
+            </span>
+          </span>
+        </p>
+        <p class="mail-line">
+          <span class="k">{t.check.spoof.to}</span> <span class="v">{t.check.spoof.toLine}</span>
+        </p>
+        <p class="mail-line">
+          <span class="k">{t.check.spoof.subject}</span> <span class="v">{t.check.spoof.subjectLine}</span>
+        </p>
+        <p class="mail-body">{t.check.spoof.body}</p>
+        <p class="stamp" data-spoof-stamp></p>
+      </div>
+      <p class="spoof-note" data-spoof-note></p>
+      <p class="spoof-small">{t.check.spoof.note}</p>
+    </figure>
+
+    <div class="verdict" data-verdict hidden>
+      <div>
+        <p class="verdict-main">
+          {t.check.verdict} <strong data-spoofing></strong>
+        </p>
+        <p class="verdict-score" data-score></p>
+        <p class="share">
+          <button type="button" data-copy-link>
+            {t.check.share.copy}
+          </button>
+          <a data-mail-results href={`mailto:?subject=${encodeURIComponent('Domain check')}`}>
+            {t.check.share.email}
+          </a>
+          <a data-watch-link href="#contact">
+            {t.check.share.watch}
+          </a>
+        </p>
+        {monitor.live && (
+          <form class="alerts" data-watch-form data-endpoint={monitor.endpoint} novalidate hidden>
+            <p class="alerts-title">{t.check.alerts.title}</p>
+            <p class="alerts-lead">{t.check.alerts.lead}</p>
+            <div class="alerts-row">
+              <label class="visually-hidden" for="watch-email">
+                {t.check.alerts.email}
+              </label>
+              <input
+                id="watch-email"
+                name="email"
+                type="email"
+                inputmode="email"
+                autocomplete="email"
+                placeholder={t.check.alerts.email}
+                required
+                aria-describedby="watch-status"
+              />
+              <button type="submit">{t.check.alerts.submit}</button>
+            </div>
+            <div class="trap" aria-hidden="true" inert>
+              <input name="website" type="text" tabindex="-1" autocomplete="off" />
+            </div>
+            <p id="watch-status" class="alerts-status" data-watch-status aria-live="polite"></p>
+            <p class="alerts-note">{t.check.alerts.disclosure}</p>
+          </form>
+        )}
+      </div>
+      <a class="btn verdict-cta" href={cta.href}>
+        {cta.label}
+      </a>
     </div>
-    <p id="domain-error" class="error" data-error role="alert" hidden></p>
-  </form>
 
-  <p class="privacy" id="check-privacy">
-    Runs in your browser through Cloudflare’s public DNS resolver. We never receive the domain you type.
-  </p>
-  <noscript><p class="privacy">The check needs JavaScript, which is turned off in this browser.</p></noscript>
+    <!-- The headline, made literal: what to fix first, failures before warnings. -->
+    <div class="fix" data-fix hidden>
+      <p class="fix-title">{t.check.fixFirst}</p>
+      <ol class="fix-list" data-fix-list></ol>
+    </div>
   </div>
 
   <div class="panel-results">
-  <p class="target" data-target hidden>Results for <strong data-target-name translate="no"></strong></p>
-
-  <ol class="results" data-results aria-busy="false" aria-label="Check results">
-    {
-      checks.map((c) => (
-        <li class="row" data-check={c.id} data-status="idle" data-about={c.about}>
+    <ol class="results" data-results aria-busy="false" aria-label={t.check.resultsLabel}>
+      {checks.map((c) => (
+        <li
+          class="row"
+          data-check={c.id}
+          data-status="idle"
+          data-about={c.about}
+          data-title={c.title}
+          data-tech={c.tech}
+        >
           <span class="status" data-icon-slot aria-hidden="true" />
           <div class="row-body">
             <p class="row-title">
@@ -72,33 +136,37 @@ const checks = [
               {c.about}
             </p>
             <details class="evidence" data-evidence hidden>
-              <summary>Show record</summary>
+              <summary>{t.check.show}</summary>
               <pre translate="no" />
             </details>
           </div>
           <span class="badge" data-badge>
-            Not run
+            {t.check.notRun}
           </span>
         </li>
-      ))
-    }
-  </ol>
-
-  <div class="verdict" data-verdict hidden>
-    <div>
-      <p class="verdict-main">Spoofing protection: <strong data-spoofing></strong></p>
-      <p class="verdict-score" data-score></p>
-    </div>
-    <a class="btn verdict-cta" href={contactCta.href}>{contactCta.label}</a>
-  </div>
+      ))}
+    </ol>
   </div>
 
   <p class="visually-hidden" aria-live="polite" data-announce></p>
 
-  <template data-icon="pass"><Icon name="check-circle" /></template>
-  <template data-icon="warn"><Icon name="warning" /></template>
-  <template data-icon="fail"><Icon name="x-circle" /></template>
-  <template data-icon="info"><Icon name="info" /></template>
+  <template data-icon="pass">
+    <Icon name="check-circle" />
+  </template>
+  <template data-icon="warn">
+    <Icon name="warning" />
+  </template>
+  <template data-icon="fail">
+    <Icon name="x-circle" />
+  </template>
+  <template data-icon="info">
+    <Icon name="info" />
+  </template>
+  <script
+    type="application/json"
+    data-i18n="check"
+    set:html={toJsonBlock({ ...checkStrings(t.check, t.hero.result), watchNeed })}
+  />
 </section>
 
 <script>
@@ -114,17 +182,21 @@ const checks = [
     padding: clamp(1.25rem, 0.9rem + 1.8vw, 2.25rem);
     background: var(--panel);
     color: var(--panel-ink);
-    border: 1px solid var(--panel-line);
+    border: 1px solid rgb(var(--ink-accent-rgb) / 0.24);
     border-radius: var(--radius-panel);
     box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.05),
-      0 30px 60px -30px rgb(19 33 27 / 0.55);
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      0 50px 90px -40px rgb(6 16 12 / 0.75),
+      0 0 0 6px rgb(var(--ink-accent-rgb) / 0.04);
   }
 
-  .panel-intro {
+  .panel-side {
     display: grid;
-    gap: var(--s-5);
+    gap: var(--s-4);
     align-content: start;
+    align-self: start;
+    position: sticky;
+    top: calc(var(--header-h) + var(--s-5));
   }
 
   .panel-results {
@@ -137,104 +209,19 @@ const checks = [
     .instrument {
       grid-template-columns: 1fr;
     }
+
+    .panel-side {
+      position: static;
+    }
   }
 
-  .head {
-    display: grid;
-    gap: var(--s-2);
-  }
-
-  .head h2 {
-    font-size: var(--step-2);
-  }
-
-  .head p,
-  .privacy,
-  .target {
-    color: var(--panel-ink-2);
-  }
-
-  .head p {
-    font-size: var(--step-0);
-  }
-
-  .check-form {
-    display: grid;
-    gap: var(--s-2);
-  }
-
-  label {
-    font-weight: 600;
-    font-size: var(--step--1);
-  }
-
-  .field {
-    display: flex;
-    gap: var(--s-2);
-  }
-
-  input {
-    flex: 1;
-    min-width: 0;
-    min-height: 3rem;
-    padding: 0 0.875rem;
-    border: 1px solid var(--panel-control);
-    border-radius: var(--radius-control);
-    background: var(--panel-2);
-    color: var(--panel-ink);
-    font: inherit;
-    font-size: 1rem;
-  }
-
-  input::placeholder {
-    color: var(--panel-ink-2);
-    opacity: 1;
-  }
-
-  input:focus-visible,
-  .run:focus-visible,
   .verdict-cta:focus-visible,
   .evidence summary:focus-visible {
     outline-color: var(--pass);
   }
 
-  input[aria-invalid='true'] {
-    border-color: var(--p-fail);
-  }
-
-  .run {
-    min-height: 3rem;
-    padding: 0 1.25rem;
-    border: 0;
-    border-radius: var(--radius-control);
-    background: var(--pass);
-    color: #08140f;
-    font: inherit;
-    font-weight: 650;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background-color 160ms ease, transform 120ms ease;
-  }
-
-  .run:hover {
-    background: #7fdcb6;
-  }
-
-  .run:active {
-    transform: translateY(1px);
-  }
-
-  .run:disabled {
-    cursor: progress;
-    opacity: 0.75;
-  }
-
-  .error {
-    color: var(--p-fail);
-    font-size: var(--step--1);
-  }
-
   .target {
+    color: var(--panel-ink-2);
     font-size: var(--step--1);
   }
 
@@ -242,6 +229,121 @@ const checks = [
     color: var(--panel-ink);
     font-weight: 600;
     word-break: break-all;
+  }
+
+  /* The email a spoofer would send, as a sheet of paper on the instrument. */
+  .spoof {
+    display: grid;
+    gap: var(--s-3);
+    margin: 0;
+  }
+
+  .spoof-title {
+    font-weight: 650;
+  }
+
+  .mail {
+    position: relative;
+    display: grid;
+    gap: 0.35rem;
+    padding: var(--s-4);
+    padding-inline-end: 7.5rem;
+    border-radius: var(--radius-control);
+    background: #f6f8f7;
+    color: #13211b;
+    font-size: var(--step--1);
+    line-height: 1.5;
+    box-shadow: 0 18px 40px -24px rgb(0 0 0 / 0.7);
+  }
+
+  .mail-line {
+    display: flex;
+    gap: var(--s-2);
+    min-width: 0;
+  }
+
+  .k {
+    flex: none;
+    width: 3.6em;
+    color: #4b5853;
+  }
+
+  .v {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .addr {
+    color: #45534c;
+    unicode-bidi: isolate;
+  }
+
+  .mail-body {
+    margin-top: var(--s-2);
+    padding-top: var(--s-2);
+    border-top: 1px solid #d6ddd8;
+  }
+
+  .stamp {
+    position: absolute;
+    top: var(--s-3);
+    inset-inline-end: var(--s-3);
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--radius-badge);
+    border: 1.5px solid currentColor;
+    font-weight: 700;
+    font-size: var(--step--2);
+    line-height: 1.3;
+    text-align: center;
+    max-width: 6.5rem;
+  }
+
+  .spoof[data-level='checking'] .stamp {
+    color: #4b5853;
+    border-style: dashed;
+  }
+
+  .spoof[data-level='delivered'] .stamp {
+    color: #b42318;
+    background: rgb(180 35 24 / 0.08);
+  }
+
+  .spoof[data-level='blocked'] .stamp {
+    color: #0a6b4c;
+    background: rgb(10 107 76 / 0.1);
+  }
+
+  .spoof[data-level='quarantined'] .stamp {
+    color: #8a5a00;
+    background: rgb(138 90 0 / 0.1);
+  }
+
+  .spoof[data-level='quarantined'] .spoof-note {
+    color: var(--p-warn);
+  }
+
+  .spoof-note {
+    font-size: var(--step--1);
+    line-height: 1.5;
+  }
+
+  .spoof[data-level='delivered'] .spoof-note {
+    color: var(--p-fail);
+  }
+
+  .spoof[data-level='blocked'] .spoof-note {
+    color: var(--pass);
+  }
+
+  .spoof-small {
+    color: var(--panel-ink-2);
+    font-size: var(--step--2);
+  }
+
+  @media (forced-colors: active) {
+    .mail {
+      border: 1px solid CanvasText;
+    }
   }
 
   .results {
@@ -297,7 +399,7 @@ const checks = [
   }
 
   .tech {
-    margin-left: 0.25rem;
+    margin-inline-start: 0.25rem;
     color: var(--panel-ink-2);
     font-weight: 450;
     font-size: var(--step--1);
@@ -324,7 +426,7 @@ const checks = [
     border-radius: var(--radius-badge);
     border: 1px solid var(--panel-line);
     color: var(--panel-ink-2);
-    font-size: 0.8125rem;
+    font-size: var(--step--2);
     font-weight: 600;
     line-height: 1.4;
     white-space: nowrap;
@@ -343,8 +445,8 @@ const checks = [
     color: var(--p-info);
   }
   .row[data-status='pass'] .badge {
-    border-color: rgb(98 211 166 / 0.35);
-    background: rgb(98 211 166 / 0.1);
+    border-color: rgb(var(--ink-accent-rgb) / 0.35);
+    background: rgb(var(--ink-accent-rgb) / 0.1);
   }
   .row[data-status='warn'] .badge {
     border-color: rgb(240 193 87 / 0.35);
@@ -366,15 +468,23 @@ const checks = [
 
   .evidence summary {
     width: fit-content;
+    padding-block: 0.25rem;
     color: var(--panel-ink-2);
     cursor: pointer;
     text-decoration: underline;
     text-underline-offset: 0.2em;
+    transition: color var(--dur-quick) ease;
   }
 
   .evidence summary:hover {
     color: var(--panel-ink);
     text-decoration-thickness: 2px;
+  }
+
+  @media (pointer: coarse) {
+    .evidence summary {
+      padding-block: 0.65rem;
+    }
   }
 
   .evidence pre {
@@ -384,7 +494,7 @@ const checks = [
     border: 1px solid var(--panel-line);
     border-radius: var(--radius-badge);
     color: var(--panel-ink);
-    font-size: 0.8125rem;
+    font-size: var(--step--2);
     line-height: 1.5;
     white-space: pre-wrap;
     word-break: break-all;
@@ -402,6 +512,12 @@ const checks = [
     border: 1px solid var(--panel-line);
   }
 
+  /* Keeps its room while the results come in, so the page below never jumps. */
+  .verdict[hidden] {
+    display: flex !important;
+    visibility: hidden;
+  }
+
   .verdict-main {
     font-weight: 600;
   }
@@ -415,10 +531,137 @@ const checks = [
   .verdict[data-level='weak'] strong {
     color: var(--p-fail);
   }
+  .verdict[data-level='incomplete'] strong {
+    color: var(--p-info);
+  }
 
   .verdict-score {
     color: var(--panel-ink-2);
     font-size: var(--step--1);
+  }
+
+  /* Passing the results on: two quiet actions under the score. */
+  .alerts {
+    display: grid;
+    gap: var(--s-2);
+    margin-top: var(--s-3);
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--panel-line);
+  }
+
+  .alerts-title {
+    font-weight: 650;
+    color: var(--panel-ink);
+  }
+
+  .alerts-lead,
+  .alerts-note,
+  .alerts-status {
+    font-size: var(--step--1);
+    color: var(--panel-ink-2);
+  }
+
+  .alerts-status:empty {
+    display: none;
+  }
+
+  .alerts-status[data-state='sent'] {
+    color: var(--pass);
+  }
+
+  .alerts-status[data-state='error'] {
+    color: var(--p-fail);
+  }
+
+  .alerts-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+
+  .alerts-row input {
+    flex: 1 1 14rem;
+    min-height: 2.75rem;
+    padding: 0 var(--s-3);
+    border: 1px solid var(--panel-control);
+    border-radius: var(--radius-control);
+    background: var(--panel-2);
+    color: var(--panel-ink);
+    font: inherit;
+  }
+
+  .alerts-row input:focus-visible {
+    outline: 2px solid var(--pass);
+    outline-offset: 2px;
+  }
+
+  .alerts-row button {
+    min-height: 2.75rem;
+    padding: 0 var(--s-4);
+    border: 1px solid var(--pass);
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--pass);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--dur-quick) ease;
+  }
+
+  .alerts-row button:hover,
+  .alerts-row button:focus-visible {
+    background: rgb(var(--ink-accent-rgb) / 0.12);
+  }
+
+  .alerts-row button[aria-disabled='true'] {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .trap {
+    position: absolute;
+    inset-inline-start: -200vw;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .share {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-4);
+    margin-top: var(--s-2);
+    font-size: var(--step--1);
+  }
+
+  .share button,
+  .share a {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--panel-ink-2);
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+    transition: color var(--dur-quick) ease;
+  }
+
+  .share button:hover,
+  .share a:hover {
+    color: var(--panel-ink);
+  }
+
+  .share button:focus-visible,
+  .share a:focus-visible {
+    outline-color: var(--pass);
+  }
+
+  @media (pointer: coarse) {
+    .share button,
+    .share a {
+      padding-block: 0.4rem;
+    }
   }
 
   .verdict-cta {
@@ -430,12 +673,60 @@ const checks = [
     background: #ffffff;
   }
 
-  .privacy {
-    font-size: 0.8125rem;
+  .fix {
+    display: grid;
+    gap: var(--s-3);
+    padding: var(--s-4);
+    border: 1px solid var(--panel-line);
+    border-inline-start: 3px solid var(--p-warn);
+    border-radius: var(--radius-control);
+    background: rgb(255 255 255 / 0.03);
+  }
+
+  .fix:has(li[data-status='fail']) {
+    border-inline-start-color: var(--p-fail);
+  }
+
+  .fix-title {
+    font-weight: 650;
+  }
+
+  .fix-list {
+    display: grid;
+    gap: var(--s-2);
+    padding-inline-start: 1.25rem;
+    color: var(--panel-ink-2);
+    font-size: var(--step--1);
     line-height: 1.5;
   }
 
+  .fix-list li::marker {
+    color: var(--panel-ink);
+    font-weight: 650;
+  }
+
+  .fix-list strong {
+    color: var(--panel-ink);
+    font-weight: 600;
+  }
+
+  .fix-list li[data-status='fail'] strong {
+    color: var(--p-fail);
+  }
+
+  .fix-list li[data-status='warn'] strong {
+    color: var(--p-warn);
+  }
+
   @media (prefers-reduced-motion: no-preference) {
+    .fix:not([hidden]) {
+      animation: settle 400ms var(--ease-out);
+    }
+
+    .spoof.in {
+      animation: land 400ms var(--ease-out);
+    }
+
     .row[data-status='checking'] .status::before {
       animation: pulse 1.1s ease-in-out infinite;
     }
@@ -451,6 +742,25 @@ const checks = [
 
     .verdict:not([hidden]) {
       animation: settle 400ms var(--ease-out);
+    }
+
+    /* Where the browser can animate to an intrinsic size, the record unfolds instead of popping. */
+    @supports (interpolate-size: allow-keywords) {
+      .evidence {
+        interpolate-size: allow-keywords;
+      }
+
+      .evidence::details-content {
+        block-size: 0;
+        overflow-y: clip;
+        transition:
+          block-size 260ms var(--ease-out),
+          content-visibility 260ms allow-discrete;
+      }
+
+      .evidence[open]::details-content {
+        block-size: auto;
+      }
     }
   }
 
@@ -477,6 +787,15 @@ const checks = [
     }
   }
 
+  @keyframes land {
+    from {
+      transform: translateY(6px);
+    }
+    to {
+      transform: none;
+    }
+  }
+
   @keyframes settle {
     from {
       opacity: 0;
@@ -489,16 +808,17 @@ const checks = [
   }
 
   @media (max-width: 26rem) {
-    .field {
-      flex-direction: column;
-    }
-
     .row {
       gap: var(--s-2);
     }
 
     .badge {
       padding-inline: 0.375rem;
+    }
+
+    .mail {
+      padding-inline-end: var(--s-4);
+      padding-top: 3rem;
     }
   }
 </style>

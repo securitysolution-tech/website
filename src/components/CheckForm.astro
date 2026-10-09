@@ -1,0 +1,154 @@
+---
+// The domain field in the hero: the site's first question, answered by the instrument below.
+// domain-check.ts owns the behaviour; this form and the results panel share one root.
+import { useI18n } from '../i18n';
+
+const { t, href } = useI18n(Astro);
+---
+
+<form class="check-form" novalidate>
+  <label class="visually-hidden" for="domain-input">
+    {t.check.label}
+  </label>
+  <div class="field">
+    <input
+      id="domain-input"
+      name="domain"
+      type="text"
+      inputmode="url"
+      enterkeyhint="go"
+      autocomplete="off"
+      autocapitalize="none"
+      spellcheck="false"
+      maxlength="253"
+      placeholder={t.check.placeholder}
+      aria-describedby="check-privacy"
+      aria-errormessage="domain-error"
+    />
+    <button type="submit" class="run">
+      {t.check.run}
+    </button>
+  </div>
+  <p id="domain-error" class="error" data-error role="alert" hidden></p>
+  <button type="button" class="retry" data-retry hidden>
+    {t.check.retry}
+  </button>
+  <p class="privacy" id="check-privacy">
+    {t.check.privacy} <a href={href('/privacy/')}>{t.check.privacyLink}</a>
+  </p>
+  <noscript>
+    <p class="privacy">{t.check.noscript}</p>
+  </noscript>
+</form>
+
+<style>
+  .check-form {
+    display: grid;
+    gap: var(--s-2);
+    width: min(100%, 36rem);
+  }
+
+  .field {
+    display: flex;
+    gap: var(--s-2);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    min-height: 3.5rem;
+    padding: 0 1rem;
+    border: 1px solid var(--ink-control);
+    border-radius: var(--radius-control);
+    background: color-mix(in srgb, var(--ink-raised) 80%, transparent);
+    color: var(--ink-text);
+    font: inherit;
+    font-size: 1.0625rem;
+    transition: border-color var(--dur-quick) ease;
+  }
+
+  input:hover {
+    border-color: var(--ink-text-2);
+  }
+
+  input::placeholder {
+    color: var(--ink-text-2);
+    opacity: 1;
+  }
+
+  input:focus-visible,
+  .run:focus-visible {
+    outline-color: var(--ink-accent);
+  }
+
+  input[aria-invalid='true'] {
+    border-color: var(--p-fail);
+  }
+
+  .run {
+    min-height: 3.5rem;
+    min-width: 8rem; /* "Check now" and "Checking…" take the same room */
+    padding: 0 1.4rem;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--ink-accent);
+    color: var(--on-ink-accent);
+    font: inherit;
+    font-size: 1.0625rem;
+    font-weight: 650;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      background-color var(--dur-quick) ease,
+      transform var(--dur-press) ease;
+  }
+
+  .run:hover {
+    background: var(--ink-accent-hover);
+  }
+
+  .run:active {
+    transform: translateY(1px);
+  }
+
+  .error {
+    color: var(--p-fail);
+    font-size: var(--step--1);
+  }
+
+  .retry {
+    justify-self: start;
+    min-height: 2.5rem;
+    padding: 0 0.875rem;
+    border: 1px solid var(--ink-control);
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--ink-text);
+    font: inherit;
+    font-size: var(--step--1);
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color var(--dur-quick) ease;
+  }
+
+  .retry:hover {
+    border-color: var(--ink-text-2);
+  }
+
+  .privacy {
+    color: var(--ink-text-2);
+    font-size: var(--step--2);
+    line-height: 1.5;
+    max-width: 36rem;
+  }
+
+  .privacy a {
+    color: var(--ink-text);
+  }
+
+  @media (max-width: 26rem) {
+    .field {
+      flex-direction: column;
+    }
+  }
+</style>

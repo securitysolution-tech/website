@@ -1,61 +1,112 @@
 ---
 import Mark from './Mark.astro';
-import { services } from '../data/services';
-import { contactCta, site } from '../data/site';
+import Wordmark from './Wordmark.astro';
+import Icon from './Icon.astro';
+import { site } from '../data/site';
+import { useI18n } from '../i18n';
 
+interface Props {
+  contactHref?: string;
+}
+const { t, href, cta, services, toggle } = useI18n(Astro);
+const { contactHref = cta.href } = Astro.props;
 const year = new Date().getFullYear();
+const path = Astro.url.pathname;
+const current = (href: string) => (path === href ? 'page' : undefined);
 ---
 
-<footer class="site-footer">
+<footer class="site-footer ink grain">
   <div class="container grid">
     <div class="about">
-      <a class="brand" href="/">
-        <Mark size={24} />
-        <span translate="no">{site.name}</span>
+      <a class="brand" href={href('/')}>
+        <Mark size={26} />
+        <Wordmark small />
       </a>
+      <p>{t.footer.blurb}</p>
       <p>
-        Security testing, monitoring and compliance readiness for companies in the {site.location}.
+        <a href={`mailto:${site.email}`}>{site.email}</a>
       </p>
-      <p><a href={`mailto:${site.email}`}>{site.email}</a></p>
     </div>
 
-    <nav aria-label="Services">
-      <h2>Services</h2>
+    <nav aria-label={t.footer.services}>
+      <h2>{t.footer.services}</h2>
       <ul>
-        {services.map((s) => <li><a href={`/services/${s.slug}/`}>{s.name}</a></li>)}
+        {services.map((s) => (
+          <li>
+            <a href={href(`/services/${s.slug}/`)} aria-current={current(href(`/services/${s.slug}/`))}>
+              {s.name}
+            </a>
+          </li>
+        ))}
       </ul>
     </nav>
 
-    <nav aria-label="Company">
-      <h2>Company</h2>
+    <nav aria-label={t.footer.company}>
+      <h2>{t.footer.company}</h2>
       <ul>
-        <li><a href="/#approach">Approach</a></li>
-        <li><a href="/#team">Team</a></li>
-        <li><a href={contactCta.href}>{contactCta.label}</a></li>
+        <li>
+          <a href={href('/#approach')}>{t.nav.approach}</a>
+        </li>
+        <li>
+          <a href={href('/#team')}>{t.nav.team}</a>
+        </li>
+        <li>
+          <a href={href('/#faq')}>{t.nav.faq}</a>
+        </li>
+        <li>
+          <a href={contactHref}>{cta.label}</a>
+        </li>
       </ul>
     </nav>
 
-    <nav aria-label="Trust">
-      <h2>Trust</h2>
+    <nav aria-label={t.footer.trust}>
+      <h2>{t.footer.trust}</h2>
       <ul>
-        <li><a href="/security/">Report a vulnerability</a></li>
-        <li><a href="/privacy/">Privacy</a></li>
-        <li><a href="/.well-known/security.txt">security.txt</a></li>
+        <li>
+          <a href={href('/security/')} aria-current={current(href('/security/'))}>
+            {t.footer.report}
+          </a>
+        </li>
+        <li>
+          <a href={href('/privacy/')} aria-current={current(href('/privacy/'))}>
+            {t.footer.privacy}
+          </a>
+        </li>
+        <li>
+          <a href="/.well-known/security.txt">{t.footer.securityTxt}</a>
+        </li>
+        <li>
+          <a class="ext" href="https://github.com/securitysolution-tech/website" rel="noopener">
+            {t.footer.source}
+            <Icon name="arrow-up-right" class="icon ext-icon" />
+          </a>
+        </li>
       </ul>
     </nav>
   </div>
 
   <div class="container legal">
-    <p>© {year} {site.name}</p>
-    <p>This site sets no cookies and loads no third-party scripts.</p>
+    <p>
+      © {year} {site.name}
+    </p>
+    <p>
+      {t.footer.legal} <a href={href('/privacy/')}>{t.footer.privacy}</a>
+      {toggle && (
+        <a class="lang" href={toggle.href} lang={toggle.lang} hreflang={toggle.lang}>
+          {toggle.label}
+        </a>
+      )}
+    </p>
   </div>
 </footer>
 
 <style>
   .site-footer {
-    border-top: 1px solid var(--line);
+    position: relative;
+    isolation: isolate;
+    border-top: 1px solid var(--ink-line);
     padding-block: var(--s-8) var(--s-6);
-    color: var(--ink-2);
+    color: var(--ink-text-2);
     font-size: var(--step--1);
   }
 
@@ -75,23 +126,32 @@ const year = new Date().getFullYear();
     display: inline-flex;
     align-items: center;
     gap: var(--s-2);
-    color: var(--ink);
-    font-weight: 700;
-    font-stretch: 112%;
-    font-size: var(--step-0);
+    color: var(--ink-text);
     text-decoration: none;
   }
 
+  .brand :global(.mark-core) {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 240ms var(--ease-out);
+  }
+
+  .brand:hover :global(.mark-core),
+  .brand:focus-visible :global(.mark-core) {
+    transform: scale(1.15);
+  }
+
   .about p {
-    max-width: 34ch;
+    max-width: 19.482em;
   }
 
   h2 {
     font-size: var(--step--1);
+    font-family: var(--font);
     font-stretch: 100%;
     font-weight: 650;
     letter-spacing: 0;
-    color: var(--ink);
+    color: var(--ink-text);
     margin-bottom: var(--s-3);
   }
 
@@ -102,11 +162,51 @@ const year = new Date().getFullYear();
   }
 
   a {
-    color: var(--ink-2);
+    display: inline-block;
+    padding-block: 0.15rem;
+    color: var(--ink-text-2);
+    transition: color 150ms ease;
   }
 
-  a:hover {
-    color: var(--ink);
+  /* Fingers need more than the 24px minimum, so on touch screens the links fill 44px rows. */
+  @media (pointer: coarse) {
+    ul {
+      gap: 0;
+    }
+
+    a {
+      padding-block: 0.7rem;
+    }
+  }
+
+  a:hover,
+  a[aria-current] {
+    color: var(--ink-text);
+  }
+
+  a[aria-current] {
+    text-decoration-color: var(--ink-accent);
+  }
+
+  .ext {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
+  }
+
+  .ext :global(.ext-icon) {
+    width: 1em;
+    height: 1em;
+    transition: transform 180ms var(--ease-out);
+  }
+
+  .ext:hover :global(.ext-icon) {
+    transform: translate(2px, -2px);
+  }
+
+  .lang {
+    margin-inline-start: var(--s-3);
+    letter-spacing: 0;
   }
 
   .legal {
@@ -116,7 +216,7 @@ const year = new Date().getFullYear();
     gap: var(--s-3);
     margin-top: var(--s-7);
     padding-top: var(--s-5);
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--ink-line);
   }
 
   @media (max-width: 54rem) {

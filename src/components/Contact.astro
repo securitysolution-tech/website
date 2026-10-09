@@ -1,54 +1,486 @@
 ---
-import { contactCta, mailto, site } from '../data/site';
+import Icon from './Icon.astro';
+import ExposureMap from './ExposureMap.astro';
+import { contactBackend, mailto, site } from '../data/site';
+import { services as spine } from '../data/services';
+import { timelines } from '../data/contact';
+import { useI18n } from '../i18n';
+import { toJsonBlock } from '../i18n/client';
+
+interface Props {
+  /** The slug of the service to tick in advance, on pages about one service. */
+  need?: string;
+}
+const { need } = Astro.props;
+const { t, href, cta, services } = useI18n(Astro);
+
+// The needs are the services, in the buyer's words, so the form and the pages agree. The
+// value is always the English name, which the inbox and the Worker expect; the label follows the page.
+const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plainName, checked: s.slug === need }));
 ---
 
-<section id="contact" class="section contact" aria-labelledby="contact-title">
-  <div class="container">
-    <h2 id="contact-title">{contactCta.label}</h2>
-    <p class="lead">
-      Email us your company name, what you would like tested or reviewed, and your timeline. We reply within one
-      business day to set up a 30-minute call.
-    </p>
-    <a class="address" href={mailto('Scoping call request')}>{site.email}</a>
-    <p class="small">
-      Found a security issue in one of our own systems? Please follow our <a href="/security/">disclosure policy</a>.
-    </p>
+<section id="contact" class="contact ink grain" aria-labelledby="contact-title">
+  <ExposureMap gain={0.5} />
+  <div class="glow" aria-hidden="true"></div>
+  <div class="container grid">
+    <h2 id="contact-title">{cta.label}</h2>
+    <div class="main">
+      <p class="lead">{t.contact.lead}</p>
+      <a class="address" href={mailto('Scoping call request')}>
+        <Icon name="envelope-simple" class="icon mail" />
+        <span>
+          {site.email.split('@')[0]}
+          <wbr />@{site.email.split('@')[1]}
+        </span>
+      </a>
+      {contactBackend.live ? <p class="small">{t.contact.replyLive}</p> : <p class="small">{t.contact.replyMailto}</p>}
+      <p class="small">
+        {t.contact.security1}
+        <a href={href('/security/')}>{t.contact.securityLink}</a>
+        {t.contact.security2}
+      </p>
+    </div>
+
+    <!-- Live backend: the request is posted to /api/contact. Otherwise, and as the fallback,
+         the form composes the request and the visitor's email app sends it. -->
+    <form class="request" novalidate data-contact-form data-to={site.email} aria-labelledby="request-title">
+      <h3 id="request-title">{t.contact.formTitle}</h3>
+
+      <div class="entry" data-entry>
+        <div class="field">
+          <label for="cf-name">{t.contact.name}</label>
+          <input id="cf-name" name="name" type="text" autocomplete="name" required aria-errormessage="cf-name-error" />
+          <p class="hint error" id="cf-name-error" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="cf-email">{t.contact.email}</label>
+          <input
+            id="cf-email"
+            name="email"
+            type="email"
+            inputmode="email"
+            autocomplete="email"
+            spellcheck="false"
+            required
+            aria-errormessage="cf-email-error"
+          />
+          <p class="hint error" id="cf-email-error" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="cf-company">
+            {t.contact.company} <span class="opt">{t.contact.optional}</span>
+          </label>
+          <input
+            id="cf-company"
+            name="company"
+            type="text"
+            inputmode="url"
+            autocomplete="url"
+            autocapitalize="none"
+            spellcheck="false"
+            placeholder={t.contact.companyPlaceholder}
+          />
+        </div>
+
+        <fieldset class="field">
+          <legend>{t.contact.needs}</legend>
+          <div class="choices">
+            {needs.map((n, i) => (
+              <label class="choice">
+                <input type="checkbox" name={`need-${i}`} value={n.value} id={`cf-need-${i}`} checked={n.checked} />
+                <span>{n.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div class="field">
+          <label for="cf-when">{t.contact.when}</label>
+          <select id="cf-when" name="when">
+            {timelines.map((v) => (
+              <option value={v}>{t.contact.timelines[v]}</option>
+            ))}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="cf-message">
+            {t.contact.message} <span class="opt">{t.contact.optional}</span>
+          </label>
+          <textarea id="cf-message" name="message" rows="3" maxlength="600" data-lenis-prevent></textarea>
+        </div>
+
+        {contactBackend.live && (
+          <div class="trap" inert>
+            <label for="cf-website">{t.contact.website}</label>
+            <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+        )}
+
+        <button type="submit" class="btn btn-primary">
+          {contactBackend.live ? t.contact.send : t.contact.prepare}
+        </button>
+      </div>
+      <p class="visually-hidden" aria-live="polite" data-status></p>
+      <noscript>
+        <p class="small">
+          {t.contact.noscript} <a href={mailto('Scoping call request')}>{site.email}</a>
+        </p>
+      </noscript>
+
+      {contactBackend.live && (
+        <div class="sent" data-sent hidden tabindex="-1">
+          <p class="ready">
+            {t.contact.sent1}
+            <strong data-sent-email />
+            {t.contact.sent2}
+          </p>
+          <button type="button" class="btn btn-secondary" data-again>
+            {t.contact.again}
+          </button>
+        </div>
+      )}
+
+      <div class="composed" data-composed hidden>
+        <p class="ready" data-note>
+          {t.contact.ready}
+        </p>
+        <div class="composed-actions">
+          <a class="btn btn-primary" data-mailto href={mailto('Scoping call request')}>
+            {t.contact.open}
+          </a>
+          <button type="button" class="btn btn-secondary" data-copy>
+            {t.contact.copy}
+          </button>
+        </div>
+        <pre class="preview" data-preview translate="no" data-lenis-prevent></pre>
+      </div>
+      <script type="application/json" data-i18n="contact" set:html={toJsonBlock(t.contact.script)} />
+    </form>
   </div>
 </section>
 
+<script>
+  import '../scripts/contact-form';
+</script>
+
 <style>
-  .contact .container {
+  .contact {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    border-top: 1px solid var(--ink-line);
+    padding-block: clamp(3.5rem, 2.5rem + 4.5vw, 6rem);
+  }
+
+  /* An accent hairline draws along the top edge as the band arrives. */
+  .contact::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: var(--ink-accent);
+    transform-origin: left center;
+    opacity: 0.9;
+    z-index: 1;
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .contact::before {
+        animation: draw-x linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 45%;
+      }
+    }
+  }
+
+  .glow {
+    position: absolute;
+    z-index: -1;
+    inset-inline-start: -15%;
+    top: -40%;
+    width: min(80vw, 1000px);
+    aspect-ratio: 1;
+    background: radial-gradient(closest-side, rgb(var(--ink-accent-rgb) / 0.14), transparent);
+    pointer-events: none;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+    gap: var(--s-6) clamp(2.5rem, 1.5rem + 4vw, 5rem);
+    align-items: start;
+  }
+
+  .main {
     display: grid;
     gap: var(--s-5);
     justify-items: start;
   }
 
   h2 {
-    font-size: var(--step-3);
+    grid-column: 1 / -1;
+    font-size: var(--step-4);
+    font-family: var(--font-display);
+    font-stretch: 116%;
   }
 
   .lead {
-    max-width: 56ch;
+    max-width: 29.796em;
   }
 
   .address {
-    font-size: clamp(1.6rem, 0.9rem + 3.6vw, 3.5rem);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-3);
+    font-size: clamp(1.2rem, 0.85rem + 1.8vw, 2.125rem);
+    font-family: var(--font-wide);
     font-weight: 680;
-    font-stretch: 112%;
+    font-stretch: 108%;
     letter-spacing: -0.02em;
-    line-height: 1.1;
-    color: var(--accent);
+    line-height: 1.15;
+    color: var(--ink-accent);
     text-decoration-thickness: 2px;
-    text-underline-offset: 0.15em;
-    word-break: break-word;
+    text-underline-offset: 0.18em;
+    transition: color var(--dur-quick) ease;
+  }
+
+  .address :global(.mail) {
+    flex: none;
+    width: 1em;
+    height: 1em;
   }
 
   .address:hover {
-    text-decoration-thickness: 4px;
+    color: var(--ink-accent-hover);
+    text-decoration-thickness: 3px;
   }
 
   .small {
-    color: var(--ink-3);
+    color: var(--ink-text-2);
     font-size: var(--step--1);
+    max-width: 29.796em;
+  }
+
+  .small a {
+    color: var(--ink-text);
+  }
+
+  /* The form sits on its own plate, the same recessed surface as the instrument. */
+  .request {
+    display: grid;
+    gap: var(--s-4);
+    padding: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
+    border: 1px solid var(--ink-line);
+    border-radius: var(--radius-panel);
+    background: color-mix(in srgb, var(--ink-raised) 88%, transparent);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05);
+  }
+
+  h3 {
+    font-size: var(--step-1);
+  }
+
+  .entry {
+    display: grid;
+    gap: var(--s-4);
+  }
+
+  /* A field people never see; scripts that fill every input give themselves away. */
+  .trap {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: clip;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .field {
+    display: grid;
+    gap: var(--s-2);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  label,
+  legend {
+    font-weight: 600;
+    font-size: var(--step--1);
+    color: var(--ink-text);
+  }
+
+  .opt {
+    font-weight: 450;
+    color: var(--ink-text-2);
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.65rem 0.875rem;
+    border: 1px solid var(--ink-control);
+    border-radius: var(--radius-control);
+    background: var(--ink-bg);
+    color: var(--ink-text);
+    font: inherit;
+    font-size: 1rem;
+    transition: border-color 160ms ease;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 5.5rem;
+  }
+
+  select {
+    appearance: none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--ink-text-2) 50%),
+      linear-gradient(135deg, var(--ink-text-2) 50%, transparent 50%);
+    background-position:
+      calc(100% - 1.25rem) 50%,
+      calc(100% - 0.9rem) 50%;
+    background-size:
+      0.35rem 0.35rem,
+      0.35rem 0.35rem;
+    background-repeat: no-repeat;
+    padding-inline-end: 2.5rem;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--ink-text-2);
+    opacity: 1;
+  }
+
+  /* The drawn chevron is a background, which forced-colour modes remove; use the native one there. */
+  @media (forced-colors: active) {
+    select {
+      appearance: auto;
+      background-image: none;
+      padding-inline-end: 0.875rem;
+    }
+  }
+
+  input:hover,
+  select:hover,
+  textarea:hover {
+    border-color: var(--ink-text-2);
+  }
+
+  input[aria-invalid='true'] {
+    border-color: var(--p-fail);
+  }
+
+  .hint {
+    font-size: var(--step--1);
+    color: var(--ink-text-2);
+  }
+
+  .error {
+    color: var(--p-fail);
+  }
+
+  .choices {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-2) var(--s-4);
+  }
+
+  .choice {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 2.75rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .choice input {
+    width: 1.125rem;
+    height: 1.125rem;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    accent-color: var(--ink-accent);
+    flex: none;
+  }
+
+  .request .btn-primary {
+    justify-self: start;
+  }
+
+  .request .btn-primary[aria-disabled='true'] {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .composed,
+  .sent {
+    display: grid;
+    gap: var(--s-3);
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--ink-line);
+  }
+
+  .sent {
+    justify-items: start;
+  }
+
+  .sent:focus {
+    outline: none;
+  }
+
+  .ready {
+    color: var(--ink-text);
+  }
+
+  .composed-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+  }
+
+  .preview {
+    margin: 0;
+    padding: var(--s-3) var(--s-4);
+    border: 1px solid var(--ink-line);
+    border-radius: var(--radius-badge);
+    background: var(--ink-bg);
+    color: var(--ink-text-2);
+    font-size: var(--step--2);
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 16rem;
+    overflow: auto;
+  }
+
+  @media (max-width: 54rem) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 30rem) {
+    .choices {
+      grid-template-columns: 1fr;
+    }
+
+    .request .btn-primary,
+    .sent .btn,
+    .composed-actions .btn {
+      justify-self: stretch;
+      width: 100%;
+    }
   }
 </style>

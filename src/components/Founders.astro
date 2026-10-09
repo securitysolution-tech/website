@@ -1,21 +1,42 @@
 ---
 import Icon from './Icon.astro';
-import { founders } from '../data/site';
+import { useI18n } from '../i18n';
+import { fmt } from '../i18n/client';
+
+const { t, founders } = useI18n(Astro);
+
+// First and last initials, set inside the scope frame until portraits exist.
+const initials = (name: string) => {
+  const parts = name.split(' ').filter(Boolean);
+  return (parts[0]?.[0] ?? '') + (parts.length > 1 ? parts[parts.length - 1][0] : '');
+};
 ---
 
 <section id="team" class="section" aria-labelledby="team-title">
   <div class="container">
     <div class="section-head">
-      <h2 id="team-title">Who you’ll work with</h2>
-      <p>You deal directly with the founders, from the first call to the retest.</p>
+      <h2 id="team-title">{t.team.title}</h2>
+      <p>{t.team.lead}</p>
     </div>
 
+    <!-- One panel, divided like the signature block of a report: the names behind the findings. -->
     <ul class="people">
-      {
-        founders.map((f) => (
-          <li class="person">
+      {founders.map((f) => (
+        <li class="person">
+          <div class="person-in">
+            <span class="mono" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="square">
+                <path d="M3 11V3h8M21 3h8v8M29 21v8h-8M11 29H3v-8"></path>
+              </svg>
+              <span class="init">{initials(f.name)}</span>
+            </span>
             <h3>{f.name}</h3>
             <p class="role">{f.role}</p>
+            <ul class="creds bullets" aria-label={fmt(t.team.glance, { name: f.name })}>
+              {f.highlights.map((h) => (
+                <li>{h}</li>
+              ))}
+            </ul>
             <p class="bio">{f.bio}</p>
             <ul class="links">
               {f.links.map((l) => (
@@ -23,46 +44,97 @@ import { founders } from '../data/site';
                   <a href={l.href} rel="noopener">
                     <Icon name={l.icon} />
                     <span>{l.label}</span>
+                    <span class="visually-hidden">, {f.name}</span>
                   </a>
                 </li>
               ))}
             </ul>
-          </li>
-        ))
-      }
+          </div>
+        </li>
+      ))}
     </ul>
   </div>
 </section>
 
 <style>
+  /* The same 1px-gap construction as the scores grid, so both read as one instrument family. */
   .people {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(2rem, 1rem + 4vw, 5rem);
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 1px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    background: var(--line);
+    overflow: hidden;
+    /* clip, not a scroll container: view() timelines inside must reach the viewport */
+    overflow: clip;
   }
 
   .person {
-    display: grid;
+    padding: clamp(1.5rem, 1.1rem + 1.4vw, 2.5rem);
+    background: var(--raised);
+  }
+
+  /* The content rises, not the cell, so the panel's hairline never shows through. */
+  .person-in {
+    display: flex;
+    flex-direction: column;
     gap: var(--s-3);
-    align-content: start;
-    padding-top: var(--s-5);
-    border-top: 3px solid var(--ink);
+    height: 100%;
+  }
+
+  .mono {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin-bottom: var(--s-2);
+    color: var(--line-strong);
+  }
+
+  .mono svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .init {
+    font-family: var(--font-wide);
+    font-stretch: 112%;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.02em;
+    color: var(--ink);
   }
 
   h3 {
     font-size: var(--step-2);
-    font-stretch: 112%;
+    font-stretch: 114%;
+    letter-spacing: -0.02em;
   }
 
   .role {
     color: var(--accent);
-    font-weight: 600;
+    font-weight: 620;
+    font-size: var(--step--1);
+  }
+
+  .creds {
+    list-style: none;
+    display: grid;
+    gap: var(--s-2);
+    margin-block: var(--s-2);
+    font-size: var(--step--1);
+    color: var(--ink);
+    font-weight: 540;
   }
 
   .bio {
     color: var(--ink-2);
-    max-width: 52ch;
+    max-width: 29.796em;
   }
 
   .links {
@@ -70,7 +142,8 @@ import { founders } from '../data/site';
     display: flex;
     flex-wrap: wrap;
     gap: var(--s-2) var(--s-5);
-    margin-top: var(--s-2);
+    margin-top: auto;
+    padding-top: var(--s-4);
   }
 
   .links a {

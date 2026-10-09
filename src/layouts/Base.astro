@@ -2,20 +2,40 @@
 import '@fontsource-variable/archivo/standard.css';
 import '../styles/global.css';
 import archivoLatin from '@fontsource-variable/archivo/files/archivo-latin-standard-normal.woff2?url';
+import notoArabic from '@fontsource-variable/noto-sans-arabic/files/noto-sans-arabic-arabic-wght-normal.woff2?url';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { site } from '../data/site';
+import { arLive, useI18n } from '../i18n';
 
 interface Props {
   title?: string;
   description?: string;
   noindex?: boolean;
+  /** The page renders the contact form, so calls to action can stay on the page. */
+  hasContact?: boolean;
+  /** Extra JSON-LD objects for this page (Service, BreadcrumbList, ...). */
+  jsonLd?: Record<string, unknown>[];
+  /** A social image of this page's own (1200 by 630), with what it shows. */
+  ogImage?: { src: string; alt: string };
 }
 
-const { title, description = site.description, noindex = false } = Astro.props;
-const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | Cybersecurity for UAE companies`;
+const { locale, t, cta, isHome, hidden, services, founders, alternates } = useI18n(Astro);
+const {
+  title,
+  description = t.site.description,
+  noindex = false,
+  hasContact = false,
+  jsonLd = [],
+  ogImage: own,
+} = Astro.props;
+const contactHref = hasContact ? '#contact' : cta.href;
+const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | ${t.site.titleTagline}`;
+// Pages that must not be indexed, and locales that are built but not yet live, have no canonical address.
+const unlisted = noindex || hidden;
 const canonical = new URL(Astro.url.pathname, site.url).href;
-const ogImage = new URL('/og.png', site.url).href;
+const ogImage = new URL(own?.src ?? (locale === 'ar' ? '/og-ar.jpg' : '/og.jpg'), site.url).href;
+const ogAlt = own?.alt ?? `${t.hero.headline} ${site.name}`;
 
 // Mirrors the header policy set at the edge; frame-ancestors can only be sent as a header.
 const csp = [
@@ -24,63 +44,117 @@ const csp = [
   "style-src 'self'",
   "img-src 'self' data:",
   "font-src 'self'",
-  'connect-src https://cloudflare-dns.com https://dns.google',
+  "connect-src 'self' https://cloudflare-dns.com https://dns.google",
   "manifest-src 'self'",
   "base-uri 'none'",
   "form-action 'self'",
+  "require-trusted-types-for 'script'",
+  "trusted-types 'none'",
   'upgrade-insecure-requests',
 ].join('; ');
 
-const orgJsonLd = JSON.stringify({
+const orgId = `${site.url}/#organization`;
+const graph = JSON.stringify({
   '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: site.name,
-  url: site.url,
-  email: site.email,
-  description: site.description,
-  areaServed: 'AE',
-  logo: new URL('/icon-512.png', site.url).href,
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': orgId,
+      name: site.name,
+      url: site.url,
+      email: site.email,
+      description: t.site.description,
+      logo: new URL('/icon-512.png', site.url).href,
+      areaServed: { '@type': 'Country', name: t.site.location },
+      address: { '@type': 'PostalAddress', addressCountry: 'AE' },
+      contactPoint: {
+        '@type': 'ContactPoint',
+        email: site.email,
+        contactType: 'sales',
+        areaServed: 'AE',
+        availableLanguage: arLive ? ['en', 'ar'] : 'en',
+      },
+      knowsAbout: services.map((s) => s.plainName),
+      sameAs: ['https://github.com/securitysolution-tech', ...founders.flatMap((f) => f.links.map((l) => l.href))],
+      founder: founders.map((f) => ({
+        '@type': 'Person',
+        name: f.name,
+        jobTitle: f.role,
+        sameAs: f.links.map((l) => l.href),
+      })),
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${site.url}/#website`,
+      url: site.url,
+      name: site.name,
+      publisher: { '@id': orgId },
+      inLanguage: locale,
+    },
+    ...jsonLd,
+  ],
 });
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={t.lang} dir={t.dir === 'rtl' ? 'rtl' : undefined} class:list={[{ home: isHome }]}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
     <meta http-equiv="Content-Security-Policy" content={csp} />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
-    {noindex && <meta name="robots" content="noindex" />}
+    {!unlisted && <link rel="canonical" href={canonical} />}
+    {unlisted && <meta name="robots" content="noindex" />}
+    {arLive && !noindex && (
+      <>
+        <link rel="alternate" hreflang="en" href={new URL(alternates.en, site.url).href} />
+        <link rel="alternate" hreflang="ar" href={new URL(alternates.ar, site.url).href} />
+        <link rel="alternate" hreflang="x-default" href={new URL(alternates.en, site.url).href} />
+      </>
+    )}
 
     <link rel="preload" href={archivoLatin} as="font" type="font/woff2" crossorigin />
+    {locale === 'ar' && <link rel="preload" href={notoArabic} as="font" type="font/woff2" crossorigin />}
+    {/* The domain check's first lookups go here as soon as the page loads. */}
+    <link rel="preconnect" href="https://cloudflare-dns.com" crossorigin />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#f2f4f1" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0d1411" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#0c1813" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#070f0c" media="(prefers-color-scheme: dark)" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={site.name} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {!unlisted && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={ogImage} />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={ogAlt} />
+    <meta property="og:locale" content={t.ogLocale} />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <script type="application/ld+json" set:html={orgJsonLd} />
+    <script type="application/ld+json" set:html={graph} />
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to content</a>
-    <Header />
+    <a class="skip-link" href="#main">
+      {t.site.skip}
+    </a>
+    <Header contactHref={contactHref} />
     <main id="main">
       <slot />
     </main>
-    <Footer />
+    <Footer contactHref={contactHref} />
+    <script>
+      import '../scripts/navigate';
+      import '../scripts/reveal';
+      import '../scripts/visit';
+    </script>
   </body>
 </html>
