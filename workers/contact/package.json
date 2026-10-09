@@ -1,0 +1,29 @@
+{
+  "name": "securitysolution-contact-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Worker behind /api/contact: sends the scoping request form to the inbox",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "check": "wrangler types --strict-vars=false && tsc --noEmit",
+    "test": "node --test test/*.test.mjs",
+    "dry-run": "wrangler deploy --dry-run --outdir=dist",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "e2e": "node test/e2e.mjs"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "wrangler": "4.148.0"
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "workerd": true
+  },
+  "overrides": {
+    "sharp": "0.35.5"
+  }
+}

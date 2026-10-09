@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    // DOM is listed only because the shared i18n client module names `document` in a function
+    // this Worker never calls; nothing here touches a DOM.
+    "lib": ["ES2022", "DOM"],
+    "types": [],
+    "strict": true,
+    // Off: the shared check modules (src/scripts) are written under the website's config, which does
+    // not index-check; they are tested there. This Worker's own code is still strict.
+    "noUncheckedIndexedAccess": false,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "erasableSyntaxOnly": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src",
+    "worker-configuration.d.ts",
+    "../../src/scripts/checks.ts",
+    "../../src/scripts/dns.ts",
+    "../../src/i18n/client.ts",
+    "../../src/i18n/en.ts"
+  ]
+}

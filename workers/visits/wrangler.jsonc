@@ -1,0 +1,49 @@
+// The visit counter Worker. Deployed by .github/workflows/visits.yml once the owner has stored
+// the Cloudflare secrets; see README.md, "Visit counter".
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "securitysolution-visits",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-15",
+  // The beacon posts to /api/hit; the founders read /api/visits. No workers.dev address.
+  "routes": [
+    { "pattern": "securitysolution.tech/api/hit*", "zone_name": "securitysolution.tech" },
+    { "pattern": "securitysolution.tech/api/visits*", "zone_name": "securitysolution.tech" },
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
+  // The privacy page promises that no IP address is stored, so Cloudflare's own per-request logs
+  // and traces (which carry request details) stay off; only the Worker's own error lines are kept.
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "invocation_logs": false, "head_sampling_rate": 1 },
+    "traces": { "enabled": false, "persist": false },
+  },
+  // The daily clean-up: visitor hashes older than a day, counts older than the retention.
+  "triggers": { "crons": ["23 20 * * *"] },
+  "vars": {
+    // "true" to count; anything else makes /api/hit a silent no-op (the dashboard keeps working).
+    "VISITS_ENABLED": "true",
+    "ALLOWED_ORIGIN": "https://securitysolution.tech",
+  },
+  // SALT_SECRET keys the daily one-way visitor hash: `wrangler secret put SALT_SECRET` (32+ random bytes).
+  // STATS_PASSWORD opens the dashboard (user "visits"): `wrangler secret put STATS_PASSWORD` (24+ random characters).
+  "secrets": { "required": ["SALT_SECRET", "STATS_PASSWORD"] },
+  // Counts only, no addresses. Create with `wrangler d1 create securitysolution-visits`, paste the id here,
+  // then `wrangler d1 migrations apply securitysolution-visits --remote`.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "securitysolution-visits",
+      "database_id": "9df78723-7af8-443e-afad-06982b7a69eb",
+      "migrations_dir": "migrations",
+    },
+  ],
+  // Soft caps. namespace_id values are account-wide and unique per counter (7301-7304 belong to the other Workers).
+  "ratelimits": [
+    { "name": "PER_IP", "namespace_id": "7305", "simple": { "limit": 20, "period": 60 } },
+    { "name": "GLOBAL", "namespace_id": "7306", "simple": { "limit": 120, "period": 60 } },
+    // Failed dashboard sign-ins per network.
+    { "name": "AUTH", "namespace_id": "7307", "simple": { "limit": 5, "period": 60 } },
+  ],
+}

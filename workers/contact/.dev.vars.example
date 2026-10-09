@@ -1,0 +1,5 @@
+# Copy to .dev.vars for `wrangler dev`. The Astro dev server proxies /api to the Worker,
+# so the browser's Origin header is the dev server's.
+ALLOWED_ORIGIN=http://localhost:4321
+# The inbox for test sends: a verified destination address in Email Routing.
+CONTACT_TO=you@example.com
