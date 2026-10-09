@@ -16,7 +16,7 @@
     "e2e": "node test/e2e.mjs"
   },
   "devDependencies": {
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "wrangler": "4.148.0"
   },
   "allowScripts": {
