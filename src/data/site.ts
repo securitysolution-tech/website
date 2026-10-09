@@ -9,10 +9,11 @@ export const site = {
   autorunDomain: 'securitysolution.tech' as string | null,
 };
 
-// The contact Worker behind /api/contact (workers/contact). Set to true once the Worker is
-// deployed and a real send has been verified (README, "Contact backend"). Until then the form
-// prepares the request for the visitor's own email app, which stays the fallback afterwards.
-const CONTACT_BACKEND_LIVE = false;
+// The contact Worker behind /api/contact (workers/contact). On: the form sends the request
+// itself. The Worker keeps a copy of every request in the dashboard's database before emailing
+// it, so none is lost if an email fails (README, "Contact backend"). When sending fails the form
+// still prepares the request for the visitor's own email app.
+const CONTACT_BACKEND_LIVE = true;
 
 export const contactBackend = {
   // PUBLIC_CONTACT_BACKEND=1 or =0 at build time overrides the switch, to test either state locally.
