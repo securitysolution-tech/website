@@ -1,7 +1,7 @@
 // The founders' dashboard: one self-contained HTML page, rendered on the server with no script, so
 // the policy it is served under can forbid scripts outright. Everything that came from the database
 // is escaped, and the numbers are numbers. The same figures are available as JSON.
-import type { Report, Row } from './store.ts';
+import type { Contact, Report, Row } from './store.ts';
 
 const esc = (value: unknown): string => String(value).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -141,8 +141,8 @@ const steps = (prefix: string, property: string): string =>
 const STEPS = steps('w', '--w') + steps('v', '--views') + steps('u', '--visitors');
 
 const STYLE = `
-:root{color-scheme:dark light;--bg:#0c1813;--panel:#12211b;--line:#223a2f;--text:#eaf1ed;--muted:#9db3a8;--accent:#62d3a6;--soft:#2b5a47;--focus:#ffd479}
-@media (prefers-color-scheme:light){:root{--bg:#f3f1ea;--panel:#fbfaf6;--line:#dcd8cb;--text:#12201a;--muted:#55645b;--accent:#0b7a54;--soft:#b6d3c4;--focus:#7a4b00}}
+:root{color-scheme:dark light;--bg:#0c1813;--panel:#12211b;--line:#223a2f;--text:#eaf1ed;--muted:#9db3a8;--accent:#62d3a6;--soft:#2b5a47;--bad:#ff8f80;--focus:#ffd479}
+@media (prefers-color-scheme:light){:root{--bg:#f3f1ea;--panel:#fbfaf6;--line:#dcd8cb;--text:#12201a;--muted:#55645b;--accent:#0b7a54;--soft:#b6d3c4;--bad:#b42318;--focus:#7a4b00}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:1rem/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
 a{color:var(--accent)}
@@ -194,8 +194,19 @@ footer.notes p{margin:.375rem 0;max-width:60rem}
 
 .delta{display:inline-block;padding:0 .4rem;border-radius:.5rem;font-weight:600;font-size:.7rem;line-height:1.4;vertical-align:middle}
 .delta.up{background:rgba(98,211,166,.18);color:var(--accent)}
-.delta.down{background:rgba(255,143,128,.18);color:#ff8f80}
+.delta.down{background:rgba(255,143,128,.18);color:var(--bad)}
 .delta.flat{background:var(--line);color:var(--muted)}
+
+.leads{list-style:none;margin:0;padding:0;display:grid;gap:.625rem}
+.lead{padding:.875rem 1rem;border:1px solid var(--line);border-radius:.75rem;background:var(--bg)}
+.lead-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .75rem}
+.lead-company{color:var(--muted)}
+.status{margin-inline-start:auto;padding:.0625rem .5rem;border-radius:.5rem;font-size:.75rem;font-weight:600;white-space:nowrap}
+.status.ok{background:rgba(98,211,166,.18);color:var(--accent)}
+.status.bad{background:rgba(255,143,128,.18);color:var(--bad)}
+.status.wait{background:var(--line);color:var(--muted)}
+.lead-meta{display:flex;flex-wrap:wrap;gap:.25rem .875rem;margin:.375rem 0 0;color:var(--muted);font-size:.875rem;overflow-wrap:anywhere}
+.lead-message{margin:.5rem 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
 ${STEPS}
 `;
 
@@ -221,14 +232,80 @@ export function delta(current: number, previous: number | undefined, days: numbe
   return `<span class="delta ${dir}">${sign}${pct}%</span> vs the previous ${days} days`;
 }
 
-/** The dashboard page for a report covering the last `days` days, with the previous period for comparison. */
-export function renderDashboard(report: Report, days: number, now: Date, previous?: Report): string {
+// What happened to each request's email, as a tone (for the colour) and the words.
+const DELIVERY: Record<string, [string, string]> = {
+  sent: ['ok', 'Email sent'],
+  failed: ['bad', 'Email failed'],
+  quota: ['bad', 'Email not sent: daily limit reached'],
+  pending: ['wait', 'Email not confirmed'],
+};
+const REFUSED: Record<string, string> = {
+  invalid: 'with details that failed the checks',
+  spam: 'flagged as automated',
+};
+
+const dubaiTime = (iso: string): string => {
+  const at = new Date(iso);
+  return Number.isNaN(at.getTime())
+    ? ''
+    : at.toLocaleString('en-GB', {
+        timeZone: 'Asia/Dubai',
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+};
+
+/** The contact log: every request sent through the form, newest first, and the refused attempts. */
+function contactSection(contact: Contact | null, days: number): string {
+  if (!contact) {
+    return '<section class="card wide"><h2>Contact requests</h2><p class="note">The request log could not be read just now, or is not set up yet.</p></section>';
+  }
+  const leads = contact.requests
+    .map((r) => {
+      const [tone, words] = DELIVERY[r.delivery] ?? ['wait', 'Email status unknown'];
+      const status = r.delivery === 'failed' && r.detail ? `${words} (${r.detail})` : words;
+      const facts = [r.needs.join(', '), r.timeline, r.page ? `from ${r.page}` : ''].filter(Boolean);
+      return `<li class="lead"><div class="lead-head"><strong>${esc(r.name)}</strong>${
+        r.company ? `<span class="lead-company">${esc(r.company)}</span>` : ''
+      }<span class="status ${tone}">${esc(status)}</span></div><p class="lead-meta"><a href="mailto:${esc(r.email)}">${esc(r.email)}</a><span>${esc(dubaiTime(r.receivedAt))}</span></p>${
+        facts.length ? `<p class="lead-meta">${facts.map((f) => `<span>${esc(f)}</span>`).join('')}</p>` : ''
+      }${r.message ? `<p class="lead-message">${esc(r.message)}</p>` : ''}</li>`;
+    })
+    .join('');
+  const refused = contact.refused.filter((r) => r.n > 0).map((r) => `${number(r.n)} ${esc(REFUSED[r.key] ?? r.key)}`);
+  return `<section class="card wide"><h2>Contact requests</h2><p class="note">Every request sent through the form in the last ${days} days, newest first, with what happened to its email. Kept for 6 months.</p>${
+    contact.requests.length ? `<ol class="leads">${leads}</ol>` : '<p class="empty">No requests in this period.</p>'
+  }${refused.length ? `<p class="note">Also refused: ${refused.join(', ')}. Nothing about those is kept.</p>` : ''}</section>`;
+}
+
+/**
+ * The dashboard page for a report covering the last `days` days, with the previous period for
+ * comparison and the contact log. Without `contact` the log is left out; with null it says it
+ * could not be read.
+ */
+export function renderDashboard(
+  report: Report,
+  days: number,
+  now: Date,
+  previous?: Report,
+  contact?: Contact | null,
+): string {
   const { totals } = report;
   const visitorsDelta = delta(totals.visitors, previous?.totals.visitors, days);
   const viewsDelta = delta(totals.views, previous?.totals.views, days);
   const mobile = report.devices.find((r) => r.key === 'mobile')?.n ?? 0;
   const automated = report.filtered.reduce((sum, r) => sum + r.n, 0);
   const perVisitor = totals.visitors > 0 ? (totals.views / totals.visitors).toFixed(1) : '0';
+  const emailed = contact ? contact.requests.filter((r) => r.delivery === 'sent').length : 0;
+  const requestsTile =
+    contact === undefined
+      ? ''
+      : `<div class="kpi"><dt>Contact requests</dt><dd>${contact ? number(contact.requests.length) : '?'}</dd><small>${
+          !contact ? 'log unavailable' : contact.requests.length ? `${number(emailed)} emailed` : 'none in this period'
+        }</small></div>`;
   const ranges = [7, 30, 90]
     .map((n) => `<a href="?days=${n}"${n === days ? ' aria-current="page"' : ''}>${n} days</a>`)
     .join('');
@@ -249,7 +326,9 @@ export function renderDashboard(report: Report, days: number, now: Date, previou
 <div class="kpi"><dt>Page views</dt><dd>${number(totals.views)}</dd><small>${viewsDelta || 'every page loaded'}</small></div>
 <div class="kpi"><dt>Pages per visitor</dt><dd>${perVisitor}</dd><small>views divided by visitors</small></div>
 <div class="kpi"><dt>On a phone</dt><dd>${percent(mobile, totals.visitors)}%</dd><small>of visitors</small></div>
+${requestsTile}
 </dl>
+${contact === undefined ? '' : contactSection(contact, days)}
 ${empty}
 ${chart(report)}
 <div class="grid">
@@ -271,6 +350,26 @@ ${ranking('Ignored as automated', `${number(automated)} requests were not counte
 </div></body></html>`;
 }
 
-/** The report as JSON, for scripts and for asking questions of the numbers. */
-export const renderJson = (report: Report, now: Date): string =>
-  JSON.stringify({ generatedAt: now.toISOString(), timeZone: 'Asia/Dubai', ...report }, null, 2);
+/**
+ * The report as JSON, for scripts and for asking questions of the numbers. The contact log appears
+ * as counts only: names, addresses and messages stay on the page.
+ */
+export const renderJson = (report: Report, now: Date, contact?: Contact | null): string =>
+  JSON.stringify(
+    {
+      generatedAt: now.toISOString(),
+      timeZone: 'Asia/Dubai',
+      ...report,
+      ...(contact === undefined
+        ? {}
+        : {
+            contact: contact && {
+              requests: contact.requests.length,
+              emailed: contact.requests.filter((r) => r.delivery === 'sent').length,
+              refused: contact.refused,
+            },
+          }),
+    },
+    null,
+    2,
+  );

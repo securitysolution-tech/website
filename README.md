@@ -84,11 +84,13 @@ Going live (owner):
 
 `workers/contact` is a Cloudflare Worker on the route `securitysolution.tech/api/contact`. The form posts the request to it as JSON; the Worker checks every field, allows three requests a minute per network and six in total, and emails the request to the inbox through Cloudflare Email Service with the visitor's address as Reply-To. Sends to a verified destination address are free on every plan. Until the Worker is live, and whenever it answers anything but 202, the form composes the same message for the visitor's own email app.
 
+Every request is also kept, before the email goes, in the dashboard’s database (the visit counter’s D1, bound here as `DB`; the schema is `workers/visits/migrations/0002_contact_requests.sql`), with what happened to the email: `sent` with its message id, `failed` with the error code, or `quota`. So no request is lost if an email fails, and the founders see every one, newest first, in the “Contact requests” section of the dashboard at `/api/visits`. Submissions that fail the checks or fill the honeypot are counted by reason and never kept; too many from one network is only logged, so a flood cannot spend the database’s daily writes. The visit counter’s daily run deletes requests after 180 days, and the Worker’s per-request logs and traces are off.
+
 ```sh
 cd workers/contact
 npm ci
 npm run check     # generates the binding types, then type-checks
-npm test          # unit tests for the validation, the rate-limit key and the email
+npm test          # the validation, the rate-limit key, the email, and the request flow on SQLite
 npm run dry-run   # bundles what a deploy would upload, without credentials
 ```
 
@@ -98,8 +100,9 @@ Going live, in this order:
 2. Store the inbox as the Worker secret: `npx wrangler secret put CONTACT_TO`.
 3. In the repository settings, create the `cloudflare` environment with the secrets `CLOUDFLARE_API_TOKEN` (permissions: Workers Scripts Edit, Workers Routes Edit, Account Settings Read, Zone Read on this zone, User Details Read) and `CLOUDFLARE_ACCOUNT_ID`. Then set the repository variable `CONTACT_WORKER_DEPLOY` to `true` and run the "Contact worker" workflow once by hand. From then on every push to `main` that touches the Worker deploys it.
 4. Check the live route from outside: `npm run e2e -- https://securitysolution.tech`. No email is sent without `--send`.
-5. Set `CONTACT_BACKEND_LIVE` to `true` in `src/data/site.ts` and push. The form, the contact section and the privacy page switch together.
-6. In the Cloudflare dashboard, add a WAF rate-limiting rule for `/api/contact` and a cache rule that bypasses `/api/*`.
+5. Make sure the request log exists: the Visits worker workflow applies the database migrations on every deploy, or run `npm run migrate` in `workers/visits` once.
+6. Set `CONTACT_BACKEND_LIVE` to `true` in `src/data/site.ts` and merge. The form, the contact section and the privacy page (which then says requests are kept for six months) switch together.
+7. In the Cloudflare dashboard, add a WAF rate-limiting rule for `/api/contact` and a cache rule that bypasses `/api/*`.
 
 `CONTACT_ENABLED` in `wrangler.jsonc` is the kill switch: anything but `true` makes the Worker answer 503, and the form falls back to email. For local work, `npm run dev` at the root proxies `/api` to `wrangler dev`.
 

@@ -1,12 +1,17 @@
 // Test helpers: a D1 stand-in over Node's built-in SQLite (so the real migration and the real SQL
 // run), a Worker environment around it, and a stand-in for the request context.
 import { DatabaseSync } from 'node:sqlite';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 
 /** D1's prepare/bind/run/all/first/batch surface, backed by an in-memory SQLite database. */
 export function openDb() {
   const sqlite = new DatabaseSync(':memory:');
-  sqlite.exec(readFileSync(new URL('../migrations/0001_init.sql', import.meta.url), 'utf8'));
+  const migrations = new URL('../migrations/', import.meta.url);
+  for (const file of readdirSync(migrations)
+    .filter((f) => f.endsWith('.sql'))
+    .sort()) {
+    sqlite.exec(readFileSync(new URL(file, migrations), 'utf8'));
+  }
   const statement = (sql, args = []) => ({
     sql,
     bind: (...bound) => statement(sql, bound),

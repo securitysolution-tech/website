@@ -9,7 +9,14 @@
   "routes": [{ "pattern": "securitysolution.tech/api/contact*", "zone_name": "securitysolution.tech" }],
   "workers_dev": false,
   "preview_urls": false,
-  "observability": { "enabled": true, "head_sampling_rate": 1 },
+  // The privacy page says the service's own log holds no personal details, so Cloudflare's
+  // per-request logs and traces (which carry request details) stay off; only the Worker's own
+  // lines (event names, message ids, error codes) are kept.
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "invocation_logs": false, "head_sampling_rate": 1 },
+    "traces": { "enabled": false, "persist": false },
+  },
   "vars": {
     // "true" to accept requests; anything else answers 503 and the form uses the visitor's email app.
     "CONTACT_ENABLED": "true",
@@ -25,6 +32,15 @@
       "allowed_sender_addresses": ["hello@securitysolution.tech"],
       // `wrangler dev` sends through the real service, so the delivery test is a real send.
       "remote": true,
+    },
+  ],
+  // The dashboard's database (the visit counter's D1): a copy of every request is kept there, so
+  // none is lost if its email fails. The schema lives in workers/visits/migrations.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "securitysolution-visits",
+      "database_id": "9df78723-7af8-443e-afad-06982b7a69eb",
     },
   ],
   // Soft caps in front of the email quota; the WAF rule on /api/contact is the hard one.
