@@ -109,3 +109,30 @@ test('the JSON carries the same figures and the time zone', () => {
   assert.equal(body.days.length, 3);
   assert.deepEqual(body.countries[1], { key: 'T1', n: 1 });
 });
+
+test('the stylesheet is linked, not inline, so the zone policy cannot block it', () => {
+  const html = renderDashboard(report(), 30, NOW);
+  assert.match(html, /<link rel="stylesheet" href="\/api\/visits\/style\.css">/);
+  assert.doesNotMatch(html, /<style>/);
+});
+
+test('the headline numbers show the change against the previous period', () => {
+  const previous = report({ totals: { views: 3, visitors: 2 } });
+  const html = renderDashboard(report(), 30, NOW, previous);
+  assert.match(
+    html,
+    /<dt>Page views<\/dt><dd>6<\/dd><small><span class="delta up">\+100%<\/span> vs the previous 30 days<\/small>/,
+  );
+  assert.match(html, /<dt>Visitors<\/dt><dd>3<\/dd><small><span class="delta up">\+50%<\/span>/);
+  const fromNothing = renderDashboard(report(), 7, NOW, report({ totals: { views: 0, visitors: 0 } }));
+  assert.match(fromNothing, /<span class="delta up">new<\/span> vs the previous 7 days/);
+  const down = renderDashboard(
+    report({ totals: { views: 3, visitors: 1 } }),
+    7,
+    NOW,
+    report({ totals: { views: 6, visitors: 2 } }),
+  );
+  assert.match(down, /<span class="delta down">-50%<\/span>/);
+  const alone = renderDashboard(report(), 30, NOW);
+  assert.match(alone, /<small>counted once a day<\/small>/);
+});
