@@ -11,3 +11,8 @@ workers/monitor/package-lock.json
 workers/monitor/worker-configuration.d.ts
 workers/monitor/node_modules/
 workers/monitor/dist/
+workers/visits/package-lock.json
+workers/visits/worker-configuration.d.ts
+workers/visits/node_modules/
+workers/visits/dist/
+workers/visits/.wrangler/
