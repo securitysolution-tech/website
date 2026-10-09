@@ -34,3 +34,24 @@ jobs:
       - run: npm run build
       # Uses the Chrome on the runner; the results land in the job summary
       - run: npm run audit
+
+  behaviour:
+    # The browser behaviour checks (CSP and errors on every page, reduced motion, overflow, the
+    # domain check, the contact form). Advisory: a timing-sensitive browser test must never block
+    # a deploy, but a regression shows here as a failed job.
+    name: Browser behaviour (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run verify:browser
