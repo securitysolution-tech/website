@@ -138,8 +138,41 @@ async function open(ctx, path, settle = 2000) {
     if (!r.spoofing) fail('domain check: no verdict text');
     else if (r.fix === 0) fail('domain check: weak domain showed no fix-first items');
     else note(`domain check: verdict "${r.spoofing}" with ${r.fix} fix-first items`);
-  } catch {
-    fail('domain check: no verdict within 20s (network to the DNS resolver?)');
+    // A second check on another domain must run through: the headline rewrite and its restore
+    // touch the DOM under Trusted Types, which a one-check test never exercises.
+    const titleAfterFirst = await page.evaluate(() => document.querySelector('[data-hero-title]').textContent);
+    await page.fill('#domain-input', 'example.com');
+    await page.click('.check-form .run');
+    await page.waitForFunction(
+      (t) =>
+        !document.querySelector('[data-verdict]').hidden &&
+        document.querySelector('[data-hero-title]').textContent !== t,
+      titleAfterFirst,
+      { timeout: 20000 },
+    );
+    const second = await page.evaluate(() => ({
+      title: document.querySelector('[data-hero-title]').textContent,
+      target: document.querySelector('[data-target-name]').textContent,
+    }));
+    if (!/example\.com/.test(second.title) || second.target !== 'example.com')
+      fail('domain check: the second check did not take over the headline');
+    else note('domain check: a second check takes over the headline');
+    // With every resolver failing, the error shows and nothing of the previous check lingers.
+    await page.route('**/dns-query*', (route) => route.abort());
+    await page.fill('#domain-input', 'example.org');
+    await page.click('.check-form .run');
+    await page.waitForFunction(() => !document.querySelector('[data-error]').hidden, null, { timeout: 20000 });
+    const after = await page.evaluate(() => ({
+      spoofHidden: document.querySelector('[data-spoof]').hidden,
+      title: document.querySelector('[data-hero-title]').textContent.trim(),
+    }));
+    if (!after.spoofHidden) fail('domain check: the preview card stayed after an error');
+    else if (/example|neverssl/.test(after.title))
+      fail('domain check: the headline kept a previous domain after an error');
+    else note('domain check: an error leaves no half state');
+    if (errors.length) fail(`domain check: ${errors.join(' | ')}`);
+  } catch (e) {
+    fail(`domain check: ${e.message.split('\n')[0]}`);
   }
   await ctx.close();
 }

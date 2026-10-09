@@ -27,11 +27,14 @@ function init(root: HTMLElement) {
   const title = root.querySelector<HTMLElement>('[data-hero-title]');
   const lines = [...root.querySelectorAll<HTMLElement>('[data-r]')];
   // The question and the records as the page loaded, restored before each new check and on an error.
-  const titleAtLoad = title?.innerHTML ?? '';
+  // Kept as cloned nodes and put back with replaceChildren: Trusted Types forbids innerHTML here.
+  const titleAtLoad = title ? [...title.childNodes].map((n) => n.cloneNode(true)) : [];
+  const titleTextAtLoad = title?.textContent ?? '';
   const linesAtLoad = lines.map((p) => p.dataset.r ?? '');
   const share = root.querySelector<HTMLElement>('[data-verdict] .share');
   const restoreHeadline = () => {
-    if (title && title.innerHTML !== titleAtLoad) title.innerHTML = titleAtLoad;
+    if (title && title.textContent !== titleTextAtLoad)
+      title.replaceChildren(...titleAtLoad.map((n) => n.cloneNode(true)));
     lines.forEach((p, i) => {
       if (p.dataset.r !== linesAtLoad[i]) p.dataset.r = linesAtLoad[i] ?? '';
     });
