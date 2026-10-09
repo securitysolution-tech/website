@@ -92,7 +92,7 @@ function ranking(
   const body = withRemainder(rows, whole)
     .map((row) => {
       const share = percent(row.n, whole);
-      return `<tr><th scope="row">${breakable(label(group, row.key))}</th><td class="n">${number(row.n)}</td><td class="share"><div class="meter"><span class="bar" style="--w:${share}%"></span><span class="pct">${share}%</span></div></td></tr>`;
+      return `<tr><th scope="row">${breakable(label(group, row.key))}</th><td class="n">${number(row.n)}</td><td class="share"><div class="meter"><span class="bar w${share}"></span><span class="pct">${share}%</span></div></td></tr>`;
     })
     .join('');
   return `<section class="card"><h2>${esc(title)}</h2><p class="note">${esc(note)}</p>${
@@ -102,12 +102,15 @@ function ranking(
   }</section>`;
 }
 
+/** A size as a whole percent of the peak, which picks one of the stylesheet's .v/.u classes. */
+const scale = (n: number, peak: number): number => Math.min(100, Math.max(0, Math.round((n / peak) * 100)));
+
 function chart(report: Report): string {
   const peak = Math.max(1, ...report.days.map((d) => d.views));
   const bars = report.days
     .map((d) => {
       const tip = `${dayLabel(d.day, true)}: ${number(d.visitors)} visitors, ${number(d.views)} page views`;
-      return `<li title="${esc(tip)}" style="--views:${((d.views / peak) * 100).toFixed(1)}%;--visitors:${((d.visitors / peak) * 100).toFixed(1)}%"><i></i><b></b></li>`;
+      return `<li title="${esc(tip)}" class="v${scale(d.views, peak)} u${scale(d.visitors, peak)}"><i></i><b></b></li>`;
     })
     .join('');
   const rows = report.days
@@ -130,6 +133,12 @@ function chart(report: Report): string {
 <details><summary>Daily numbers</summary><table class="daily"><thead><tr><th scope="col">Day</th><th scope="col" class="n">Visitors</th><th scope="col" class="n">Page views</th></tr></thead><tbody>${rows}</tbody></table></details>
 </section>`;
 }
+
+// Bar widths and heights are classes (.w42, .v73, .u41), never style attributes: the zone adds the
+// site's policy (style-src 'self') to every response, and a browser enforces it on this page too.
+const steps = (prefix: string, property: string): string =>
+  Array.from({ length: 101 }, (_, n) => `.${prefix}${n}{${property}:${n}%}`).join('');
+const STEPS = steps('w', '--w') + steps('v', '--views') + steps('u', '--visitors');
 
 const STYLE = `
 :root{color-scheme:dark light;--bg:#0c1813;--panel:#12211b;--line:#223a2f;--text:#eaf1ed;--muted:#9db3a8;--accent:#62d3a6;--soft:#2b5a47;--focus:#ffd479}
@@ -187,12 +196,20 @@ footer.notes p{margin:.375rem 0;max-width:60rem}
 .delta.up{background:rgba(98,211,166,.18);color:var(--accent)}
 .delta.down{background:rgba(255,143,128,.18);color:#ff8f80}
 .delta.flat{background:var(--line);color:var(--muted)}
+${STEPS}
 `;
 
-/** The dashboard page for a report covering the last `days` days. */
 /** The stylesheet, served by the Worker at /api/visits/style.css: the zone's policy allows only
  * same-origin styles, so it cannot be inline. */
 export const STYLESHEET = STYLE;
+
+// A fingerprint in the address, so a changed stylesheet is fetched instead of served from a cache.
+const fingerprint = (text: string): string => {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) hash = Math.imul(hash ^ text.charCodeAt(i), 0x01000193);
+  return (hash >>> 0).toString(36);
+};
+export const STYLESHEET_HREF = `/api/visits/style.css?v=${fingerprint(STYLE)}`;
 
 /** The change against the previous period of the same length, for a headline number. */
 export function delta(current: number, previous: number | undefined, days: number): string {
@@ -204,6 +221,7 @@ export function delta(current: number, previous: number | undefined, days: numbe
   return `<span class="delta ${dir}">${sign}${pct}%</span> vs the previous ${days} days`;
 }
 
+/** The dashboard page for a report covering the last `days` days, with the previous period for comparison. */
 export function renderDashboard(report: Report, days: number, now: Date, previous?: Report): string {
   const { totals } = report;
   const visitorsDelta = delta(totals.visitors, previous?.totals.visitors, days);
@@ -220,7 +238,7 @@ export function renderDashboard(report: Report, days: number, now: Date, previou
       : '';
 
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow"><meta name="color-scheme" content="dark light"><title>Visits | SecuritySolution.tech</title><link rel="stylesheet" href="/api/visits/style.css"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow"><meta name="color-scheme" content="dark light"><title>Visits | SecuritySolution.tech</title><link rel="stylesheet" href="${STYLESHEET_HREF}"></head>
 <body><div class="page">
 <header class="top"><div><p class="eyebrow">SecuritySolution.tech</p><h1>Visits</h1></div><nav class="range" aria-label="Time range">${ranges}</nav></header>
 <p class="span">${esc(dayLabel(report.since, true))} to ${esc(dayLabel(report.until, true))}, Dubai time. Generated ${esc(now.toISOString().slice(0, 16).replace('T', ' '))} UTC.</p>

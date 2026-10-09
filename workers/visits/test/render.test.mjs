@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { renderDashboard, renderJson } from '../src/render.ts';
+import { renderDashboard, renderJson, STYLESHEET, STYLESHEET_HREF } from '../src/render.ts';
 
 const NOW = new Date('2026-10-09T12:00:00Z');
 
@@ -110,10 +110,66 @@ test('the JSON carries the same figures and the time zone', () => {
   assert.deepEqual(body.countries[1], { key: 'T1', n: 1 });
 });
 
-test('the stylesheet is linked, not inline, so the zone policy cannot block it', () => {
+test('the stylesheet is linked, with a fingerprint, not inline, so the zone policy cannot block it', () => {
   const html = renderDashboard(report(), 30, NOW);
-  assert.match(html, /<link rel="stylesheet" href="\/api\/visits\/style\.css">/);
+  assert.match(html, /<link rel="stylesheet" href="\/api\/visits\/style\.css\?v=[a-z0-9]+">/);
+  assert.ok(html.includes(`href="${STYLESHEET_HREF}"`));
   assert.doesNotMatch(html, /<style>/);
+});
+
+// The zone adds the site's policy (style-src 'self', script-src 'self') to every response, so on the
+// live site a browser blocks anything inline. A style attribute once left the chart and the share
+// bars empty there while looking fine locally. Nothing on the page may need one.
+test('the page has no inline style, style attribute or script', () => {
+  const html = renderDashboard(report(), 30, NOW, report());
+  assert.doesNotMatch(html, /<style/i);
+  assert.doesNotMatch(html, /\sstyle\s*=/i);
+  assert.doesNotMatch(html, /<script/i);
+  assert.doesNotMatch(html, /\son[a-z]+\s*=/i);
+});
+
+test('every bar size the page uses is a class the stylesheet defines', () => {
+  const days = Array.from({ length: 30 }, (_, i) => ({
+    day: `2026-09-${String(i + 1).padStart(2, '0')}`,
+    views: i * 7,
+    visitors: Math.round(i * 2.9),
+  }));
+  const html = renderDashboard(
+    report({
+      days,
+      totals: { views: 100, visitors: 50 },
+      pages: [
+        { key: '/', n: 1 },
+        { key: 'other', n: 99 },
+      ],
+    }),
+    30,
+    NOW,
+  );
+  const used = new Set();
+  for (const [, value] of html.matchAll(/class="([^"]*)"/g)) {
+    for (const name of value.split(/\s+/)) if (/^[wvu]\d+$/.test(name)) used.add(name);
+  }
+  assert.ok(used.size > 20, `the page uses ${used.size} size classes`);
+  const property = { w: '--w', v: '--views', u: '--visitors' };
+  for (const name of used) {
+    const rule = `.${name}{${property[name[0]]}:${name.slice(1)}%}`;
+    assert.ok(STYLESHEET.includes(rule), `${rule} is not in the stylesheet`);
+  }
+  // The scale runs from nothing to the whole.
+  for (const edge of [
+    '.w0{--w:0%}',
+    '.w100{--w:100%}',
+    '.v0{--views:0%}',
+    '.v100{--views:100%}',
+    '.u100{--visitors:100%}',
+  ]) {
+    assert.ok(STYLESHEET.includes(edge), edge);
+  }
+});
+
+test('a changed stylesheet gets a new address, so a browser never keeps an old one', () => {
+  assert.match(STYLESHEET_HREF, /^\/api\/visits\/style\.css\?v=[a-z0-9]{3,8}$/);
 });
 
 test('the headline numbers show the change against the previous period', () => {
