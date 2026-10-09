@@ -26,6 +26,16 @@ function init(root: HTMLElement) {
   // The hook: the headline, the record lines behind it, the preview email and the map's scan.
   const title = root.querySelector<HTMLElement>('[data-hero-title]');
   const lines = [...root.querySelectorAll<HTMLElement>('[data-r]')];
+  // The question and the records as the page loaded, restored before each new check and on an error.
+  const titleAtLoad = title?.innerHTML ?? '';
+  const linesAtLoad = lines.map((p) => p.dataset.r ?? '');
+  const share = root.querySelector<HTMLElement>('[data-verdict] .share');
+  const restoreHeadline = () => {
+    if (title && title.innerHTML !== titleAtLoad) title.innerHTML = titleAtLoad;
+    lines.forEach((p, i) => {
+      if (p.dataset.r !== linesAtLoad[i]) p.dataset.r = linesAtLoad[i] ?? '';
+    });
+  };
   const spoof = root.querySelector<HTMLElement>('[data-spoof]');
   const spoofDomain = root.querySelector<HTMLElement>('[data-spoof-domain]');
   const spoofStamp = root.querySelector<HTMLElement>('[data-spoof-stamp]');
@@ -143,12 +153,19 @@ function init(root: HTMLElement) {
   function printRecords(domain: string, results: Result[]) {
     if (!lines.length) return;
     const clip = (v: string) => (v.length > 72 ? `${v.slice(0, 72)}…` : v);
+    // A lookup that did not answer is printed as such, never as a missing record (checks.ts).
+    const failed = (id: string) => {
+      const r = results.find((x) => x.id === id);
+      return !!r && r.status === 'info' && r.summary === t.summaries.unknown;
+    };
     const evidence = (id: string, tech: string, quoted: boolean) => {
+      if (failed(id)) return t.lookupFailed;
       const first = results.find((r) => r.id === id)?.evidence[0];
       if (!first) return fmt(t.noRecord, { tech });
       return quoted ? `"${clip(first)}"` : clip(first);
     };
-    const dnssec = results.find((r) => r.id === 'dnssec')?.status === 'pass' ? t.signed : t.unsigned;
+    const dnssecResult = results.find((r) => r.id === 'dnssec');
+    const dnssec = failed('dnssec') ? t.lookupFailed : dnssecResult?.status === 'pass' ? t.signed : t.unsigned;
     const texts = [
       `_dmarc.${domain}.   TXT   ${evidence('dmarc', 'DMARC', true)}`,
       `${domain}.   TXT   ${evidence('spf', 'SPF', true)}`,
@@ -218,8 +235,10 @@ function init(root: HTMLElement) {
     }
   }
 
+  let watchSending = false;
   watchForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (watchSending) return;
     const domain = watchForm.dataset.domain;
     const email = watchForm.querySelector<HTMLInputElement>('input[name="email"]');
     const trap = watchForm.querySelector<HTMLInputElement>('input[name="website"]');
@@ -234,6 +253,7 @@ function init(root: HTMLElement) {
       email.focus();
       return;
     }
+    watchSending = true;
     button.setAttribute('aria-disabled', 'true');
     say('busy', t.alerts.sending);
     const controller = new AbortController();
@@ -262,6 +282,7 @@ function init(root: HTMLElement) {
       say('error', t.alerts.failed);
     } finally {
       window.clearTimeout(timer);
+      watchSending = false;
       button.removeAttribute('aria-disabled');
     }
   });
@@ -305,6 +326,7 @@ function init(root: HTMLElement) {
       : fmt(t.score, { passed: v.passed, scored: v.scored });
     verdict.hidden = false;
     const count = v.incomplete ? 0 : showFixFirst(results);
+    if (share) share.hidden = v.incomplete;
     if (v.incomplete) {
       if (fix) fix.hidden = true;
       if (spoof) spoof.hidden = true;
@@ -352,6 +374,7 @@ function init(root: HTMLElement) {
     shown = '';
     if (!autorun) {
       lastRequested = domain;
+      restoreHeadline();
       button.textContent = t.checking;
       // The map scans again: the visitor can see the instrument working.
       canvas?.dispatchEvent(new Event('exposurescan'));
@@ -390,6 +413,8 @@ function init(root: HTMLElement) {
       if (id !== runId) return;
       rows.forEach((li) => setState(li, 'idle', li.dataset.about ?? ''));
       target.hidden = true;
+      if (spoof) spoof.hidden = true;
+      restoreHeadline();
       if (autorun) return;
       if (err instanceof DomainNotFoundError) {
         showError(fmt(t.errors.notFound, { domain }));

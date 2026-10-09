@@ -153,6 +153,9 @@ function init(form: HTMLFormElement) {
     submit.textContent = t.sending;
     say(t.sendingStatus);
     try {
+      // AbortController with a timer, not AbortSignal.timeout, which Safari and iOS before 16 lack.
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), 10_000);
       const response = await fetch(contactBackend.endpoint, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -163,8 +166,9 @@ function init(form: HTMLFormElement) {
           page: location.pathname,
         }),
         credentials: 'omit',
-        signal: AbortSignal.timeout(10_000),
+        signal: controller.signal,
       });
+      window.clearTimeout(timer);
       if (response.status === 202) return showSent(request);
       if (response.status === 400) {
         // The Worker names the fields it refused; the wording is the form's own.

@@ -611,8 +611,10 @@ html.leaving :is(main, .site-footer) {
   html.io .steps.in .step:nth-child(5) .num {
     transition-delay: 1.2s;
   }
-  html.io .steps::after {
-    transform: scaleY(0);
+  @media (max-width: 60rem) {
+    html.io .steps::after {
+      transform: scaleY(0);
+    }
   }
 }
 

@@ -15,10 +15,15 @@ import { createRequire } from 'node:module';
 import { chromium } from 'playwright-core';
 import lighthouse from 'lighthouse';
 import { launch } from 'chrome-launcher';
+import { arLive } from '../src/i18n/locales.mjs';
 
 const require = createRequire(import.meta.url);
 const dist = fileURLToPath(new URL('../dist/', import.meta.url));
-const budgets = JSON.parse(readFileSync(new URL('../budget.json', import.meta.url), 'utf8'));
+// Lighthouse 12 removed its budgets feature, so the limits in budget.json are checked here,
+// directly against the requests the page made.
+const budgets = JSON.parse(readFileSync(new URL('../budget.json', import.meta.url), 'utf8'))[0] ?? {};
+const sizeLimit = (type) => (budgets.resourceSizes ?? []).find((b) => b.resourceType === type)?.budget;
+const countLimit = (type) => (budgets.resourceCounts ?? []).find((b) => b.resourceType === type)?.budget;
 const chromeFlags = ['--headless=new', '--no-sandbox', '--disable-gpu'];
 const summary = [];
 const problems = [];
@@ -119,26 +124,42 @@ await browser.close();
 // every page above but kept out of the Lighthouse SEO gate (a noindex page scores low there).
 // --- Lighthouse on three pages ----------------------------------------------------------------
 const chrome = await launch({ chromeFlags });
-for (const url of ['/', '/ar/', '/services/offensive-testing/', '/privacy/']) {
+// The Arabic home joins the SEO gate only while it is live; noindex pages score low there by design.
+for (const url of ['/', ...(arLive ? ['/ar/'] : []), '/services/offensive-testing/', '/privacy/']) {
   const result = await lighthouse(base + url, {
     port: chrome.port,
     output: 'json',
     logLevel: 'error',
     onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
-    budgets,
   });
   const { categories, audits } = result.lhr;
   const score = (k) => Math.round((categories[k]?.score ?? 0) * 100);
   const metric = (k) => audits[k]?.displayValue ?? '?';
   const cls = audits['cumulative-layout-shift']?.numericValue ?? 0;
-  const budget = audits['performance-budget'];
-  const over = (budget?.details?.items ?? [])
-    .filter((i) => i.sizeOverBudget > 0 || i.countOverBudget)
-    .map(
-      (i) => `${i.label}: ${i.sizeOverBudget ? Math.round(i.sizeOverBudget / 1024) + ' KiB over' : i.countOverBudget}`,
-    );
+  // The budgets, from the requests the page made: script bytes, total bytes, third-party requests.
+  const requests = audits['network-requests']?.details?.items ?? [];
+  const origin = new URL(base).origin;
+  const kib = (n) => Math.round(n / 1024);
+  const scriptBytes = requests
+    .filter((r) => r.resourceType === 'Script')
+    .reduce((n, r) => n + (r.transferSize ?? 0), 0);
+  const totalBytes = requests.reduce((n, r) => n + (r.transferSize ?? 0), 0);
+  // Loaded resources only: the check's DNS-over-HTTPS fetches are data the policy's connect-src
+  // sanctions, not code or assets from a third party.
+  const loaded = new Set(['Script', 'Stylesheet', 'Font', 'Image', 'Media', 'Document', 'Manifest']);
+  const thirdParty = requests.filter(
+    (r) => r.url && !r.url.startsWith(origin) && !r.url.startsWith('data:') && loaded.has(r.resourceType),
+  );
+  const over = [];
+  if (sizeLimit('script') !== undefined && kib(scriptBytes) > sizeLimit('script'))
+    over.push(`scripts ${kib(scriptBytes)} KiB (limit ${sizeLimit('script')})`);
+  if (sizeLimit('total') !== undefined && kib(totalBytes) > sizeLimit('total'))
+    over.push(`total ${kib(totalBytes)} KiB (limit ${sizeLimit('total')})`);
+  if (countLimit('third-party') !== undefined && thirdParty.length > countLimit('third-party'))
+    over.push(`${thirdParty.length} third-party request(s): ${thirdParty.map((r) => r.url).join(', ')}`);
+  const weight = `scripts ${kib(scriptBytes)} KiB, total ${kib(totalBytes)} KiB, third-party ${thirdParty.length}`;
   summary.push(
-    `${url}: performance ${score('performance')}, accessibility ${score('accessibility')}, best practices ${score('best-practices')}, SEO ${score('seo')}; LCP ${metric('largest-contentful-paint')}, TBT ${metric('total-blocking-time')}, CLS ${metric('cumulative-layout-shift')}`,
+    `${url}: performance ${score('performance')}, accessibility ${score('accessibility')}, best practices ${score('best-practices')}, SEO ${score('seo')}; LCP ${metric('largest-contentful-paint')}, TBT ${metric('total-blocking-time')}, CLS ${metric('cumulative-layout-shift')}; ${weight}`,
   );
   if (score('accessibility') < 100) problems.push(`${url}: accessibility ${score('accessibility')} (expected 100)`);
   if (score('best-practices') < 100) problems.push(`${url}: best practices ${score('best-practices')} (expected 100)`);

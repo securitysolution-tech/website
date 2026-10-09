@@ -66,7 +66,10 @@ export function score(answers: Partial<Record<string, Answer>>): Result {
   const band: Band = pct >= 75 ? 'strong' : pct >= 40 ? 'developing' : 'at-risk';
   const startHere = questions
     .filter((q) => answers[q.id] && answers[q.id] !== 'yes')
-    .sort((a, b) => value[answers[a.id]!] * a.weight - value[answers[b.id]!] * b.weight || b.weight - a.weight)
+    // Points lost, largest first, so the heaviest gap is never pushed off the list; ties go to the heavier control.
+    .sort(
+      (a, b) => (1 - value[answers[b.id]!]) * b.weight - (1 - value[answers[a.id]!]) * a.weight || b.weight - a.weight,
+    )
     .slice(0, 3)
     .map((q) => q.id);
   return { score: pct, band, answered, total: questions.length, startHere };

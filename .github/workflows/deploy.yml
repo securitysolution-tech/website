@@ -3,6 +3,10 @@ name: Deploy
 on:
   push:
     branches: [main]
+  # A merge made by the Actions token (Dependabot auto-merge) triggers no push run, so a daily
+  # catch-up publishes main again; the build is the same when nothing changed.
+  schedule:
+    - cron: '19 2 * * *'
   workflow_dispatch:
 
 permissions:
@@ -21,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       stylesheet: ${{ steps.build.outputs.stylesheet }}
+      build: ${{ steps.build.outputs.build }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -37,9 +42,12 @@ jobs:
       - run: npm run build
       - run: npm test
 
-      # The hashed stylesheet name identifies this build on the live site
+      # The commit marker in the page head identifies this build on the live site; the stylesheet
+      # name is kept for the asset check.
       - id: build
-        run: echo "stylesheet=$(basename dist/_astro/Base.*.css)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "stylesheet=$(basename dist/_astro/Base.*.css)" >> "$GITHUB_OUTPUT"
+          echo "build=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
@@ -67,6 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       STYLESHEET: ${{ needs.build.outputs.stylesheet }}
+      BUILD: ${{ needs.build.outputs.build }}
     steps:
       # The new build must be what visitors get: the page, its policy header and this build's assets
       - name: Wait for the new build to be served
@@ -74,7 +83,7 @@ jobs:
         run: |
           for i in $(seq 1 18); do
             html="$(curl -sS --max-time 20 https://securitysolution.tech/ || true)"
-            if grep -q "/_astro/$STYLESHEET" <<<"$html"; then
+            if grep -q "<meta name=\"build\" content=\"$BUILD\"" <<<"$html"; then
               echo "live after $((i * 10)) seconds"
               exit 0
             fi

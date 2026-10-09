@@ -6,6 +6,7 @@ import { ar } from '../i18n/ar';
 // GitHub Pages serves this one page for every missing address, under /ar/ as well, so it
 // speaks both languages. The Arabic face is loaded here for that block alone.
 import '@fontsource-variable/noto-sans-arabic';
+import { arLive } from '../i18n';
 
 const { t, href, services } = useI18n(Astro);
 const n = ar.notFound;
@@ -41,18 +42,20 @@ const n = ar.notFound;
             </a>
           </div>
         </div>
-        <div class="side arabic" lang="ar" dir="rtl">
-          <p class="h1">{n.title}</p>
-          <p class="lead">{n.lead}</p>
-          <div class="actions">
-            <a class="btn btn-primary" href="/ar/">
-              {n.home}
-            </a>
-            <a class="btn btn-secondary" href="/ar/#check">
-              {n.check}
-            </a>
+        {arLive && (
+          <div class="side arabic" lang="ar" dir="rtl">
+            <p class="h1">{n.title}</p>
+            <p class="lead">{n.lead}</p>
+            <div class="actions">
+              <a class="btn btn-primary" href="/ar/">
+                {n.home}
+              </a>
+              <a class="btn btn-secondary" href="/ar/#check">
+                {n.check}
+              </a>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   </section>
