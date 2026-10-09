@@ -3,11 +3,25 @@ export interface ServiceItem {
   text: string;
 }
 
+export interface Fact {
+  label: string;
+  value: string;
+}
+
 export interface Service {
   slug: string;
   name: string;
+  /** The buyer's term for the service: page heading and form label. */
+  plainName: string;
+  icon: 'crosshair' | 'shield-check' | 'scales' | 'cloud-check';
   /** One sentence for the home page index. */
   summary: string;
+  /** One line under "What we cover" on the service page. */
+  coverLead: string;
+  /** Standards and guides the work is measured against. */
+  standards: string[];
+  /** Plain facts for the service page header. */
+  facts: Fact[];
   /** Opening paragraph on the service page. */
   intro: string;
   /** Page <title> and meta description. */
@@ -22,11 +36,21 @@ export interface Service {
 export const services: Service[] = [
   {
     slug: 'offensive-testing',
+    icon: 'crosshair',
     name: 'Offensive testing',
+    plainName: 'Penetration testing',
     summary:
       'We test your web apps, APIs, networks and cloud the way a real attacker would, then show you how to close every gap we find.',
+    coverLead: 'Six kinds of test, each scoped to what you expose and how your team works.',
+    standards: ['OWASP Web Security Testing Guide', 'OWASP API Security Top 10', 'OWASP MASVS'],
+    facts: [
+      { label: 'Typical duration', value: '1 to 2 weeks for one web application' },
+      { label: 'Price', value: 'Fixed quote after a 30-minute scoping call' },
+      { label: 'Report', value: 'Executive summary plus every finding with fix steps' },
+      { label: 'Retest', value: 'Included, with an updated report' },
+    ],
     intro:
-      'A penetration test answers one question: what could someone do to your business with the access the internet already gives them? We find out under a written scope, stop at the agreed limits, and give you evidence your team can act on.',
+      'A penetration test answers one question: what could an attacker do to your business, from the internet or from inside your network? We find out under a written scope, stop at the agreed limits, and give you evidence your team can act on.',
     seoTitle: 'Penetration testing in the UAE',
     seoDescription:
       'Web, API, mobile and network penetration testing for UAE companies, with plain-language reports and a retest of every fix.',
@@ -69,9 +93,19 @@ export const services: Service[] = [
   },
   {
     slug: 'defensive-operations',
+    icon: 'shield-check',
     name: 'Defensive operations',
+    plainName: 'Security monitoring',
     summary:
       'We set up monitoring that spots attacks early, prepare your team for incidents, and harden the systems attackers try first.',
+    coverLead: 'Monitoring, playbooks and hardening that a small team can actually run.',
+    standards: [],
+    facts: [
+      { label: 'Price', value: 'Fixed quote after a 30-minute scoping call' },
+      { label: 'You keep', value: 'Monitoring configured and documented in your environment' },
+      { label: 'Playbooks', value: 'For the incidents you are most likely to face' },
+      { label: 'NDA', value: 'Yours or ours, signed first' },
+    ],
     intro:
       'Prevention fails eventually. What matters then is how fast you notice and how well you respond. We build the monitoring, playbooks and hardening a small team can actually run.',
     seoTitle: 'Security monitoring and incident readiness',
@@ -112,9 +146,19 @@ export const services: Service[] = [
   },
   {
     slug: 'governance-compliance',
+    icon: 'scales',
     name: 'Governance & compliance',
+    plainName: 'Compliance readiness',
     summary:
       'We get you ready for the security standards your customers and regulators ask about, with policies and training your staff will follow.',
+    coverLead: 'The standards your customers and regulators name, and the paperwork behind them.',
+    standards: ['UAE Information Assurance Standard', 'Dubai ISR', 'UAE PDPL', 'ISO/IEC 27001'],
+    facts: [
+      { label: 'Price', value: 'Fixed quote after a 30-minute scoping call' },
+      { label: 'Output', value: 'Gap assessment and a remediation plan ordered by risk' },
+      { label: 'Certification', value: 'Issued by an accredited body; we prepare you for it' },
+      { label: 'NDA', value: 'Yours or ours, signed first' },
+    ],
     intro:
       'Compliance work goes faster when someone has already read the standard closely. We map where you are, write what is missing, and prepare you for the audit.',
     seoTitle: 'UAE IA, ISO 27001 and PDPL readiness',
@@ -160,9 +204,19 @@ export const services: Service[] = [
   },
   {
     slug: 'ai-cloud-security',
+    icon: 'cloud-check',
     name: 'AI & cloud security',
+    plainName: 'AI and cloud security',
     summary:
       'We test the AI features and cloud accounts your business now depends on, before someone else finds the weak point.',
+    coverLead: 'The AI features and cloud accounts your business depends on, reviewed where attackers look first.',
+    standards: ['OWASP Top 10 for LLM Applications', 'CIS Benchmarks'],
+    facts: [
+      { label: 'Price', value: 'Fixed quote after a 30-minute scoping call' },
+      { label: 'Report', value: 'Findings with evidence and fix steps' },
+      { label: 'Retest', value: 'Included once the changes are made' },
+      { label: 'NDA', value: 'Yours or ours, signed first' },
+    ],
     intro:
       'AI assistants and cloud platforms add new ways in. A chatbot can be talked into leaking data, and one misconfigured storage bucket can expose everything. We test both.',
     seoTitle: 'AI application and cloud security testing',
@@ -198,5 +252,3 @@ export const services: Service[] = [
     ],
   },
 ];
-
-export const getService = (slug: string) => services.find((s) => s.slug === slug);

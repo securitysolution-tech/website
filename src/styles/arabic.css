@@ -1,0 +1,125 @@
+/* Arabic pages: the font stack, Arabic typography and the right-to-left overrides. Only the
+   /ar/ routes import this file, so English pages carry none of it. Archivo stays first in the
+   stack so Latin names, records and numbers keep the brand face; Arabic letters fall through
+   to Noto Sans Arabic, whose face covers only the Arabic ranges. */
+
+html[lang='ar'] {
+  --font:
+    'Archivo Variable', 'Noto Sans Arabic Variable', 'Archivo Fallback', 'Segoe UI', Tahoma, 'Geeza Pro',
+    'Noto Sans Arabic', 'Noto Naskh Arabic UI', system-ui, sans-serif;
+  --font-wide:
+    'Archivo Variable', 'Noto Sans Arabic Variable', 'Archivo Fallback Wide', 'Segoe UI', Tahoma, 'Geeza Pro',
+    'Noto Sans Arabic', 'Noto Naskh Arabic UI', system-ui, sans-serif;
+  --font-display:
+    'Archivo Variable', 'Noto Sans Arabic Variable', 'Archivo Fallback Display', 'Segoe UI', Tahoma, 'Geeza Pro',
+    'Noto Sans Arabic', 'Noto Naskh Arabic UI', system-ui, sans-serif;
+}
+
+/* Joined script is never tracked, and it needs more leading than Latin. */
+html[lang='ar']
+  :is(
+    h1,
+    h2,
+    h3,
+    h4,
+    p,
+    a,
+    span,
+    li,
+    dt,
+    dd,
+    button,
+    label,
+    legend,
+    input,
+    select,
+    textarea,
+    strong,
+    summary,
+    .display
+  ) {
+  letter-spacing: 0;
+}
+
+html[lang='ar'] body {
+  line-height: 1.75;
+}
+
+html[lang='ar'] :is(h1, .display) {
+  line-height: 1.22;
+}
+
+html[lang='ar'] h2 {
+  line-height: 1.28;
+}
+
+html[lang='ar'] h3 {
+  line-height: 1.4;
+}
+
+/* The English hero line is tuned to 16.5em; the Arabic one breaks better a little narrower. */
+html[lang='ar'] .intro h1 {
+  max-width: 14.5em;
+}
+
+/* Islands that stay left-to-right inside right-to-left pages: the wordmark, records, code,
+   grades, addresses and the fields that hold them. Names and free text follow their first letter. */
+html[dir='rtl']
+  :is(
+    .wordmark,
+    .backdrop,
+    pre,
+    code,
+    .grade,
+    .preview,
+    .target strong,
+    .address span,
+    #domain-input,
+    #cf-email,
+    #cf-company
+  ) {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+html[dir='rtl'] :is(#cf-name, #cf-message) {
+  unicode-bidi: plaintext;
+}
+
+/* Motion that draws from the start edge draws from the right. */
+html[dir='rtl'] :is(.approach::before, .contact::before, .steps::after, .w, .ledger path) {
+  transform-origin: right center;
+}
+
+@media (max-width: 60rem) {
+  html[dir='rtl'] .steps::after {
+    transform-origin: center top;
+  }
+
+  html[dir='rtl'] :is(.steps::before, .steps::after) {
+    left: auto;
+    right: calc(1.125rem - 1px);
+  }
+}
+
+/* The hero records fade in from the left edge instead of the right. */
+html[dir='rtl'] .backdrop {
+  -webkit-mask-image: linear-gradient(270deg, transparent 0%, transparent 52%, #000 72%, #000 96%, transparent 100%);
+  mask-image: linear-gradient(270deg, transparent 0%, transparent 52%, #000 72%, #000 96%, transparent 100%);
+}
+
+/* The drawn chevron of the select sits at the inline end, which is now the left. */
+html[dir='rtl'] .request select {
+  background-position:
+    0.9rem 50%,
+    1.25rem 50%;
+}
+
+/* Outward arrows point up and to the left. The hover nudge keeps working through `transform`. */
+html[dir='rtl'] :is(.ext-icon, .runs .ext, .report .ext) {
+  scale: -1 1;
+}
+
+html[dir='rtl'] :is(.ext:hover .ext-icon, .report:hover .ext) {
+  transform: translate(-2px, -2px);
+}

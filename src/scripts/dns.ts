@@ -22,15 +22,16 @@ export type RRName = keyof typeof RR;
 const resolvers = [
   (name: string, type: RRName) =>
     `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}&do=1`,
-  (name: string, type: RRName) =>
-    `https://dns.google/resolve?name=${encodeURIComponent(name)}&type=${type}&do=1`,
+  (name: string, type: RRName) => `https://dns.google/resolve?name=${encodeURIComponent(name)}&type=${type}&do=1`,
 ];
 
 const TIMEOUT_MS = 6000;
 
-async function fetchJson(url: string): Promise<any> {
+async function fetchJson(url: string, signal?: AbortSignal): Promise<any> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  // A superseded check cancels its requests through the caller's signal.
+  signal?.addEventListener('abort', () => controller.abort(), { once: true });
   try {
     const res = await fetch(url, {
       headers: { accept: 'application/dns-json' },
@@ -46,11 +47,12 @@ async function fetchJson(url: string): Promise<any> {
   }
 }
 
-export async function query(name: string, type: RRName): Promise<DnsResponse> {
+export async function query(name: string, type: RRName, signal?: AbortSignal): Promise<DnsResponse> {
   let lastError: unknown;
   for (const build of resolvers) {
+    if (signal?.aborted) throw new Error('Cancelled');
     try {
-      const json = await fetchJson(build(name, type));
+      const json = await fetchJson(build(name, type), signal);
       // Status 2 (SERVFAIL) from one resolver is worth retrying on the other.
       if (json.Status === 2) {
         lastError = new Error('SERVFAIL');
@@ -82,7 +84,11 @@ export function txtValue(data: string): string {
 export function caaValue(data: string): { tag: string; value: string } | null {
   const hex = data.match(/^\\#\s+\d+\s+([0-9a-fA-F\s]+)$/);
   if (hex) {
-    const bytes = hex[1].replace(/\s+/g, '').match(/../g)?.map((b) => parseInt(b, 16)) ?? [];
+    const bytes =
+      hex[1]
+        .replace(/\s+/g, '')
+        .match(/../g)
+        ?.map((b) => parseInt(b, 16)) ?? [];
     if (bytes.length < 2) return null;
     const tagLen = bytes[1];
     const tag = String.fromCharCode(...bytes.slice(2, 2 + tagLen));
@@ -117,11 +123,38 @@ export function normaliseDomain(input: string): string | null {
 
 // Second-level suffixes where the registrable domain has three labels.
 const multiLabelSuffixes = new Set([
-  'co.ae', 'net.ae', 'org.ae', 'gov.ae', 'ac.ae', 'sch.ae', 'mil.ae',
-  'com.sa', 'net.sa', 'org.sa', 'gov.sa', 'edu.sa',
-  'com.qa', 'net.qa', 'org.qa', 'gov.qa', 'edu.qa',
-  'com.kw', 'com.bh', 'com.om', 'com.eg', 'com.jo', 'com.lb',
-  'co.uk', 'org.uk', 'ac.uk', 'gov.uk', 'com.au', 'net.au', 'org.au', 'co.in', 'co.za',
+  'co.ae',
+  'net.ae',
+  'org.ae',
+  'gov.ae',
+  'ac.ae',
+  'sch.ae',
+  'mil.ae',
+  'com.sa',
+  'net.sa',
+  'org.sa',
+  'gov.sa',
+  'edu.sa',
+  'com.qa',
+  'net.qa',
+  'org.qa',
+  'gov.qa',
+  'edu.qa',
+  'com.kw',
+  'com.bh',
+  'com.om',
+  'com.eg',
+  'com.jo',
+  'com.lb',
+  'co.uk',
+  'org.uk',
+  'ac.uk',
+  'gov.uk',
+  'com.au',
+  'net.au',
+  'org.au',
+  'co.in',
+  'co.za',
 ]);
 
 /** Best-effort organisational domain, used for the DMARC fallback lookup. */

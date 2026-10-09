@@ -2,7 +2,7 @@
   Design tokens
   Palette: cool limestone paper, deep green ink, one accent ("verified" green).
   Severity colours are functional only: they appear in check results and findings.
-  Radius rule: controls 10px, panels 16px, status badges 6px.
+  Radius rule: controls 10px, panels 16px, status badges and code wells 6px; sub-panels inside a panel use the control radius.
 */
 :root {
   color-scheme: light dark;
@@ -34,15 +34,36 @@
   --p-fail: #ff8f80;
   --p-info: #9fb8d4;
 
-  --font: 'Archivo Variable', 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Ink bands: header, hero, process, contact and footer */
+  --ink-bg: #0c1813;
+  --ink-raised: #12211b;
+  --ink-line: #24372e;
+  --ink-text: #eaf1ed;
+  --ink-text-2: #a9bbb2;
+  --ink-accent: #62d3a6;
+  --ink-accent-hover: #86e0bd;
+  /* The accent as channels, for translucent tints: rgb(var(--ink-accent-rgb) / 0.2) */
+  --ink-accent-rgb: 98 211 166;
+  /* Text that sits on the accent in either theme. */
+  --on-ink-accent: #07130e;
+  --ink-control: #577266;
+
+  --font:
+    'Archivo Variable', 'Archivo Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-wide:
+    'Archivo Variable', 'Archivo Fallback Wide', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display:
+    'Archivo Variable', 'Archivo Fallback Display', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    sans-serif;
   --mono: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace;
 
+  --step--2: 0.8125rem;
   --step--1: 0.875rem;
   --step-0: 1.0625rem;
   --step-1: 1.3125rem;
   --step-2: 1.625rem;
   --step-3: clamp(1.75rem, 1.35rem + 1.6vw, 2.375rem);
-  --step-4: clamp(2.35rem, 1.45rem + 3.6vw, 4rem);
+  --step-4: clamp(2.35rem, 1.45rem + 3.6vw, 4.5rem);
 
   --s-1: 0.25rem;
   --s-2: 0.5rem;
@@ -60,15 +81,41 @@
 
   --container: 74rem;
   --gutter: clamp(1rem, 4vw, 2.5rem);
-  --measure: 65ch;
+  /* Line lengths are in em, not ch: ch is the width of a "0" in the active font, so it shifts when Archivo replaces the fallback. */
+  --measure: 37.245em;
   --header-h: 4.25rem;
+
+  /* Motion tokens. Three curves, five durations, one stagger, one rise. */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-loop: cubic-bezier(0.45, 0, 0.55, 1);
+  --dur-press: 120ms;
+  --dur-quick: 180ms;
+  --dur-base: 260ms;
+  --dur-slow: 420ms;
+  --dur-enter: 720ms;
+  --stagger: 50ms;
+  --rise: 14px;
+}
+
+/* Pointer offsets written by exposure-map.ts: registered so they stay on the element that uses them. */
+@property --px {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --py {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #0d1411;
-    --raised: #131c18;
+    /* Paper sits two steps above the ink bands, so the page keeps its band rhythm in the dark. */
+    --paper: #101814;
+    --raised: #17211c;
     --ink: #e4ebe7;
     --ink-2: #a6b4ad;
     --ink-3: #8c9a93;
@@ -76,14 +123,101 @@
     --line-strong: #5b6b64;
     --accent: #5fcda0;
     --accent-hover: #7ad9b2;
-    --on-accent: #07130e;
+    --on-accent: var(--on-ink-accent);
     --accent-tint: #173328;
     --crit: #ff8f80;
     --warn: #f0c157;
     --focus: #5fcda0;
     --panel: #131f1a;
     --panel-2: #0a120f;
+    --ink-bg: #070f0c;
+    --ink-raised: #0f1b16;
+    --ink-line: #1d2d26;
   }
+}
+
+/*
+  Fallback faces. Until Archivo arrives, text is set in Arial scaled to Archivo's widths and
+  vertical metrics, so the page lays out the same before and after the font loads.
+  size-adjust is Archivo's width over Arial's, measured on this site's own text: body 0.985,
+  semibold 0.98, headings at 112-114% 1.115, at 116-118% 1.157. The ascent and descent
+  overrides are Archivo's 0.88 and 0.21 em divided by size-adjust.
+*/
+@font-face {
+  font-family: 'Archivo Fallback';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('Arimo');
+  font-weight: 100 599;
+  size-adjust: 98.5%;
+  ascent-override: 89.3%;
+  descent-override: 21.3%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Archivo Fallback';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('Arimo Bold');
+  font-weight: 600 900;
+  size-adjust: 98%;
+  ascent-override: 89.8%;
+  descent-override: 21.4%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Archivo Fallback Wide';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('Arimo Bold');
+  font-weight: 600 900;
+  size-adjust: 111.5%;
+  ascent-override: 78.9%;
+  descent-override: 18.8%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Archivo Fallback Display';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('Arimo Bold');
+  font-weight: 600 900;
+  size-adjust: 115.7%;
+  ascent-override: 76.1%;
+  descent-override: 18.2%;
+  line-gap-override: 0%;
+}
+
+/* A dark band. Everything inside reads its colours from the ink tokens. */
+.ink {
+  background: var(--ink-bg);
+  color: var(--ink-text);
+  --focus: var(--ink-accent);
+  --mark-core: var(--ink-accent);
+}
+
+.ink .btn-primary {
+  background: var(--ink-accent);
+  color: var(--on-ink-accent);
+}
+
+.ink .btn-primary:hover {
+  background: var(--ink-accent-hover);
+}
+
+.ink .btn-secondary {
+  color: var(--ink-text);
+  border-color: var(--ink-control);
+}
+
+.ink .btn-secondary:hover {
+  background: rgb(255 255 255 / 0.06);
+  border-color: var(--ink-text-2);
+}
+
+.ink .section-head p,
+.ink .lead {
+  color: var(--ink-text-2);
+}
+
+.ink ::selection {
+  background: var(--ink-accent);
+  color: var(--on-ink-accent);
 }
 
 *,
@@ -127,6 +261,7 @@ h2,
 h3,
 h4 {
   margin: 0;
+  font-family: var(--font-wide);
   font-stretch: 112%;
   font-weight: 680;
   line-height: 1.08;
@@ -137,6 +272,14 @@ h4 {
 h1 {
   font-size: var(--step-4);
   line-height: 1.02;
+}
+
+/* The display cut used by every page-opening heading. */
+.display {
+  font-family: var(--font-display);
+  font-stretch: 116%;
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 h2 {
@@ -207,20 +350,20 @@ kbd {
 }
 
 .section {
-  padding-block: clamp(4rem, 3rem + 5vw, 7rem);
+  padding-block: clamp(3.5rem, 2rem + 5vw, 7rem);
 }
 
 .section-head {
   display: grid;
   gap: var(--s-4);
-  margin-bottom: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+  margin-bottom: clamp(2rem, 1.5rem + 2.5vw, 4rem);
 }
 
 .section-head p {
   color: var(--ink-2);
   font-size: var(--step-1);
   line-height: 1.5;
-  max-width: 52ch;
+  max-width: 29.796em;
 }
 
 .lead {
@@ -246,22 +389,53 @@ kbd {
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    transform 120ms ease;
+    background-color var(--dur-quick) ease,
+    border-color var(--dur-quick) ease,
+    box-shadow var(--dur-quick) ease,
+    transform var(--dur-press) ease;
 }
 
 .btn:active {
   transform: translateY(1px);
 }
 
+/* A hairline of light along the top and a tinted drop, so the button reads as a key, not a flat fill. */
 .btn-primary {
   background: var(--accent);
   color: var(--on-accent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.28),
+    0 1px 2px rgb(6 16 12 / 0.18);
 }
 
 .btn-primary:hover {
   background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.28),
+    0 10px 24px -12px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+.btn-primary:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1);
+}
+
+.ink .btn-secondary {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* Film grain for the ink bands: a static tile, so it costs one cached bitmap. */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url('/noise.png');
+  background-size: 128px 128px;
+  opacity: 0.05;
+  pointer-events: none;
 }
 
 .btn-secondary {
@@ -273,6 +447,7 @@ kbd {
 .btn-secondary:hover {
   background: var(--raised);
   border-color: var(--ink-2);
+  transform: translateY(-1px);
 }
 
 .icon {
@@ -295,7 +470,7 @@ kbd {
 
 .skip-link {
   position: absolute;
-  left: var(--s-4);
+  inset-inline-start: var(--s-4);
   top: -100%;
   z-index: 100;
   padding: var(--s-3) var(--s-4);
@@ -322,7 +497,173 @@ kbd {
 .prose ul {
   display: grid;
   gap: var(--s-2);
-  padding-left: 1.25rem;
+  padding-inline-start: 1.25rem;
+}
+
+/*
+  Motion. One load moment (the hero), scroll-driven reveals that settle as
+  content enters, and a short cross-page fade. Everything here is skipped
+  when the visitor asks for reduced motion.
+*/
+
+/* Pages fade into each other; the header holds still across navigations. */
+@view-transition {
+  navigation: auto;
+}
+
+.site-header {
+  view-transition-name: site-header;
+}
+
+::view-transition-group(*),
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-base);
+  animation-timing-function: var(--ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* The one entrance: fade and rise. from-only on purpose, and on `translate` rather than
+   `transform`, so at rest the effect yields to the underlying style and hover transforms on
+   the same elements keep working. --enter-y overrides the distance per element. */
+@keyframes enter {
+  from {
+    opacity: var(--enter-from, 0);
+    translate: 0 var(--enter-y, var(--rise));
+  }
+}
+
+/* A hairline that draws itself along an edge as a band arrives. */
+@keyframes draw-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Lenis drives scrolling when it runs; the browser must not smooth it a second time. */
+html.lenis {
+  scroll-behavior: auto;
+}
+
+/* Departure fade for browsers without cross-document view transitions (set by navigate.ts).
+   Only the content fades; the header stays, so dark-topped pages never flash light. */
+main,
+.site-footer {
+  transition: opacity 140ms ease;
+}
+
+html.leaving :is(main, .site-footer) {
+  opacity: 0;
+}
+
+/* In-page navigation moves focus to the section; the whole region does not need a ring. */
+:is(section, article, main)[tabindex='-1']:focus {
+  outline: none;
+}
+
+.top-sentinel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+/* Where scroll-driven animations are missing, reveal.ts marks the process band as it enters and
+   these transitions fill the line and light the numbers. */
+@supports not (animation-timeline: view()) {
+  html.io .steps::after {
+    transform: scaleX(0);
+    transition: transform 1.4s var(--ease-standard);
+  }
+  html.io .steps.in::after {
+    transform: none;
+  }
+  html.io .num {
+    border-color: var(--ink-line);
+    color: var(--ink-text-2);
+    transition:
+      border-color var(--dur-base) ease,
+      color var(--dur-base) ease;
+  }
+  html.io .steps.in .num {
+    border-color: var(--ink-accent);
+    color: var(--ink-accent);
+  }
+  html.io .steps.in .step:nth-child(2) .num {
+    transition-delay: 0.3s;
+  }
+  html.io .steps.in .step:nth-child(3) .num {
+    transition-delay: 0.6s;
+  }
+  html.io .steps.in .step:nth-child(4) .num {
+    transition-delay: 0.9s;
+  }
+  html.io .steps.in .step:nth-child(5) .num {
+    transition-delay: 1.2s;
+  }
+  html.io .steps::after {
+    transform: scaleY(0);
+  }
+}
+
+/* The scrolled header, driven by a sentinel observer where scroll-driven animations are
+   missing or motion is reduced (the frosted state is information, not motion). */
+.site-header {
+  transition:
+    box-shadow var(--dur-base) ease,
+    background-color var(--dur-base) ease;
+}
+
+.site-header.scrolled {
+  background: color-mix(in srgb, var(--ink-bg) 82%, transparent);
+  box-shadow: 0 14px 34px -22px rgb(2 8 6 / 0.85);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
+}
+
+/* Square bullets, shared by every list that uses them (and by prose lists). */
+:is(.bullets, .prose ul) {
+  list-style: none;
+  padding-inline-start: 0;
+}
+
+:is(.bullets, .prose ul) li {
+  position: relative;
+  padding-inline-start: 1.1rem;
+}
+
+:is(.bullets, .prose ul) li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.55em;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.8;
+}
+
+.ink :is(.bullets, .prose ul) li::before {
+  background: var(--ink-accent);
+}
+
+/* The squares are backgrounds, which forced-colour modes remove; draw them in the text colour there. */
+@media (forced-colors: active) {
+  :is(.bullets, .prose ul) li::before {
+    background: CanvasText;
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -332,5 +673,125 @@ kbd {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* On paper: the ink bands print as paper, the chrome, canvases, forms and ornaments stay off
+   the page, nothing waits for a scroll or a pointer, and the policies and the check's results
+   come out as a plain document. */
+@media print {
+  :root {
+    --paper: #fff;
+    --raised: #fff;
+    --ink-bg: #fff;
+    --ink-raised: #fff;
+    --ink-line: #999;
+    --ink-text: #000;
+    --ink-text-2: #333;
+    --ink-accent: #0a6b4c;
+    --ink-accent-rgb: 10 107 76;
+    --ink-accent-hover: #0a6b4c;
+    --on-ink-accent: #fff;
+    --ink-control: #666;
+    --panel: #fff;
+    --panel-2: #fff;
+    --panel-ink: #000;
+    --panel-ink-2: #333;
+    --panel-line: #999;
+    --pass: #0a6b4c;
+    --p-warn: #8a5a00;
+    --p-fail: #b42318;
+    --p-info: #334;
+    --line: #bbb;
+  }
+
+  *,
+  ::before,
+  ::after {
+    animation: none !important;
+    transition: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .site-header,
+  .site-footer,
+  .skip-link,
+  .exposure-map,
+  .glow,
+  .backdrop,
+  .art,
+  .grain::after,
+  .check-form,
+  .retry,
+  .request,
+  .verdict-cta,
+  .start,
+  .spotlight,
+  .top-sentinel {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .approach {
+    min-height: auto !important;
+  }
+
+  .approach .container {
+    position: static !important;
+  }
+
+  .section,
+  .page-head,
+  .contact,
+  .hero {
+    padding-block: 1.5rem;
+  }
+
+  .check-wrap {
+    margin-top: 0;
+  }
+
+  .tray {
+    border: 0;
+    padding: 0;
+    background: none;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  .card,
+  .row,
+  .qa,
+  .finding,
+  .fact,
+  .person,
+  .step,
+  .cell {
+    break-inside: avoid;
+  }
+
+  .qa[open] summary ~ *,
+  .qa:not([open]) .answer {
+    display: block;
+  }
+
+  .prose a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.85em;
+    color: #333;
+  }
+
+  a {
+    color: inherit;
   }
 }

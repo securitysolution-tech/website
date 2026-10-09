@@ -1,23 +1,62 @@
-import { DomainNotFoundError, runChecks, type Result, type Status, type Verdict } from './checks';
+import { DomainNotFoundError, runChecks, type Result, type Verdict } from './checks';
 import { normaliseDomain } from './dns';
+import { reduceMotion, scrollToElement } from './navigate';
+import { fmt, readStrings, type CheckStrings } from '../i18n/client';
 
-const labels: Record<Status, string> = { pass: 'Pass', warn: 'Warning', fail: 'Fail', info: 'Info' };
+// The page renders the strings in its own language (DomainCheck.astro).
+const t = readStrings<CheckStrings & { watchNeed?: string }>('check');
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+// A Latin domain inside a sentence in either direction keeps its own order.
+const isolate = (text: string) => `⁦${text}⁩`;
 
 function init(root: HTMLElement) {
   const form = root.querySelector('form')!;
   const input = root.querySelector<HTMLInputElement>('input[name="domain"]')!;
   const button = root.querySelector<HTMLButtonElement>('button[type="submit"]')!;
   const error = root.querySelector<HTMLElement>('[data-error]')!;
+  const retry = root.querySelector<HTMLButtonElement>('[data-retry]');
+  const panel = root.querySelector<HTMLElement>('[data-results-panel]') ?? root;
   const list = root.querySelector<HTMLOListElement>('[data-results]')!;
   const target = root.querySelector<HTMLElement>('[data-target]')!;
   const targetName = root.querySelector<HTMLElement>('[data-target-name]')!;
+  const targetOwn = root.querySelector<HTMLElement>('[data-target-own]')!;
+  const ownDomain = root.dataset.autorun ?? '';
   const verdict = root.querySelector<HTMLElement>('[data-verdict]')!;
   const announce = root.querySelector<HTMLElement>('[data-announce]')!;
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  // The hook: the headline, the record lines behind it, the preview email and the map's scan.
+  const title = root.querySelector<HTMLElement>('[data-hero-title]');
+  const lines = [...root.querySelectorAll<HTMLElement>('[data-r]')];
+  const spoof = root.querySelector<HTMLElement>('[data-spoof]');
+  const spoofDomain = root.querySelector<HTMLElement>('[data-spoof-domain]');
+  const spoofStamp = root.querySelector<HTMLElement>('[data-spoof-stamp]');
+  const spoofNote = root.querySelector<HTMLElement>('[data-spoof-note]');
+  const canvas = root.querySelector<HTMLCanvasElement>('[data-exposure-map]');
+  const copyLink = root.querySelector<HTMLButtonElement>('[data-copy-link]');
+  const mailResults = root.querySelector<HTMLAnchorElement>('[data-mail-results]');
+  // Orders the managed watch: prefills the request form, then the link's own jump to it happens.
+  const watchLink = root.querySelector<HTMLAnchorElement>('[data-watch-link]');
+  // The free alerts signup (rendered only when the monitor is live). Posts to the Worker.
+  const watchForm = root.querySelector<HTMLFormElement>('[data-watch-form]');
+  const watchStatus = watchForm?.querySelector<HTMLElement>('[data-watch-status]') ?? null;
+  // Timed from page load (as the contact form does), so a browser autofill after a verdict never
+  // looks like a script to the Worker's two-second check.
+  const watchOpened = performance.now();
+  const copyLabel = copyLink?.textContent ?? '';
+  let copyTimer = 0;
 
   const rows = new Map<string, HTMLLIElement>();
   list.querySelectorAll<HTMLLIElement>('[data-check]').forEach((li) => rows.set(li.dataset.check!, li));
+
+  // "Show record" reads "Hide record" while the evidence is open.
+  rows.forEach((li) => {
+    const evidence = li.querySelector<HTMLDetailsElement>('[data-evidence]');
+    const summary = evidence?.querySelector('summary');
+    if (evidence && summary) {
+      evidence.addEventListener('toggle', () => {
+        summary.textContent = evidence.open ? t.hide : t.show;
+      });
+    }
+  });
 
   const icon = (name: string) => {
     const tpl = root.querySelector<HTMLTemplateElement>(`template[data-icon="${name}"]`);
@@ -29,7 +68,7 @@ function init(root: HTMLElement) {
     li.classList.remove('revealed');
     li.querySelector('[data-icon-slot]')!.replaceChildren();
     li.querySelector('[data-summary]')!.textContent = text;
-    li.querySelector('[data-badge]')!.textContent = state === 'checking' ? 'Checking…' : 'Not run';
+    li.querySelector('[data-badge]')!.textContent = state === 'checking' ? t.checking : t.notRun;
     const evidence = li.querySelector<HTMLDetailsElement>('[data-evidence]')!;
     evidence.hidden = true;
     evidence.open = false;
@@ -43,73 +82,323 @@ function init(root: HTMLElement) {
     const svg = icon(r.status);
     slot.replaceChildren(...(svg ? [svg] : []));
     li.querySelector('[data-summary]')!.textContent = r.summary;
-    li.querySelector('[data-badge]')!.textContent = labels[r.status];
+    li.querySelector('[data-badge]')!.textContent = t.labels[r.status];
     const evidence = li.querySelector<HTMLDetailsElement>('[data-evidence]')!;
     evidence.querySelector('pre')!.textContent = r.evidence.join('\n');
     evidence.hidden = r.evidence.length === 0;
     li.classList.add('revealed');
   }
 
-  function showVerdict(domain: string, v: Verdict) {
-    verdict.querySelector('[data-spoofing]')!.textContent = v.spoofing;
-    verdict.dataset.level = v.spoofing.toLowerCase();
-    verdict.querySelector('[data-score]')!.textContent = `${v.passed} of ${v.scored} checks passed`;
-    verdict.hidden = false;
-    announce.textContent = `Check complete for ${domain}. Spoofing protection is ${v.spoofing.toLowerCase()}. ${v.passed} of ${v.scored} checks passed.`;
+  // What to fix first: failures before warnings, in the order that matters most for email and DNS.
+  const priority: Record<string, number> = { dmarc: 0, spf: 1, mtasts: 2, dnssec: 3, caa: 4 };
+  const fix = root.querySelector<HTMLElement>('[data-fix]');
+  const fixList = root.querySelector<HTMLOListElement>('[data-fix-list]');
+
+  function showFixFirst(results: Result[]): number {
+    if (!fix || !fixList) return 0;
+    const items = results
+      .filter((r) => (r.status === 'fail' || r.status === 'warn') && r.id in priority)
+      .sort((a, b) => (a.status === b.status ? priority[a.id] - priority[b.id] : a.status === 'fail' ? -1 : 1));
+    fixList.replaceChildren(
+      ...items.map((r) => {
+        const row = rows.get(r.id);
+        const li = document.createElement('li');
+        li.dataset.status = r.status;
+        const strong = document.createElement('strong');
+        strong.textContent = `${row?.dataset.title ?? r.id} (${row?.dataset.tech ?? r.id})`;
+        li.append(strong, document.createTextNode(` ${r.summary}`));
+        return li;
+      }),
+    );
+    fix.hidden = items.length === 0;
+    return items.length;
   }
 
-  function showError(message: string) {
+  // The email a spoofer would send, stamped with what this domain does to it. While the
+  // check runs the card already carries the domain, and the stamp says so.
+  function showSpoof(domain: string, results: Result[] | null) {
+    if (!spoof || !spoofStamp || !spoofNote) return;
+    if (spoofDomain) spoofDomain.textContent = domain;
+    if (!results) {
+      spoof.dataset.level = 'checking';
+      spoofStamp.textContent = t.checking;
+      spoofNote.textContent = '';
+    } else {
+      // Enforced at reject refuses the mail; enforced at quarantine sends it to spam.
+      const dmarc = results.find((r) => r.id === 'dmarc');
+      const enforced = dmarc?.status === 'pass';
+      const quarantine = enforced && /\bp=quarantine\b/i.test(dmarc?.evidence[0] ?? '');
+      const level = quarantine ? 'quarantined' : enforced ? 'blocked' : 'delivered';
+      spoof.dataset.level = level;
+      spoofStamp.textContent = t.spoof[level];
+      spoofNote.textContent = t.spoof[`${level}Note`];
+    }
+    spoof.hidden = false;
+    spoof.classList.remove('in');
+    void spoof.offsetWidth;
+    spoof.classList.add('in');
+  }
+
+  // The record lines behind the headline print the checked domain's own records.
+  function printRecords(domain: string, results: Result[]) {
+    if (!lines.length) return;
+    const clip = (v: string) => (v.length > 72 ? `${v.slice(0, 72)}…` : v);
+    const evidence = (id: string, tech: string, quoted: boolean) => {
+      const first = results.find((r) => r.id === id)?.evidence[0];
+      if (!first) return fmt(t.noRecord, { tech });
+      return quoted ? `"${clip(first)}"` : clip(first);
+    };
+    const dnssec = results.find((r) => r.id === 'dnssec')?.status === 'pass' ? t.signed : t.unsigned;
+    const texts = [
+      `_dmarc.${domain}.   TXT   ${evidence('dmarc', 'DMARC', true)}`,
+      `${domain}.   TXT   ${evidence('spf', 'SPF', true)}`,
+      `${domain}.   MX   ${evidence('mx', 'MX', false)}`,
+      `${domain}.   DNSSEC   ${dnssec}`,
+      `${domain}.   CAA   ${evidence('caa', 'CAA', false)}`,
+      `_mta-sts.${domain}.   TXT   ${evidence('mtasts', 'MTA-STS', true)}`,
+    ];
+    lines.forEach((p, i) => {
+      p.dataset.r = texts[i] ?? '';
+      if (!reduceMotion.matches) {
+        p.animate(
+          [
+            { opacity: 0, translate: '1.5rem 0' },
+            { opacity: 1, translate: '0 0' },
+          ],
+          {
+            duration: 820,
+            delay: 200 + i * 90,
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            fill: 'backwards',
+          },
+        );
+      }
+    });
+  }
+
+  // The results as an email to whoever can act on them, and as a link to this page.
+  function offerResults(domain: string, v: Verdict, results: Result[]) {
+    const url = `${location.origin}${location.pathname}#check=${encodeURIComponent(domain)}`;
+    if (mailResults) {
+      const name = (r: Result) => `${rows.get(r.id)?.dataset.title ?? r.id} (${rows.get(r.id)?.dataset.tech ?? r.id})`;
+      const clip = (s: string) => (s.length > 160 ? `${s.slice(0, 160)}…` : s);
+      const fixes = results
+        .filter((r) => (r.status === 'fail' || r.status === 'warn') && r.id in priority)
+        .sort((a, b) => (a.status === b.status ? priority[a.id] - priority[b.id] : a.status === 'fail' ? -1 : 1));
+      const lines = [
+        fmt(t.share.intro, { domain }),
+        `${t.levels[v.spoofing]}. ${fmt(t.score, { passed: v.passed, scored: v.scored })}`,
+        '',
+      ];
+      if (fixes.length)
+        lines.push(t.share.fixFirst, ...fixes.map((r, i) => `${i + 1}. ${name(r)}: ${clip(r.summary)}`), '');
+      lines.push(
+        t.share.results,
+        ...results.map((r) => `- ${name(r)}: ${t.labels[r.status]}. ${clip(r.summary)}`),
+        '',
+        fmt(t.share.again, { url }),
+      );
+      mailResults.href = `mailto:?subject=${encodeURIComponent(fmt(t.share.subject, { domain }))}&body=${encodeURIComponent(lines.join('\r\n'))}`;
+    }
+    if (copyLink) {
+      copyLink.onclick = async () => {
+        clearTimeout(copyTimer);
+        try {
+          await navigator.clipboard.writeText(url);
+        } catch {
+          // No clipboard access: the address bar already holds the same link.
+          history.replaceState(null, '', `#check=${encodeURIComponent(domain)}`);
+        }
+        copyLink.textContent = t.share.copied;
+        announce.textContent = t.share.copied;
+        copyTimer = window.setTimeout(() => {
+          copyLink.textContent = copyLabel;
+        }, 2200);
+      };
+    }
+  }
+
+  watchForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const domain = watchForm.dataset.domain;
+    const email = watchForm.querySelector<HTMLInputElement>('input[name="email"]');
+    const trap = watchForm.querySelector<HTMLInputElement>('input[name="website"]');
+    const button = watchForm.querySelector<HTMLButtonElement>('button[type="submit"]');
+    if (!domain || !email || !button || !watchStatus) return;
+    const say = (state: 'sent' | 'error' | 'busy', text: string) => {
+      watchStatus.textContent = text;
+      watchStatus.dataset.state = state;
+    };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
+      say('error', t.alerts.invalidEmail);
+      email.focus();
+      return;
+    }
+    button.setAttribute('aria-disabled', 'true');
+    say('busy', t.alerts.sending);
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 10_000);
+    try {
+      const response = await fetch(watchForm.dataset.endpoint ?? '/api/watch', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          domain,
+          email: email.value.trim(),
+          website: trap?.value ?? '',
+          elapsed: Math.round(performance.now() - watchOpened),
+        }),
+        signal: controller.signal,
+      });
+      if (response.status === 202) {
+        say('sent', t.alerts.sent);
+        email.value = '';
+      } else if (response.status === 400) {
+        say('error', t.alerts.invalidEmail);
+      } else {
+        say('error', t.alerts.failed);
+      }
+    } catch {
+      say('error', t.alerts.failed);
+    } finally {
+      window.clearTimeout(timer);
+      button.removeAttribute('aria-disabled');
+    }
+  });
+
+  watchLink?.addEventListener('click', () => {
+    const domain = watchLink.dataset.domain;
+    const request = document.querySelector<HTMLFormElement>('[data-contact-form]');
+    if (!domain || !request) return;
+    const company = request.querySelector<HTMLInputElement>('[name="company"]');
+    if (company && !company.value) company.value = domain;
+    for (const box of request.querySelectorAll<HTMLInputElement>('input[name^="need-"]')) {
+      if (t.watchNeed && box.value === t.watchNeed) box.checked = true;
+    }
+    const message = request.querySelector<HTMLTextAreaElement>('[name="message"]');
+    if (message && !message.value) {
+      message.value = fmt(t.share.watchMessage, { domain });
+      // The form treats edits as new input, so any earlier prepared message is set aside.
+      message.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+
+  function showVerdict(domain: string, v: Verdict, results: Result[], autorun: boolean) {
+    const level = v.incomplete ? 'incomplete' : v.spoofing;
+    verdict.querySelector('[data-spoofing]')!.textContent = t.levels[level];
+    verdict.dataset.level = level;
+    if (watchLink) {
+      // Not for our own domain, and not for a reading that did not complete.
+      watchLink.hidden = v.incomplete || domain === ownDomain;
+      watchLink.dataset.domain = domain;
+    }
+    if (watchForm) {
+      watchForm.hidden = v.incomplete || domain === ownDomain;
+      watchForm.dataset.domain = domain;
+      if (watchStatus) {
+        watchStatus.textContent = '';
+        delete watchStatus.dataset.state;
+      }
+    }
+    verdict.querySelector('[data-score]')!.textContent = v.incomplete
+      ? t.incompleteScore
+      : fmt(t.score, { passed: v.passed, scored: v.scored });
+    verdict.hidden = false;
+    const count = v.incomplete ? 0 : showFixFirst(results);
+    if (v.incomplete) {
+      if (fix) fix.hidden = true;
+      if (spoof) spoof.hidden = true;
+    } else {
+      showSpoof(domain, results);
+      offerResults(domain, v, results);
+      if (!autorun) {
+        if (title) title.textContent = fmt(t.hero[v.spoofing], { domain: isolate(domain) });
+        printRecords(domain, results);
+      }
+    }
+    announce.textContent = v.incomplete
+      ? fmt(t.announceIncomplete, { domain })
+      : fmt(t.announceDone, { domain, level: t.levels[v.spoofing].toLowerCase(), passed: v.passed, scored: v.scored }) +
+        (count ? ` ${count === 1 ? t.fixOne : fmt(t.fixMany, { count })}` : '');
+    if (domain !== ownDomain) document.dispatchEvent(new CustomEvent('domaincheck', { detail: { domain } }));
+  }
+
+  function showError(message: string, canRetry = false) {
     error.textContent = message;
     error.hidden = false;
     input.setAttribute('aria-invalid', 'true');
+    if (retry) retry.hidden = !canRetry;
   }
 
   function clearError() {
     error.hidden = true;
     error.textContent = '';
     input.removeAttribute('aria-invalid');
+    if (retry) retry.hidden = true;
   }
 
   let runId = 0;
+  let controller: AbortController | null = null;
+  let shown = ''; // the domain whose results are on screen
+  let lastRequested = '';
 
-  async function run(domain: string) {
+  // The autorun (our own domain on page load) never locks the form and fails silently:
+  // a visitor's submit takes over at any moment, and the stale run is cancelled.
+  async function run(domain: string, autorun = false) {
     const id = ++runId;
-    button.disabled = true;
-    button.textContent = 'Checking…';
+    controller?.abort();
+    controller = new AbortController();
+    const { signal } = controller;
+    shown = '';
+    if (!autorun) {
+      lastRequested = domain;
+      button.textContent = t.checking;
+      // The map scans again: the visitor can see the instrument working.
+      canvas?.dispatchEvent(new Event('exposurescan'));
+    }
     list.setAttribute('aria-busy', 'true');
     verdict.hidden = true;
+    if (fix) fix.hidden = true;
+    showSpoof(domain, null);
     announce.textContent = '';
     targetName.textContent = domain;
+    targetOwn.hidden = domain !== ownDomain;
     target.hidden = false;
-    rows.forEach((li) => setState(li, 'checking', 'Looking this up…'));
+    rows.forEach((li) => setState(li, 'checking', t.looking));
 
-    // Rows fill in one after another so the eye can follow the results.
+    // Rows fill in one after another so the eye can follow the results. On page load the
+    // first row waits for the instrument to finish rising, so the fill is actually seen.
+    const holdUntil = autorun && !reduceMotion.matches ? performance.now() + 1100 : 0;
     let queue = Promise.resolve();
     const reveal = (r: Result) => {
       queue = queue.then(async () => {
         if (id !== runId) return;
+        if (holdUntil > performance.now()) await wait(holdUntil - performance.now());
+        if (id !== runId) return;
         render(r);
-        if (!reduce.matches) await wait(150);
+        if (!reduceMotion.matches) await wait(150);
       });
     };
 
     try {
-      const { verdict: v } = await runChecks(domain, reveal);
+      const { results, verdict: v } = await runChecks(domain, reveal, signal, t.summaries);
       await queue;
-      if (id === runId) showVerdict(domain, v);
+      if (id !== runId) return;
+      shown = domain;
+      showVerdict(domain, v, results, autorun);
     } catch (err) {
       if (id !== runId) return;
       rows.forEach((li) => setState(li, 'idle', li.dataset.about ?? ''));
       target.hidden = true;
-      showError(
-        err instanceof DomainNotFoundError
-          ? `${domain} does not exist in DNS. Check the spelling and try again.`
-          : 'The DNS lookups could not be completed. Your network may block DNS-over-HTTPS, so try again on another connection.',
-      );
+      if (autorun) return;
+      if (err instanceof DomainNotFoundError) {
+        showError(fmt(t.errors.notFound, { domain }));
+      } else {
+        showError(t.errors.resolver, true);
+      }
     } finally {
       if (id === runId) {
-        button.disabled = false;
-        button.textContent = 'Run check';
+        button.textContent = t.run;
         list.setAttribute('aria-busy', 'false');
       }
     }
@@ -119,7 +408,7 @@ function init(root: HTMLElement) {
     event.preventDefault();
     const domain = normaliseDomain(input.value);
     if (!domain) {
-      showError('Enter a domain name, for example yourcompany.ae.');
+      showError(t.errors.empty);
       input.focus();
       return;
     }
@@ -128,6 +417,14 @@ function init(root: HTMLElement) {
     // Keep the result linkable. The fragment never leaves the browser, so the domain stays private.
     history.replaceState(null, '', `#check=${encodeURIComponent(domain)}`);
     run(domain);
+    // The headline answers in place; the page moves only when the results sit out of view.
+    if (panel.getBoundingClientRect().top > innerHeight * 0.85) scrollToElement(panel, { focus: false });
+  });
+
+  retry?.addEventListener('click', () => {
+    if (!lastRequested) return;
+    clearError();
+    run(lastRequested);
   });
 
   input.addEventListener('input', () => {
@@ -143,12 +440,25 @@ function init(root: HTMLElement) {
     }
   };
   const linked = fromHash();
-  const autorun = linked ?? root.dataset.autorun;
-  if (autorun) {
-    input.value = autorun;
-    if (linked) root.scrollIntoView({ block: 'start' });
-    run(autorun);
+  if (linked) {
+    input.value = linked;
+    requestAnimationFrame(() => scrollToElement(panel, { immediate: true, focus: false }));
+    run(linked);
+  } else if (ownDomain) {
+    // Show our own results on load, and leave the field empty for the visitor's domain.
+    run(ownDomain, true);
   }
+
+  // In-page links such as "/#check=example.com" only change the hash.
+  window.addEventListener('hashchange', () => {
+    const domain = fromHash();
+    if (!domain) return;
+    input.value = domain;
+    clearError();
+    scrollToElement(panel, { focus: false });
+    // Back and forward restore a fragment whose results may already be on screen.
+    if (domain !== shown) run(domain);
+  });
 }
 
 document.querySelectorAll<HTMLElement>('[data-domain-check]').forEach(init);
