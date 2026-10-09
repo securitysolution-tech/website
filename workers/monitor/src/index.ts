@@ -125,18 +125,20 @@ async function handleSignup(request: Request, env: Env): Promise<Response> {
 
   const key = await keyFor(result.domain, result.email);
   const existing = await get(env.WATCH, key);
-  if (!existing) {
-    const sub: Subscription = {
-      domain: result.domain,
-      email: result.email,
-      verified: false,
-      createdAt: new Date().toISOString(),
-    };
-    await put(env.WATCH, key, sub);
+  const now = Date.now();
+  // Within the cooldown the answer is the same 202 and nothing is sent: no information leaks and
+  // no inbox can be flooded. After it, the link is resent, so a typo never strands anyone.
+  if (existing?.confirmSentAt && now - Date.parse(existing.confirmSentAt) < CONFIRM_COOLDOWN) {
+    return json(202, { ok: true });
   }
-  // The confirm link is (re)sent on every signup, so a repeat never gets stuck unconfirmed.
+  const sub: Subscription = existing ?? {
+    domain: result.domain,
+    email: result.email,
+    verified: false,
+    createdAt: new Date(now).toISOString(),
+  };
   const token = await sign(
-    { act: 'verify', dom: result.domain, eml: result.email, exp: Date.now() + CONFIRM_TTL },
+    { act: 'verify', dom: result.domain, eml: result.email, exp: now + CONFIRM_TTL },
     env.TOKEN_SECRET,
   );
   try {
@@ -147,6 +149,8 @@ async function handleSignup(request: Request, env: Env): Promise<Response> {
     );
     return json(502, { error: 'send_failed' });
   }
+  sub.confirmSentAt = new Date(now).toISOString();
+  await put(env.WATCH, key, sub);
   return json(202, { ok: true });
 }
 
