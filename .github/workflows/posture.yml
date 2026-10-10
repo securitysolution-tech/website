@@ -29,6 +29,16 @@ jobs:
         shell: bash
         run: bash scripts/posture.sh | tee posture.txt
 
+      - name: Run web-posture-check
+        # A second, independent check with the founders' open-source tool
+        # (github.com/MohammadThabetHassan/web-posture-check). It also runs when
+        # the script above fails, and fails on any WARN, since the site is clean.
+        if: always()
+        uses: MohammadThabetHassan/web-posture-check@1709f9a3d604d8003f5dde97d66673fc715e9c89 # v0.2.0
+        with:
+          targets: securitysolution.tech
+          args: --fail-on warn
+
       - name: Open or update an issue on regression
         if: failure()
         env:
@@ -36,7 +46,12 @@ jobs:
           REPO: ${{ github.repository }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          failed="$(grep '^FAIL' posture.txt || echo 'The check script did not finish. See the run log.')"
+          failed="$(grep '^FAIL' posture.txt || echo 'No FAIL from scripts/posture.sh. See the run log.')"
+          # web-posture-check writes its Markdown report here; keep only its FAIL and WARN rows.
+          report="$RUNNER_TEMP/web-posture-report.md"
+          if [ -f "$report" ] && grep -qE '^\| (FAIL|WARN) ' "$report"; then
+            failed="$(printf '%s\n\nweb-posture-check:\n%s' "$failed" "$(grep -E '^\| (FAIL|WARN) ' "$report")")"
+          fi
           body="$(printf 'The daily posture check failed.\n\n```\n%s\n```\n\nRun: %s' "$failed" "$RUN_URL")"
           gh label create posture --repo "$REPO" --color B42318 --description "Live security posture regression" --force
           existing="$(gh issue list --repo "$REPO" --label posture --state open --json number --jq '.[0].number // empty')"
