@@ -34,7 +34,7 @@ jobs:
         # (github.com/MohammadThabetHassan/web-posture-check). It also runs when
         # the script above fails, and fails on any WARN, since the site is clean.
         if: always()
-        uses: MohammadThabetHassan/web-posture-check@1709f9a3d604d8003f5dde97d66673fc715e9c89 # v0.2.0
+        uses: MohammadThabetHassan/web-posture-check@169530c426abbfd43aa2237f4d958dd02ea7fa8b # v0.3.0
         with:
           targets: securitysolution.tech
           args: --fail-on warn
