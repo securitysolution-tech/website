@@ -46,7 +46,14 @@ const needs = spine.map((s, i) => ({ value: s.plainName, label: services[i].plai
 
     <!-- Live backend: the request is posted to /api/contact. Otherwise, and as the fallback,
          the form composes the request and the visitor's email app sends it. -->
-    <form class="request" novalidate data-contact-form data-to={site.email} aria-labelledby="request-title">
+    <form
+      class="request"
+      method="post"
+      novalidate
+      data-contact-form
+      data-to={site.email}
+      aria-labelledby="request-title"
+    >
       <h3 id="request-title">{t.contact.formTitle}</h3>
 
       <div class="entry" data-entry>
