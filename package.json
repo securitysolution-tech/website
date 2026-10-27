@@ -31,7 +31,7 @@
     "@phosphor-icons/core": "2.1.1",
     "axe-core": "4.14.0",
     "chrome-launcher": "1.2.2",
-    "html-validate": "11.16.2",
+    "html-validate": "11.17.0",
     "lighthouse": "13.5.0",
     "playwright-core": "1.64.0",
     "prettier": "3.9.10",
